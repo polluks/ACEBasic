@@ -13,7 +13,7 @@ else
   if <arg> EQ "docs"
    ; archive the ACE-specific docs
    lha -a a <arg> ace:docs/history
-   lha -a a <arg> ace:docs/ref.doc
+   lha -a a <arg> ace:docs/ref.txt
    lha -a a <arg> ace:docs/ref.guide
    lha -a a <arg> ace:docs/ace.fmt
    lha -a a <arg> ace:docs/ace.guide

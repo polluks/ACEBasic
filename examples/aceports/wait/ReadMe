@@ -22,7 +22,7 @@ Another way is to copy each program to the RAM: disk (for example), compiling
 both with the -i switch to create icons. Then open the RAM: disk and double
 click on each program's icon. Either program may be run first.
 
-See ace.doc and ref.doc for more information.
+See ace.txt and ref.txt for more information.
 
 Regards,
 David Benn

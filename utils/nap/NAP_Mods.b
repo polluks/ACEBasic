@@ -3,7 +3,7 @@
 ** NAP_Mods : Sub modules needed by NAP.                           **
 **                                                                 **
 ** For information about the copyright read the corresponding sec- **
-** tion in NAP.doc, since these modules are part of NAP.           **
+** tion in NAP.txt, since these modules are part of NAP.           **
 *********************************************************************
 ** Copy - copies a string into an allocated memoryblock            **
 **                                                                 **
@@ -416,7 +416,7 @@ SUB STRING Get_name_of_object (SHORTINT startpos, STRING text) external
      sub.b    #32,d0
      beq.s    _gno_exit                { = SPACE -> exit             }
 
-     bra.s    _gno_loop2               { else repeat                 }
+     bra.s    _gno_loop2ï¿½              { else repeat                 }
 
   _gno_exit:
 

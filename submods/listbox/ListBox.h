@@ -3,7 +3,7 @@
 ** ListView gadget-based requester with a Cancel and Ok button, and returns 
 ** the number of the selection made or LISTBOX_CANCELLED.
 **
-** See also ace.doc, "Creating & using ACE subprogram modules".
+** See also ace.txt, "Creating & using ACE subprogram modules".
 **
 ** This file should reside in ACEinclude: so that #include <SUBmods/ListBox.h>
 ** can be used in programs linked with ListBox.o.

@@ -106,13 +106,13 @@ ARG$ *		- syntax: ARG$(n) where n=0..ARGCOUNT.
 		- Returns the nth command line argument as a string. 
 		- If n=0 the name of the command is returned.
 		- Note that ARG$ only works for CLI/Shell launched 
-		  programs. See ace.doc for details about how to access
+		  programs. See ace.txt for details about how to access
 		  Workbench arguments.
 		- See also ARGCOUNT.
  
 --------------------------------------------------------------------------------
 ARGCOUNT *	- Returns the number of command line arguments.
-		- See also ace.doc re: Workbench arguments.
+		- See also ace.txt re: Workbench arguments.
  
 --------------------------------------------------------------------------------
 AREA		- syntax: AREA [STEP](x,y)
@@ -265,7 +265,7 @@ BLOCK *		- The BLOCK construct permits arbitrarily large collections of
 BREAK		- syntax: BREAK ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON BREAK event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 CALL		- Passes control to a user-defined subprogram, 
@@ -273,7 +273,7 @@ CALL		- Passes control to a user-defined subprogram,
 		  or user-defined machine code routine.
 		- Subprogram CALLs can be recursive in ACE. 
 		- See also sections on subprograms, shared library access,
-		  external functions and machine code calls in ace.doc.
+		  external functions and machine code calls in ace.txt.
  
 --------------------------------------------------------------------------------
 CASE *		- This is ACE's version of the CASE statement and is different 
@@ -360,7 +360,7 @@ CLOSE		- syntax: CLOSE [#]<fileNum>[,[#]<fileNum>..]
 		- This command closes at least one open file. 
 		- Note that in ACE, CLOSE must be followed by at least one 
 		  filenumber, unlike AmigaBASIC.
-		- See section on files in ace.doc.
+		- See section on files in ace.txt.
  		- See also ERR.
 
 --------------------------------------------------------------------------------
@@ -391,7 +391,7 @@ COMMON *	- syntax: COMMON [<type>] <identifier>[%&!$]
 		  from the point of the declaration onward, and the variable's 
 		  name is also exported to other modules where it may be 
 		  externally referenced via the External command.
-		- See also "Common and Global variables" in ace.doc.	
+		- See also "Common and Global variables" in ace.txt.	
 		 
 --------------------------------------------------------------------------------
 CONST *		- syntax: CONST <ident> = [+|-]<constant>[,..]
@@ -469,7 +469,7 @@ DECLARE		- This has four uses in ACE:
 		  1. DECLARE FUNCTION [<type>] <func-name>[%&!#$][(param-list)] 
 							  LIBRARY [<lib-name>]
 
-		     (see section on shared library functions in ace.doc)
+		     (see section on shared library functions in ace.txt)
 
 		  2. DECLARE FUNCTION [<type>] <func-name>[%&!#$][(param-list)] 
 							         EXTERNAL
@@ -477,7 +477,7 @@ DECLARE		- This has four uses in ACE:
 		     which declares an external function. See also 
 		     EXTERNAL command.
 
-		     (see section on External References in ace.doc)
+		     (see section on External References in ace.txt)
  
 		  3. DECLARE SUB [<type>] subprogram-name[(param-list)] 
 							 [EXTERNAL]
@@ -488,7 +488,7 @@ DECLARE		- This has four uses in ACE:
 		     The reference will be resolved at link time.
 
 		     (see "Creating & using ACE subprogram modules" 
-		      in ace.doc)
+		      in ace.txt)
  
 		  In 1,2 and 3 above, <type> may be one of the following:
 		
@@ -566,7 +566,7 @@ DEF FN		- syntax:
 		- Once a function has been defined, you cannot redefine
 		  it (AmigaBASIC allows this) in the same program.
 		- If the optional EXTERNAL keyword is used, the function
-	 	  will be externally visible to other modules. See ace.doc
+	 	  will be externally visible to other modules. See ace.txt
 		  section "Creating & using ACE subprogram modules".
 		- See the file ACEinclude:MathFunc.h for examples of
 		  defined functions (taken from Appendix E of the
@@ -614,7 +614,7 @@ DIM		- syntax:
 		  When used in DIM, the SIZE option specifies how big each
 		  string element is to be.
 		- SHARED is not an option and ACE arrays are shared in the
-		  same way as variables. See "Subprograms" in ace.doc.
+		  same way as variables. See "Subprograms" in ace.txt.
 		- Arrays may be dynamically allocated in ACE, eg:
 
 			CONST STRSIZE=80 
@@ -686,7 +686,7 @@ ERR		- syntax: ERR
 		- The most typical usage is as part of a conditional test, 
 		  eg: IF ERR<>0 THEN PRINT "Error!":STOP
 		- ERR may also be called after an error has been trapped
-		  by the ON ERROR event trapping mechanism. See ace.doc
+		  by the ON ERROR event trapping mechanism. See ace.txt
 		  for more details about event trapping in ACE. 
 		- Here are the current codes:
  
@@ -728,7 +728,7 @@ ERR		- syntax: ERR
 ERROR		- syntax: ERROR ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON ERROR event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 EQV		- Boolean operator: X EQV Y.
@@ -802,7 +802,7 @@ EXTERNAL *	- syntax: EXTERNAL [FUNCTION] [<type>] <identifier>[%&!$]
 
 			ADDRESS,LONGINT,SHORTINT,SINGLE,STRING
 
-		- See the section on External References in ace.doc.
+		- See the section on External References in ace.txt.
 		- See also the DECLARE command for an alternative
 		  (and better) external function declaration syntax.
  
@@ -901,7 +901,7 @@ FOR..NEXT	- syntax: FOR <variable>=x TO y [STEP z]
  		- If you want to branch out of a FOR loop never to return,
 		  use EXIT FOR. See also the further discussion of this
 		  issue (including RETURNing from within a FOR loop) in the
-		  "Limitations" section of ace.doc.
+		  "Limitations" section of ace.txt.
 		
 --------------------------------------------------------------------------------
 FORWARD *	- syntax: FORWARD n
@@ -1050,7 +1050,7 @@ GADGET MOD *	- syntax: GADGET MOD id,knob-position[,max-positions]
 GADGET ON .. *	- syntax: GADGET ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON GADGET event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 GADGET OUTPUT *	- syntax: GADGET OUTPUT id
@@ -1080,7 +1080,7 @@ GET		- syntax: GET [#]<fileNum>,<structVar>[,<recordNum>]
 		- The record number (<recordNum>) is optional. The minimum 
 		  <recordNum> is 1, while the maximum value depends upon 
 		  available disk space and structure size. 
-		- See also the ace.doc section, "Random Files".
+		- See also the ace.txt section, "Random Files".
 
 --------------------------------------------------------------------------------
 GLOBAL *	- syntax: GLOBAL [<type>] <identifier>[%&!$]
@@ -1091,7 +1091,7 @@ GLOBAL *	- syntax: GLOBAL [<type>] <identifier>[%&!$]
 		- A static variable (BSS object) is declared. The scope
 		  of the variable is limited to the current source module
 		  from the point of the declaration onward.
-		- See also "Common and Global variables" in ace.doc.	
+		- See also "Common and Global variables" in ace.txt.	
 		 
 --------------------------------------------------------------------------------
 GOSUB..RETURN	- syntax: GOSUB <label> | <line>
@@ -1198,7 +1198,7 @@ IFF READ *	- syntax: IFF READ [#]channel[,screen-id]
 		  which is closed later by a call to IFF CLOSE.
 		- Otherwise, the screen should be opened in accordance with 
 		  the information returned via the IFF function (see above).
-		- See also ERR and ace.doc.
+		- See also ERR and ace.txt.
 		
 --------------------------------------------------------------------------------
 IMP		- Boolean operator: X IMP Y.
@@ -1274,7 +1274,7 @@ INPUT #		- syntax: INPUT #filenumber,<variable-list>
 		  and quotes as delimiters for each field in a sequential file.
 		- AmigaBASIC and ACE sequential file formats are virtually
 		  identical.
-		- See also "Files" section in ace.doc.
+		- See also "Files" section in ace.txt.
  		- See also ERR.
 
 --------------------------------------------------------------------------------
@@ -1314,7 +1314,7 @@ INPUT$		- syntax: INPUT$(X,[#]filenumber)
 		- INPUT$ in ACE is only used for sequential file input, so
 		  the filenumber is not optional. In AmigaBASIC, if the latter
 		  is omitted, input is taken from the keyboard. Not so in ACE.
-		- See also section on files in ace.doc.
+		- See also section on files in ace.txt.
  
 --------------------------------------------------------------------------------
 INSTR		- syntax: INSTR([I,]X$,Y$)
@@ -1369,7 +1369,7 @@ LIBRARY		- syntax: LIBRARY [CLOSE] [<libname>]
 
 		- LIBRARY CLOSE closes all open libraries or a single library
 		  can be specified instead.
-		- See "Shared library function calls" section in ace.doc.
+		- See "Shared library function calls" section in ace.txt.
  
 --------------------------------------------------------------------------------
 LINE		- The syntax of this command - apart from the simple 
@@ -1409,7 +1409,7 @@ LINE INPUT #	- syntax: LINE INPUT #filenumber,<string-variable>
 		  not currently implemented in ACE.
 		- LINE INPUT will not read more than MAXSTRINGLEN characters.
 		- See also INPUT$ (which will read up to 32K of characters),
-		  INPUT# and ace.doc's section on files.
+		  INPUT# and ace.txt's section on files.
 		- See also ERR.
 
 --------------------------------------------------------------------------------
@@ -1522,7 +1522,7 @@ MENU CLEAR *	- syntax: MENU CLEAR
 MENU ON ..	- syntax: MENU ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON MENU event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 MENU WAIT *	- syntax: MENU WAIT
@@ -1609,7 +1609,7 @@ MOUSE		- syntax: MOUSE(n)
 MOUSE ON ..	- syntax: MOUSE ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON MOUSE event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 MSGBOX *	- syntax: MSGBOX(message,button-text1[,button-text2])
@@ -1669,7 +1669,7 @@ ON..GOTO/GOSUB/CALL
 		- syntax 2: ON <event-spec> GOTO | GOSUB <label> | <line>
 		  syntax 3: ON <event-spec> CALL <SUBprogram-name>
 		  
-		- See "Event Trapping" section in ace.doc for more details
+		- See "Event Trapping" section in ace.txt for more details
 		  of the usage represented by syntax 2 and 3.
 
 --------------------------------------------------------------------------------
@@ -1707,7 +1707,7 @@ OPTION *	- syntax: OPTION <switch>+|-[,<switch>+|-..]
 		  the former activating the directive and the latter
 		  neutralising it.
 		- Switches currently implemented are: b,c,E,i,l,m,O,w
- 		- See ace.doc, "Compiler options" for details of each
+ 		- See ace.txt, "Compiler options" for details of each
 		  switch. Notice that for switches i and O, activation 
 		  or deactivation takes effect at the end of compilation.
  
@@ -1891,7 +1891,7 @@ PUT		- syntax: PUT [#]<fileNum>,<structVar>[,<recordNum>]
 		- The file is expanded in size (OS Release 36+, ie. not Wb 1.3) 
 		  if <recordNum>*SizeOf(<structVar>) is beyond the current 
 		  end-of-file.
-		- See also the ace.doc section, "Random Files".
+		- See also the ace.txt section, "Random Files".
  
 --------------------------------------------------------------------------------
 RANDOMIZE	- syntax: RANDOMIZE <expression>
@@ -2318,12 +2318,12 @@ SHARED		- syntax: SHARED <ident>[,<ident> ... ]
 		- Variables, arrays and structures must explicitly
 		  be shared between the main program and subprograms.
 		- Only EXTERNAL variables are exempt from such sharing in
-		  ACE since they are global (see "Identifiers" in ace.doc).
+		  ACE since they are global (see "Identifiers" in ace.txt).
 		- One or more SHARED statements can appear in a subprogram
 		  and are usually placed before all other code in that SUB.
 		- Declarations of objects to be shared must appear in the 
 		  main program before the subprogram is *declared*.
-		- See subprograms section in ace.doc and the entry for
+		- See subprograms section in ace.txt and the entry for
 		  DIM above re: DIM SHARED.
  
 --------------------------------------------------------------------------------
@@ -2410,7 +2410,7 @@ SLEEP FOR *	- syntax: SLEEP FOR <seconds>
 SOUND		- syntax: SOUND period,duration[,volume][,voice]
 		- Note that the syntax of this command is different
 		  from the equivalent statement in AmigaBASIC.
-		- See the sound section in ace.doc for details.
+		- See the sound section in ace.txt for details.
 		- See also the WAVE command. A combination of
 		  these two commands in ACE allows you to easily
 		  play sound samples (see example program play.b).
@@ -2500,11 +2500,11 @@ STRUCT *	- Defines a new structure data type, thus:
 		  of these data types.
 		- A structure member may also be another structure. In this
 		  case, <type> must be the name of a previously defined 
-		  structure type. See ace.doc's "Structures" section for 
+		  structure type. See ace.txt's "Structures" section for 
 		  more about this.
 		- Where a member is of type STRING, an optional size can be
 		  specified (STRING <ident> [SIZE <size>]).
-		- See also: DECLARE and the section on structures in ace.doc.
+		- See also: DECLARE and the section on structures in ace.txt.
 		- Structures have been provided in ACE primarily to make
 		  communicating with the operating system a little nicer
 		  and to make dynamic data structures possible (see the
@@ -2513,7 +2513,7 @@ STRUCT *	- Defines a new structure data type, thus:
 		  there is nothing to stop you from storing structure start
 		  addresses in array elements. For an example of this, see  
 		  examples/misc/array_of_structs.b.
-		- See "Structures" section in ace.doc for more details.
+		- See "Structures" section in ace.txt for more details.
 			
 --------------------------------------------------------------------------------
 STYLE *		- syntax: STYLE n
@@ -2554,7 +2554,7 @@ SUB..END SUB	- syntax:
 		  is not allowed.
 		- The optional EXTERNAL keyword makes the subprogram 
 		  visible to other ACE modules. 
-		- See "Subprograms" section in ace.doc for more details.
+		- See "Subprograms" section in ace.txt for more details.
  
 --------------------------------------------------------------------------------
 SWAP		- syntax: SWAP <object>,<object>
@@ -2637,7 +2637,7 @@ TIMER		- syntax: TIMER
 TIMER ON ..	- syntax: TIMER ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON TIMER(n) event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 		
 --------------------------------------------------------------------------------
 TRANSLATE$	- syntax: TRANSLATE$(<string-expression>)
@@ -2698,8 +2698,8 @@ VARPTR		- syntax: VARPTR(<data-object>)
 		- When used in conjunction with a structure variable x, 
 		  @x will return the address of the variable itself, NOT 
 		  the start address of the structure (see "Structures" in
-		  ace.doc for more).
-		- See also section on indirection operators in ace.doc.
+		  ace.txt for more).
+		- See also section on indirection operators in ace.txt.
  
 --------------------------------------------------------------------------------
 WAVE		- syntax: WAVE voice,SIN | [waveform-address,byte-count]
@@ -2710,7 +2710,7 @@ WAVE		- syntax: WAVE voice,SIN | [waveform-address,byte-count]
 		  waveform for the SOUND statement.
 		- Unlike AmigaBASIC, the number of bytes in the waveform 
 		  table must be specified when SIN is not used.
-		- See also the Sound section in ace.doc.
+		- See also the Sound section in ace.txt.
 		
 --------------------------------------------------------------------------------
 WHILE..WEND	- syntax: WHILE <condition>
@@ -2790,7 +2790,7 @@ WINDOW		- syntax:
 		  WINDOW(12) - font width for current output window.
 		  WINDOW(13) - font height for current output window.
  
-		- See the section on Windows in ace.doc for more details.  
+		- See the section on Windows in ace.txt for more details.  
 
 --------------------------------------------------------------------------------
 WINDOW CLOSE	- syntax: WINDOW CLOSE id
@@ -2800,7 +2800,7 @@ WINDOW CLOSE	- syntax: WINDOW CLOSE id
 WINDOW ON .. *	- syntax: WINDOW ON|OFF|STOP 
 		- These commands are used for enabling, disabling and 
 		  suspending ON WINDOW event trapping.
-		- See the Event Trapping section in ace.doc.
+		- See the Event Trapping section in ace.txt.
 
 --------------------------------------------------------------------------------
 WINDOW OUTPUT 	- syntax: WINDOW OUTPUT id 
@@ -2815,7 +2815,7 @@ WRITE #		- syntax: WRITE #filenumber,expression-list
 		- Note that the form of WRITE allowing for screen
 		  output is not supported by ACE.
 		- See PRINT# re: the treatment of CHR$(0) in file I/O by ACE. 
-		- See also INPUT# and the section on files in ace.doc. 
+		- See also INPUT# and the section on files in ace.txt. 
  		- See also ERR.
 
 --------------------------------------------------------------------------------

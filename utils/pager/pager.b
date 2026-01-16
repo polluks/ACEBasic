@@ -1,6 +1,6 @@
 '..Prints a document, throwing paper to the top-of-form
 '..each time "- page" is encountered. The latter is
-'..produced by autonum.b and found in ace.doc.
+'..produced by autonum.b and found in ace.txt.
 
 input "Print which file";x$
 input "Name of print device [PRT:]";dev$

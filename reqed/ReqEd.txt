@@ -12,15 +12,15 @@
 
 CONTENTS
 --------
-° Introduction
-° Working with ReqEd
-° Menu Summary
-° Code Generation
-° Limitations
-° Known Bugs
-° Future Work
-° Contacting the Author
-° Final Word
+ï¿½ Introduction
+ï¿½ Working with ReqEd
+ï¿½ Menu Summary
+ï¿½ Code Generation
+ï¿½ Limitations
+ï¿½ Known Bugs
+ï¿½ Future Work
+ï¿½ Contacting the Author
+ï¿½ Final Word
 
 
 Introduction
@@ -183,7 +183,7 @@ When in layout mode:
 		    regardless of what you specify via the Set Title option.
     
   The remainder of the items in this menu toggle various window attributes.
-  See ref.doc in the ACE distribution under WINDOW for more about these 
+  See ref.txt in the ACE distribution under WINDOW for more about these 
   attributes (or "type" values).
 
 
@@ -199,10 +199,10 @@ Code Generation
 When a project is saved, ReqEd produces an ACE source file containing a 
 subprogram with code to do the following:
 
-	° Open a window,
-	° Render text, bevel-boxes and gadgets,
-	° Wait for gadget activity and determine which gadget is activated,
-	° Close gadgets and window.
+	ï¿½ Open a window,
+	ï¿½ Render text, bevel-boxes and gadgets,
+	ï¿½ Wait for gadget activity and determine which gadget is activated,
+	ï¿½ Close gadgets and window.
 
 You are, of course, free to modify this code in whatever way you wish. Helpful
 comments are generated to delineate functional sections. Here's a typical SUB
@@ -279,7 +279,7 @@ program. This could be done either by assigning a value to the subprogram, eg:
 
 	MyReq = GADGET(3)	'..return slider's knob position.
 
-or by using SHARED variables or pass-by-reference parameters. See ace.doc's
+or by using SHARED variables or pass-by-reference parameters. See ace.txt's
 section on Subprograms for more about these mechanisms.
 
 More complex gadget handling may need to be farmed off to another subprogram,
@@ -294,14 +294,14 @@ of modularity however.
 	
 Limitations
 -----------
-° The font used in gadgets cannot yet be specified and so defaults to that
+ï¿½ The font used in gadgets cannot yet be specified and so defaults to that
   set in preferences. The next release of ACE will enable ReqEd to allow a
   gadget's text font to be specified.
 
-° ReqEd currently always provides a default value of zero for LONGINT gadgets.
+ï¿½ ReqEd currently always provides a default value of zero for LONGINT gadgets.
   This can of course be removed from the generated code.
   
-° Currently, string and longint gadgets may only return their results when the 
+ï¿½ Currently, string and longint gadgets may only return their results when the 
   return key has been pressed. The next version of ACE will allow the string
   or long integer value of these gadgets to be retrieved at any time. In like
   manner, the knob position of slider gadgets in ACE may only be accessed when
@@ -312,28 +312,28 @@ Limitations
 
 Known Bugs
 ----------
-° None known.
+ï¿½ None known.
 
 
 Future Work
 -----------
 Likely additions to ReqEd include:
 
-° Automatic redrawing of window contents when layouts become obscured through 
+ï¿½ Automatic redrawing of window contents when layouts become obscured through 
   window resizing.
 
-° File and font requester defaults based upon previous values.
+ï¿½ File and font requester defaults based upon previous values.
 
-° Autogrid. This will allow objects to be aligned more easily by increasing
+ï¿½ Autogrid. This will allow objects to be aligned more easily by increasing
   the coarseness of layout object movement.
 
-° Ability to copy and paste existing objects.
+ï¿½ Ability to copy and paste existing objects.
 
-° Simple drawing tools and pixel editor for additional button/other imagery.
+ï¿½ Simple drawing tools and pixel editor for additional button/other imagery.
 
-° Vertical and horizontal centering of layout objects.
+ï¿½ Vertical and horizontal centering of layout objects.
 
-° Greater control over gadget attributes (eg. borderless button setting). 
+ï¿½ Greater control over gadget attributes (eg. borderless button setting). 
 
 
 Contacting the Author

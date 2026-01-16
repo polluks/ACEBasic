@@ -2,7 +2,7 @@ Well, it's finally happened. The ACE source code has been released under
 the Gnu Public Lisence. In fact, the complete distribution has. This 
 represents version 2.4 of the compiler, and the later update to db.lib 
 (version 2.61). See docs/history for the details. The primary ACE document
-(ace.doc/ace.fmt/ace.guide) has been annotated with recent changes, e.g.
+(ace.txt/ace.fmt/ace.guide) has been annotated with recent changes, e.g.
 re: contact information.
 
 I developed ACE between November 1991 and September 1996. In preparing the 

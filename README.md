@@ -38,7 +38,7 @@ Released under the GNU General Public License (GPL v2) in 1998.
 
 ## Documentation
 
-- `ace.doc` / `ace.guide` - Main reference documentation
+- `ace.txt` / `ace.guide` - Main reference documentation
 - `ref.guide` - Language reference guide
 - `ACE_Tutorial.guide` - Tutorial for beginners
 - `docs/` - Additional materials and developer notes

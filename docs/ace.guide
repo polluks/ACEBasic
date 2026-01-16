@@ -122,12 +122,12 @@ The following files constitute a complete ACE package:
 
  	documents
 	---------    	
-	ace.doc/guide	- The document you are reading, which describes ACE.
-	ref.doc/guide 	- A command and function reference for ACE.
+	ace.txt/guide	- The document you are reading, which describes ACE.
+	ref.txt/guide 	- A command and function reference for ACE.
 	example.guide	- Examples of ACE command and function usage.
 	history		- A history of ACE's development.
-	a68k.doc	- Documentation for the assembler.
-	blink.doc	- Documentation for the linker.
+	a68k.txt	- Documentation for the assembler.
+	blink.txt	- Documentation for the linker.
 
 	scanned libraries (NOT shared libraries)
 	-----------------

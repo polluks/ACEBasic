@@ -1516,7 +1516,7 @@ BOOL   found;
 
 			/*
 			** Push address of valid object
-			** [see ref.doc].
+			** [see ref.txt].
 			*/
 			   /* external variable or function? */
 			   if (exist(extobjid,extvar) || 

@@ -53,7 +53,7 @@
 2/5/92 - 8/5/92		- Added screens, PALETTE, PAINT, SYSTEM, DATE$.
 			- Made CIRCLE rendering faster by using DrawEllipse()
 			  if full 360 degree ellipse is requested.
-			- Updated ace.doc and noted that SADD is not required
+			- Updated ace.txt and noted that SADD is not required
 			  for string constants (ie: it's optional).  
 
 12/5/92			- Incorporated command line arguments [argcount,arg$].
@@ -62,7 +62,7 @@
 			- Fixed OCT$ which was giving incorrect results
 			  for high values. Now only handles positive LONGs.
 			- Added BIN$. Like OCT$, n=abs(n) [n is LONG].
-			- Added FRE(n), with extras (see ace.doc).
+			- Added FRE(n), with extras (see ace.txt).
 			- Added POTX(n) and POTY(n), where n=0 or 1.
 
 17/5/92			- Fixed bug in _deletewindow (db.s): Contents of
@@ -245,7 +245,7 @@
 30/12/92		- Added STRING$ and INSTR.
 
 1/1/93			- Added descriptions for ALL functions and commands
-			  in ref.doc since some people using ACE won't have
+			  in ref.txt since some people using ACE won't have
 			  the AmigaBASIC manual.
 
 5/1/93 - 6/1/93		- Work on sequential files:
@@ -412,7 +412,7 @@
 			  A single-precision number is converted to the form:
 			  -|+.mmmmmmmmE-|+nn by fpa(). If 7 <= nn < -6 the
 			  number is displayed in exponential format.	  
-			- Added a FIX command (see ref.doc for details) which
+			- Added a FIX command (see ref.txt for details) which
 			  alters the number of decimal places a FFP value is
 			  rounded to.
 
@@ -460,7 +460,7 @@
 
 14/3/93			- Added support for SAY mode-array element #6. This
 			  allows for 12 different audio channel allocation
-			  combinations as per AmigaBASIC. See ref.doc for more.
+			  combinations as per AmigaBASIC. See ref.txt for more.
 			- Improved performance of INSTR function by only 
 			  checking first character of target string against
 			  each character in the source string until they
@@ -549,7 +549,7 @@
 			  factor() in expression parser to correct the
 			  precedence of !%, !& and !* operators.
 			- I have decided to leave SUB parameters as they
-			  are for now. See ace.doc Subprograms section
+			  are for now. See ace.txt Subprograms section
 			  for latest details.
 			- Added SLEEP command. So far only works when in
 			  screen mode.
@@ -593,7 +593,7 @@
 			  still be obtained by simply referencing the
 			  variable (eg: x = mystructvar). The modification
 			  makes variable structure parameters possible 
-			  (see ace.doc "Structures" for an example).
+			  (see ace.txt "Structures" for an example).
 
 20/6/93			- Made structures sharable with the SHARED statement.
 			- SUB parameters may now be preceded by SHORTINT,
@@ -853,7 +853,7 @@
 4/1/94			- I have written an ACE program (autonum.b) 
 		  	  which takes the drudgery out of maintaining
 			  the line number references to the sections
-			  in ace.doc and also adds page numbers.
+			  in ace.txt and also adds page numbers.
 		
 5/1/94			- Implemented a SYSTEM function which returns
 			  ExecBase->libNode.lib_Version (eg: 34 = Wb 1.3).
@@ -998,7 +998,7 @@
 27/2/94			- Added support for IFF graphic files. You can
 			  open, view and get information about picture
 			  files in ACE via three commands and a function.
-			  See ref.doc under "IFF".
+			  See ref.txt under "IFF".
 
 28/2/94			- Weird bugs appeared in file I/O after adding
 			  the IFF module to db.lib. Excluding iff.o
@@ -1156,7 +1156,7 @@
 
 12/6/94			- Implemented a mechanism to allow for multi-module
 			  ACE projects and/or the creation of ACE subprogram
-			  libraries. See ace.doc for more about this feature.
+			  libraries. See ace.txt for more about this feature.
 			- Added a push/pop pair for d1-d7 and a0-a6 around
 			  external function calls so as to prevent register
 			  corruption.
@@ -1169,7 +1169,7 @@
 20/6/94 - 23/6/94	- Completed work on external SUB definition and
 			  declarations. Subprograms in modules retain
 			  full functionality albeit with some specific
-			  requirements as laid out in ace.doc.
+			  requirements as laid out in ace.txt.
 
 24/6/94 - 25/6/94	- Implemented a bevel-box function to give gadgets
 			  the look-and-feel of Wb 2.x/3.0. This same
@@ -1372,7 +1372,7 @@
 3/9/94			- MSGBOX is now also usable as a statement for those
 			  occasions when the return value from sysrequest() 
 			  is of no interest. The statement only takes two
-			  parameters, not three. See ref.doc for more.
+			  parameters, not three. See ref.txt for more.
 			- Removed some redundant IDCMP handling code. This
 			  resulted in an increase in run-time efficiency. I
 			  also suspect that this redundant code caused the
@@ -1522,7 +1522,7 @@
 			  and style specified.
 
 			- Version 2.35 prepared for release. This is only 
-			  a partial release: ace, db.lib ref.doc and this
+			  a partial release: ace, db.lib ref.txt and this
 			  history log.
 
 			- I expect there to be a few small releases (such
@@ -1592,7 +1592,7 @@
 			  IEEE function in use. This is despite the overhead
 			  involved in FFP <-> IEEE conversions.
 
-6/11/95			- Added GADGET OUTPUT command. See ref.doc for more.
+6/11/95			- Added GADGET OUTPUT command. See ref.txt for more.
 			  This uncovered a bug in which the default value of 
 			  a LongInt gadget was not being set at gadget creation
 			  time. It never showed up before because the only time
@@ -1623,7 +1623,7 @@
 11/3/96 - 16/3/96	- Implemented random files after much thought about
 			  what was the best approach to take. ACE structures
 			  have been made central, such that far fewer commands
-			  and functions are necessary. See ace.doc and ref.doc 
+			  and functions are necessary. See ace.txt and ref.txt 
 			  for details.
 
 11/6/96			- Added Common variables which behave identically to

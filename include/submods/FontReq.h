@@ -3,7 +3,7 @@
 ** library module FontReq.o, which creates a simple ASL font requester
 ** and returns font name, height, style and front/back pen colors. 
 **
-** See also ace.doc, "Creating & using ACE subprogram modules".
+** See also ace.txt, "Creating & using ACE subprogram modules".
 **
 ** This file should reside in ACEinclude: so that #include <FontReq.h>
 ** can be used in programs linked with FontReq.o.

@@ -9,7 +9,7 @@ subprograms in WBarg.o. The latter is an object module that must be linked with 
 program wishing to use any of the subprograms externally declared in WBarg.h. Use the
 simple "Make" shell script, eg. make test, for this purpose.
 
-WBarg.o contains subprograms to handle Workbench arguments (as documented in ace.doc) 
+WBarg.o contains subprograms to handle Workbench arguments (as documented in ace.txt) 
 and tooltypes (not provided before). There is also a function which returns true or
 false depending upon whether the program was Workbench-launched.
 

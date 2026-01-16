@@ -30,7 +30,7 @@
 ** correct number of bytes required to allocate
 ** memory for a 2D or 3D array dynamically.
 **
-** See also the DIM entry in ref.doc.
+** See also the DIM entry in ref.txt.
 */
 
 SUB LONGINT array_size_2D(n,m,element_size)

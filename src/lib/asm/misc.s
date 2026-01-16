@@ -338,7 +338,7 @@ _firing:
 	rts
 
 ;
-; MOUSE - returns in d0 information about the mouse (see ace.doc).
+; MOUSE - returns in d0 information about the mouse (see ace.txt).
 ;	- a parameter in d0 determines what information is returned.
 ;
 ;	A future version of MOUSE(0) may use the gameport.device/Intuition.

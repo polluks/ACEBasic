@@ -125,7 +125,7 @@ In many cases, ACE programs produce results which are similar or identical
 to programs written in AmigaBASIC.
 
 Any differences between the two are discussed in this document and the command 
-and function reference (ref.doc).
+and function reference (ref.txt).
 
 The following files constitute a complete ACE package:
 
@@ -143,12 +143,12 @@ The following files constitute a complete ACE package:
 
  	documents
 	---------    	
-	ace.doc/guide	- The document you are reading, which describes ACE.
-	ref.doc/guide 	- A command and function reference for ACE.
+	ace.txt/guide	- The document you are reading, which describes ACE.
+	ref.txt/guide 	- A command and function reference for ACE.
 	example.guide	- Examples of ACE command and function usage.
 	history		- A history of ACE's development.
-	a68k.doc	- Documentation for the assembler.
-	blink.doc	- Documentation for the linker.
+	a68k.txt	- Documentation for the assembler.
+	blink.txt	- Documentation for the linker.
 
 	scanned libraries (NOT shared libraries)
 	-----------------
@@ -399,7 +399,7 @@ windows or screens will not be closed. The use of ON WINDOW can get around
 this by allowing for a user-defined clean-up subroutine (see the "Event 
 Trapping" section below).
 
-See also the OPTION command in ref.doc.
+See also the OPTION command in ref.txt.
  
 The syntax for the bas script is:
 
@@ -630,7 +630,7 @@ Please note that in addition to their use in relational expressions, the
 logical operators (AND, NOT...) actually work in bitwise fashion. This means 
 that you can create bitwise AND masks and perform other operations on groups 
 of bits, as desired. The SHL and SHR functions may also prove useful in this 
-respect (see ref.doc).
+respect (see ref.txt).
 
 ACE allows you to define named global signed numeric constants with the 
 CONST directive (see command and function reference).
@@ -869,7 +869,7 @@ functions:
 
 Note that for any command which is immediately followed by a # there should 
 be at least one space between the keyword and the #, even though I may refer 
-to such commands as <name># in the text of this document and in ref.doc.
+to such commands as <name># in the text of this document and in ref.txt.
 
 See the command and function reference for details of each of these.
 
@@ -915,7 +915,7 @@ is two strings as far as INPUT# is concerned.
  
 The formats of sequential files in ACE and AmigaBASIC are now very nearly
 identical, the only differences being in ACE tabs (produced by comma 
-delimiters in PRINT -- see PRINT in ref.doc) and the number of decimal 
+delimiters in PRINT -- see PRINT in ref.txt) and the number of decimal 
 places written for single-precision values (usually more in ACE).
   
 If you find ACE file I/O too slow, you may want to use the dos.library 
@@ -930,7 +930,7 @@ Although SER: may be opened as a sequential file, it is not possible to
 specify parameters for the serial port (baud rate etc) by this method as 
 is possible in AmigaBASIC.
 
-Instead, ACE provides a set of special serial I/O commands. See ref.doc for 
+Instead, ACE provides a set of special serial I/O commands. See ref.txt for 
 details of SERIAL OPEN/CLOSE etc, and examples/IO/aterm.b for a simple terminal 
 program.
  
@@ -1039,7 +1039,7 @@ They are also simple for this reason and because few commands and functions
 are needed.
 
 See ACE:examples/IO/rfile.b for an example program, and carefully read the
-section on "Structures" below. See ref.doc for the details of CLOSE, GET,
+section on "Structures" below. See ref.txt for the details of CLOSE, GET,
 LOC, LOF, OPEN, and PUT. See also ERR for error codes relating to random
 files.
 
@@ -1664,7 +1664,7 @@ is long-word aligned, use ALLOC (or AllocMem), eg:
 The above examples assume the presence of appropriate DATA statements. See 
 the examples/MC directory for examples.
 
-ACE also supports primitive inline assembly code inclusion. See ref.doc
+ACE also supports primitive inline assembly code inclusion. See ref.txt
 under ASSEM..END ASSEM for details.
  
 
@@ -1955,7 +1955,7 @@ and function reference for the syntax of the WINDOW statement.
 
 All user-defined windows are now (as of ACE v2.0) Intuition windows with 
 each characteristic being configurable via the "type" parameter as per 
-AmigaBASIC (see ref.doc).
+AmigaBASIC (see ref.txt).
 
 Windows can be opened on the Workbench screen or on a user-defined screen.
 
@@ -1963,7 +1963,7 @@ The zeroth window (the shell/CLI, if the program was CLI launched) is now
 the only instance of a DOS console window in ACE.
 
 The WINDOW function takes a single parameter and returns information about
-the current output window. See ref.doc for details.
+the current output window. See ref.txt for details.
 
 Note that for user-defined windows, close-gadget clicks must be handled by 
 the use of ON WINDOW event trapping or via the "w" compiler switch (or the
@@ -2016,7 +2016,7 @@ and descending order.
 
 A special SCREEN function exists in ACE which returns pointers to various
 Intuition structures (window,screen,rastport,viewport,bitmap) and x,y font
-sizes. This is detailed in the command and function reference (ref.doc) as 
+sizes. This is detailed in the command and function reference (ref.txt) as 
 are the following commands: SCREEN, SCREEN CLOSE, PALETTE and PRINTS. The 
 latter is now redundant since all commands and functions can - as of ACE v2.0 
 - be used transparently for screens, user-defined windows and the shell/CLI.
@@ -2129,7 +2129,7 @@ library TextLength or TextExtent (v36) function.
 
 String and LongInt gadgets now have associated with them a 1K buffer.
 
-For more details about the GADGET commands and function, see ref.doc.
+For more details about the GADGET commands and function, see ref.txt.
 
 
 $$Menus
@@ -2156,7 +2156,7 @@ the other example programs in the archive so that they are menu-driven.
 
 Note that in ACE, MENU CLEAR replaces MENU RESET.
 
-See ref.doc for more details about the MENU commands and function. See
+See ref.txt for more details about the MENU commands and function. See
 also the SUBmod/Menu directory for a SUBmod which permits the creation
 of GadTools (OS Release 2.x/3.x) menus including submenus while still
 allowing the MENU(n) function to be used. In fact, MENU(2) returns the
@@ -2182,7 +2182,7 @@ For Wb 1.3 an ARP file requester is invoked for two simple reasons:
 	- It is quite acceptable.
 	- The arp.library is common on Wb 1.3 systems.
 
-See MSGBOX, FILEBOX, INPUTBOX and INPUTBOX$ in ref.doc for more. The
+See MSGBOX, FILEBOX, INPUTBOX and INPUTBOX$ in ref.txt for more. The
 SUBmods directory contains other requesters to enhance your programs,
 eg. FontReq, EasyRequest.
  
@@ -2340,7 +2340,7 @@ image - which is stored in db.lib - to create ram:ILBMtmp/ilbm.library. This
 file and the directory ILBMtmp will be removed when the program exits. The
 idea of using a binary image like this was Roland Acton's.
 
-See ref.doc for details of the IFF commands and function.
+See ref.txt for details of the IFF commands and function.
 
  
 $$Sound
@@ -2543,7 +2543,7 @@ WAITing (only for menus and gadgets currently - see MENU/GADGET WAIT).
 $$Interprocess Communication
 --------------------------
 ACE provides a simple IPC mechanism centered around a set of MESSAGE
-commands (see ref.doc for full details).
+commands (see ref.txt for full details).
 
 ACEports represent a blocking/non-blocking, named IPC mechanism.
 
@@ -2593,7 +2593,7 @@ effect.
 
 Note that while the ERR function and ON ERROR event trapping are supported,
 only file I/O, serial I/O, IFF, IPC (MESSAGE) and window/screen open errors 
-are currently reported via these mechanisms. See ref.doc for details.
+are currently reported via these mechanisms. See ref.txt for details.
  
 
 $$Notes for assembly programmers
@@ -2672,7 +2672,7 @@ In all these cases a single static data item is being referenced.
 6. If you issue RETURN from within a FOR loop, the return address will *not* 
 be the top item on the stack. Instead, FOR..NEXT loop data will be. A GURU will 
 almost certainly result. It is probably better to use a while or repeat loop 
-if you must RETURN from within a loop. See also EXIT FOR in ref.doc which
+if you must RETURN from within a loop. See also EXIT FOR in ref.txt which
 allows for the safe, early termination of FOR loops, although it's not perfect.
 
 7. A shared variable cannot be used as a FOR loop index in ACE. Any attempt to

@@ -9,7 +9,7 @@
 ** libraries to be open. This is handled by the code in
 ** WBarg.b however.
 ** 
-** See also ace.doc, "Creating & using ACE subprogram modules".
+** See also ace.txt, "Creating & using ACE subprogram modules".
 **
 ** Author: David J Benn
 **   Date: 29th,30th December 1994,

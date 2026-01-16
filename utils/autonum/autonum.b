@@ -18,8 +18,8 @@ DIM content(MAX),page(MAX),section(MAX)
 
 if argcount<>2 and argcount<>3 then
   print "usage: ";arg$(0);" source target [page-length (default=62)]"
-  print "   eg: ";arg$(0);" ace.fmt ace.doc" 
-  print "       ";arg$(0);" ace.fmt ace.doc 59" 
+  print "   eg: ";arg$(0);" ace.fmt ace.txt" 
+  print "       ";arg$(0);" ace.fmt ace.txt 59" 
   stop
 end if
 

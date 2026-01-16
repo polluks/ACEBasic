@@ -1,5 +1,5 @@
 @DATABASE "AIDE Documentation 2.11"
-@MASTER "ace.doc"
+@MASTER "ace.txt"
 
 @NODE MAIN "AIDE - AmigaGuide� Documentation"
 @TOC TOC
@@ -82,7 +82,7 @@
         ACEinclude:     (ACE:include)
         ACEbmaps:       (ACE:bmaps)
 
-        (see "ACE.doc"/@{"ACE.guide" LINK ACE:docs/ACE.guide/MAIN} for the details)
+        (see "ACE.txt"/@{"ACE.guide" LINK ACE:docs/ACE.guide/MAIN} for the details)
 
  If these dirs aren't set up correctly, AIDE will abort with an error
  message.  Same  if  one  of the following files are not in the right
@@ -204,7 +204,7 @@
                             to an ASCII text file for use by ACE. In-
                             vokes a  file requester  for selection of
                             the input and output dir and file name.
-    UppercACEr          -   Invokes @{"UppercACEr" LINK ACE:docs/UppercACEr.doc}
+    UppercACEr          -   Invokes @{"UppercACEr" LINK ACE:docs/UppercACEr.txt}
 
                             Important:
                                 UppercACEr.Reserved must reside in S:
@@ -233,19 +233,19 @@
 
     The supported docs are:
 
-            AIDE.doc/AIDE.guide
-            ACE.doc/ACE.guide
+            AIDE.txt/AIDE.guide
+            ACE.txt/ACE.guide
             SuperOptimizer.guide
-            A68K.doc
+            A68K.txt
             PhxAss.guide
-            BLink.doc
+            BLink.txt
             PhxLnk.guide
             ref.guide
             ace-rwords
             example.guide
             history
-            ACEcalc.doc (/ACEcalc.guide if available)
-            ReqEd.doc   (/ReqEd.guide if available)
+            ACEcalc.txt (/ACEcalc.guide if available)
+            ReqEd.txt   (/ReqEd.guide if available)
 
     Note:
         The docs must exist under the names described above. AIDE re-
@@ -651,7 +651,7 @@
                   this option and Make Executable (above) is  that no
                   linking occurs and ACE's -m switch is used. See al-
                   so  "Creating & using  ACE  subprogram modules"  in
-                  ace.doc.
+                  ace.txt.
                   The  object module  goes to ACE:Mods (default),  or
                   where the entry in AIDE2.config points to.  If this
                   is empty,  the module goes to the  root  directory,
@@ -704,7 +704,7 @@
     Window Trapping
 
     These five correspond to the compiler's command-line switches: b,
-    c, i, O and w  respectively.  See  ace.doc's  "Compiler  options"
+    c, i, O and w  respectively.  See  ace.txt's  "Compiler  options"
     section for details of each of these.
 
     "List Source Lines" is not available via checkbox gadget,  if you
@@ -720,7 +720,7 @@
               tion which may be defined new for the future.  Use this
               as well if you want to specifiy "list source line".
 
-              You have to enter the options as defined in ACE.doc. If
+              You have to enter the options as defined in ACE.txt. If
               no "space" is required, then don't enter it.
 
               If you enter an empty string here all options which may

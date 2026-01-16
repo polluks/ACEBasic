@@ -6,7 +6,7 @@
 **
 ** Requires version 36 or higher of the OS (Wb 2.x/3.x).
 **
-** See also ace.doc, "Creating & using ACE subprogram modules".
+** See also ace.txt, "Creating & using ACE subprogram modules".
 **
 ** This file should reside in ACEinclude: so that #include <RunProg.h>
 ** can be used in programs linked with RunProg.o.
