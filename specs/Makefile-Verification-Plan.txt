@@ -74,11 +74,9 @@ VERIFICATION SCRIPTS
 
 Location: ACE:scripts/verify/
 
-verify-makefile.rexx        - Main verification script (runs all tests)
-verify-build.rexx           - Build comparison tests
-verify-incremental.rexx     - Incremental build tests
-verify-targets.rexx         - Target validation tests
-compare-binaries.rexx       - Binary comparison utilities
+verify-makefile.rexx        - Main verification suite (all 15 tests)
+quick-test.rexx             - Quick verification (essential tests)
+README.txt                  - Documentation and usage guide
 
 All scripts run inside the fs-uae environment via ARexx.
 
@@ -525,11 +523,9 @@ APPENDIX B: File Locations
 ================================================================================
 
 Verification scripts:
-  ACE:scripts/verify/verify-makefile.rexx     - Main test runner
-  ACE:scripts/verify/verify-build.rexx        - Build tests
-  ACE:scripts/verify/verify-incremental.rexx  - Incremental tests
-  ACE:scripts/verify/verify-targets.rexx      - Target tests
-  ACE:scripts/verify/compare-binaries.rexx    - Comparison utils
+  ACE:scripts/verify/verify-makefile.rexx     - Main verification suite (all 15 tests)
+  ACE:scripts/verify/quick-test.rexx          - Quick verification (essential tests)
+  ACE:scripts/verify/README.txt               - Documentation and usage guide
 
 Test artifacts:
   T:verbose.log                   - Verbose build output

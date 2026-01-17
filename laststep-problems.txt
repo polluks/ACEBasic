@@ -1,0 +1,137 @@
+================================================================================
+  ACE Makefile Verification - Next Steps
+================================================================================
+
+Date: 2026-01-17
+Status: DOCUMENTATION COMPLETE - READY FOR FS-UAE VERIFICATION
+
+================================================================================
+COMPLETED IN THIS ITERATION
+================================================================================
+
+✓ Fixed documentation discrepancy in specs/Makefile-Verification-Plan.txt
+  - Updated VERIFICATION SCRIPTS section (lines 77-79) to reflect actual
+    implementation (verify-makefile.rexx, quick-test.rexx, README.txt)
+  - Updated APPENDIX B (lines 526-528) to list actual verification scripts
+  - Documentation now matches the consolidated script approach
+
+All host-side preparation is now complete.
+
+================================================================================
+REMAINING WORK: FS-UAE VERIFICATION
+================================================================================
+
+The Makefile-ace implementation and all documentation are complete. The only
+remaining step is to run the verification tests in the fs-uae environment.
+
+NEXT ACTION: Run Tests in fs-uae
+---------------------------------
+
+To complete the Makefile migration, the 15 verification tests must be executed
+in AmigaOS via fs-uae emulation.
+
+Step 1: Launch fs-uae
+  Command:
+    ~/Applications/Emu/Amiga/FS-UAE/FS-UAE.app/Contents/MacOS/fs-uae \
+      /Users/mbergmann/Documents/FS-UAE/Configurations/sys3xdev.fs-uae
+
+Step 2: Verify ACE: assign in AmigaOS Shell
+  Command: assign
+  Expected: ACE: points to repository root
+
+Step 3: Run verification suite
+  Commands:
+    cd ACE:scripts/verify
+    rx verify-makefile.rexx
+
+Step 4: Review results
+  - Check console output for PASS/FAIL status
+  - Review detailed log: T:makefile-verification.log
+  - Expected duration: 5-10 minutes
+
+Step 5: Archive results
+  If all tests pass:
+    copy T:makefile-verification.log ACE:verification-results.log
+
+================================================================================
+VERIFICATION TEST CHECKLIST (Pending)
+================================================================================
+
+[PENDING] Test 1: Clean Build with Makefile
+[PENDING] Test 2: No-Op Build (Timestamp Check)
+[PENDING] Test 3: Incremental Build (Single File Change)
+[PENDING] Test 4: Clean Target
+[PENDING] Test 5: Verbose Mode
+[PENDING] Test 6: Quiet Mode (Default)
+[PENDING] Test 7: Script-Based Build (Baseline)
+[PENDING] Test 8: Makefile Build (Comparison)
+[PENDING] Test 9: Binary Comparison
+[PENDING] Test 10: Functional Equivalence
+[PENDING] Test 11: Backup Target
+[PENDING] Test 12: Help Target
+[PENDING] Test 13: Build Time Comparison
+[PENDING] Test 14: Error Handling (Invalid Source)
+[PENDING] Test 15: Full Test Suite (Regression)
+
+================================================================================
+POST-VERIFICATION ACTIONS
+================================================================================
+
+After running fs-uae verification:
+
+If ALL Tests Pass:
+  1. Archive verification log to repository
+  2. Update this file with test results
+  3. Create commit with verification results
+  4. Update pull request status
+  5. Request code review
+  6. Merge to master branch
+
+If Any Tests Fail:
+  1. Document failures in detail
+  2. Investigate root causes
+  3. Fix issues in Makefile-ace
+  4. Re-run verification
+  5. Update this file with findings
+
+================================================================================
+CURRENT STATUS SUMMARY
+================================================================================
+
+Host-Side Work:        ✓ COMPLETE
+  - Makefile-ace:      ✓ Implemented
+  - Source files:      ✓ All present (29 modules)
+  - Verification scripts: ✓ Created (verify-makefile.rexx, quick-test.rexx)
+  - Documentation:     ✓ Complete and accurate
+  - Directory structure: ✓ Verified
+
+fs-uae Verification:   ⏳ PENDING
+  - Test suite ready:  ✓ Yes
+  - Environment ready: ✓ Yes (sys3xdev.fs-uae)
+  - ACE: assign:       ⏳ To be verified
+  - Tests executed:    ⏳ Not yet run
+
+Branch Status:         Ready for verification
+Next Action:           Run rx verify-makefile.rexx in fs-uae
+
+================================================================================
+REFERENCE FILES
+================================================================================
+
+Build System:
+  make/Makefile-ace                    - GNU Makefile implementation
+  make/makeace                         - Legacy build script (for comparison)
+
+Verification:
+  scripts/verify/verify-makefile.rexx  - Main test suite (all 15 tests)
+  scripts/verify/quick-test.rexx       - Quick subset for iteration
+  scripts/verify/README.txt            - Usage documentation
+
+Documentation:
+  CLAUDE.md                            - Build system documentation
+  specs/Makefile-Migration-Spec.txt    - Migration specification
+  specs/Makefile-Verification-Plan.txt - Verification test plan (now updated)
+
+================================================================================
+END OF STATUS
+================================================================================
