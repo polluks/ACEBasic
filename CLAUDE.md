@@ -8,9 +8,27 @@ ACE (Amiga BASIC Compiler) is a complete BASIC compiler for the Amiga platform t
 
 ## Build System
 
-The build system uses AmigaDOS scripts in the `make/` directory:
+The build system provides two options:
+1. **GNU Makefile** (`make/Makefile-ace`) - Recommended for incremental builds
+2. **AmigaDOS scripts** (`make/cmake`, `make/makeace`) - Legacy build system
 
 ### Building the ACE Compiler
+
+#### Using GNU Make (Recommended)
+
+```bash
+# Build with Makefile-ace (run from make/ directory or use -f flag)
+make -f Makefile-ace           # Build ACE compiler (quiet mode)
+make -f Makefile-ace V=1       # Build with verbose output
+make -f Makefile-ace clean     # Remove all build artifacts
+make -f Makefile-ace clean all # Clean rebuild
+make -f Makefile-ace backup    # Backup current executable to ace.old
+make -f Makefile-ace help      # Show help
+```
+
+The Makefile provides incremental builds (rebuilds only changed sources), standard targets, and verbose/quiet modes. Requires GNU Make 3.80 or later.
+
+#### Using AmigaDOS Scripts (Legacy)
 
 ```bash
 # Build individual compiler modules (run from make/ directory)
@@ -146,6 +164,8 @@ The `examples/` directory contains 30+ categories of sample programs demonstrati
 - `parse.c` - Main parser entry point
 - `lex.c` - Lexical analyzer
 - `opt.c` - Peephole optimizer
+- `make/Makefile-ace` - GNU Makefile for building ACE compiler (recommended)
+- `make/makeace` - Legacy AmigaDOS build script
 - `bin/bas.vb` - Primary build script (modern vasm/vlink toolchain)
 - `tests/runner.rexx` - Test harness
 

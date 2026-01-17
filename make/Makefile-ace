@@ -1,0 +1,136 @@
+################################################################################
+# ACE Compiler Makefile
+################################################################################
+#
+# Description:
+#   GNU Makefile for building the ACE (Amiga BASIC Compiler) executable.
+#   Provides incremental builds, standard targets, and backward compatibility
+#   with the existing ACE: assign structure.
+#
+# Location:
+#   ACE:make/Makefile-ace
+#
+# Usage:
+#   From make/ directory:
+#     make -f Makefile-ace           # Build ACE compiler (quiet mode)
+#     make -f Makefile-ace V=1       # Build with verbose output
+#     make -f Makefile-ace clean     # Remove all build artifacts
+#     make -f Makefile-ace backup    # Backup current executable
+#     make -f Makefile-ace help      # Show help
+#
+#   From root directory:
+#     make -f make/Makefile-ace
+#
+# Requirements:
+#   - GNU Make 3.80 or later (AmigaOS)
+#   - gcc 2.95.3
+#   - ACE: assign must be configured
+#
+# Author: Generated from Makefile-Migration-Spec.txt
+# Date: 2026-01-17
+#
+################################################################################
+
+################################################################################
+# CONFIGURATION
+################################################################################
+
+# Toolchain
+CC = gcc
+CFLAGS = -m68020 -c -s -O -pedantic -Wcast-qual -noixemul
+LDFLAGS = -m68020 -s -noixemul
+INCLUDES = -I.
+
+# Paths (using ACE: assign)
+SRC_DIR = ACE:src/ace/c
+OBJ_DIR = ACE:src/ace/obj
+BIN_DIR = ACE:bin
+TARGET = $(BIN_DIR)/ace
+
+# Verbose control
+# V=0 (default): Quiet mode - shows only high-level progress
+# V=1: Verbose mode - shows all commands
+V = 0
+ifeq ($(V),1)
+  Q =
+  ECHO = @true
+else
+  Q = @
+  ECHO = @echo
+endif
+
+################################################################################
+# SOURCE FILES
+################################################################################
+
+# Source files (29 modules - verified against makeace script)
+#
+# Note: The following files are NOT listed here because they are included
+#       via #include directives in other source files:
+#         - lexvar.c  (included in lex.c)
+#         - symvar.c  (included in sym.c)
+SOURCES = alloc.c assign.c basfun.c control.c declare.c \
+          event.c expr.c factor.c file.c gadget.c gfx.c \
+          iff.c lex.c libfunc.c memory.c menu.c message.c \
+          misc.c opt.c parse.c parsevar.c print.c screen.c \
+          serial.c statement.c sub.c sym.c ver.c window.c
+
+# Object files (pattern substitution from source list)
+OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
+
+################################################################################
+# PHONY TARGETS
+################################################################################
+
+.PHONY: all clean backup help
+
+################################################################################
+# BUILD TARGETS
+################################################################################
+
+# Default target
+all: $(TARGET)
+
+# Link executable from object files
+$(TARGET): $(OBJECTS)
+	$(ECHO) "Linking ACE..."
+	$(Q)cd $(OBJ_DIR) && $(CC) $(LDFLAGS) $(notdir $(OBJECTS)) -o $(TARGET)
+
+# Compile source files to object files
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(ECHO) "Compiling $<..."
+	$(Q)cd $(SRC_DIR) && $(CC) $(CFLAGS) $(INCLUDES) $(notdir $<) -o $@
+
+################################################################################
+# UTILITY TARGETS
+################################################################################
+
+# Clean build artifacts
+clean:
+	$(ECHO) "Cleaning object files..."
+	$(Q)delete $(OBJ_DIR)/#?.o QUIET
+	$(ECHO) "Cleaning executable..."
+	$(Q)delete $(TARGET) QUIET
+
+# Backup current executable
+backup:
+	$(ECHO) "Backing up ace..."
+	$(Q)copy $(TARGET) $(BIN_DIR)/ace.old CLONE QUIET
+
+# Help text
+help:
+	@echo "ACE Compiler Makefile (Makefile-ace)"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all      - Build ACE compiler (default)"
+	@echo "  clean    - Remove all object files and executable"
+	@echo "  backup   - Backup current executable to ace.old"
+	@echo "  help     - Show this help message"
+	@echo ""
+	@echo "Options:"
+	@echo "  V=1      - Verbose output (show all commands)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make -f Makefile-ace           # Build with quiet output"
+	@echo "  make -f Makefile-ace V=1       # Build with verbose output"
+	@echo "  make -f Makefile-ace clean all # Clean rebuild"
