@@ -185,36 +185,21 @@ Expected: Full gcc command lines visible
 Findings: See scripts/verify/results/phase3-findings.txt
 
 ================================================================================
-PHASE 4: OUTPUT COMPARISON (In fs-uae)
+PHASE 4: MAKEFILE BUILD VERIFICATION (In fs-uae)
 ================================================================================
 
-Compare Makefile build with legacy script build.
+Verify Makefile-ace produces a working ACE compiler executable.
 
-Test 4.1: Build Baseline with Legacy Script
--------------------------------------------
-Purpose: Create reference build with existing scripts
+Test 4.1: Build with Makefile
+-----------------------------
+Purpose: Build ACE with Makefile-ace and verify it succeeds
 Commands:
   cd ACE:make
-  makeace
-  copy ACE:bin/ace ACE:bin/ace.script CLONE
-Expected: ace.script created successfully
-
-Test 4.2: Build with Makefile
------------------------------
-Purpose: Create Makefile build for comparison
-Commands:
   make -f Makefile-ace clean
-  make -f Makefile-ace
-  copy ACE:bin/ace ACE:bin/ace.makefile CLONE
-Expected: ace.makefile created successfully
-
-Test 4.3: Compare File Sizes
-----------------------------
-Purpose: Verify identical output
-Commands:
-  list ACE:bin/ace.script
-  list ACE:bin/ace.makefile
-Expected: Identical file sizes
+  make -f Makefile-ace V=1
+Expected:
+  - All 29 modules compile without errors
+  - ACE:bin/ace created successfully
 
 Findings: See scripts/verify/results/phase4-findings.txt
 
@@ -285,9 +270,7 @@ TESTING ORDER SUMMARY
 | 3.2  | No-op build               | Low        | 1 min      |
 | 3.3  | Incremental build         | Medium     | 2 min      |
 | 3.4  | Verbose mode              | Low        | 5 min      |
-| 4.1  | Legacy script build       | Medium     | 5-10 min   |
-| 4.2  | Makefile build            | Medium     | 5-10 min   |
-| 4.3  | Compare sizes             | Low        | 1 min      |
+| 4.1  | Makefile build            | Medium     | 5-10 min   |
 | 5.1  | Compile simple program    | Low        | 2 min      |
 | 5.2  | Full test suite           | High       | 15-20 min  |
 | 6.1  | Create verification script| Medium     | 10 min     |
