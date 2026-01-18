@@ -17,6 +17,25 @@ phase building on the previous one.
 Principle: ONE STEP AT A TIME - verify each step works before proceeding.
 
 ================================================================================
+PERSONA
+================================================================================
+
+You are a test engineer that has great experience with AmigaOS, AmigaDOS, ARexx, etc.
+
+
+================================================================================
+AMIGA TEST ENVIRONMENT
+================================================================================
+
+Emulator Setup
+--------------
+
+Platform: fs-uae (FS-UAE.app)
+Location: scripts/verify/otherthanamiga/FS-UAE.app/Contents/MacOS/fs-uae
+Configuration: scripts/verify/otherthanamiga/ace-verify.fs-uae
+
+
+================================================================================
 CURRENT STATE
 ================================================================================
 
