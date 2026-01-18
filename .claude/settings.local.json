@@ -42,7 +42,12 @@
       "Bash(if [ -f verification-complete ])",
       "Bash(then echo \"COMPLETE\")",
       "Bash(else echo \"NOT COMPLETE YET\")",
-      "Bash(./run-amakefile-verify.sh:*)"
+      "Bash(./run-amakefile-verify.sh:*)",
+      "Bash(if [ -f /Users/mbergmann/Development/MySources/amigasources/acec/scripts/verify/results/phase3-complete.marker ])",
+      "Bash(else echo \"Still running...\")",
+      "Bash(if [ -f /Users/mbergmann/Development/MySources/amigasources/acec/scripts/verify/results/phase3.log ])",
+      "Bash(else echo \"Log not created yet\")",
+      "Bash(then echo \"=== LOG ===\")"
     ]
   }
 }

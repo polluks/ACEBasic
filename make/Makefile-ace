@@ -52,8 +52,8 @@ BIN_DIR = /bin
 TARGET_NAME = ace
 TARGET = $(BIN_DIR)/$(TARGET_NAME)
 
-# VPATH tells Make where to find source files
-VPATH = $(SRC_DIR)
+# Note: VPATH doesn't work reliably on AmigaOS, so we use explicit paths
+# in the pattern rule instead
 
 # Verbose control
 # V=0 (default): Quiet mode - shows only high-level progress
@@ -101,33 +101,33 @@ OBJECTS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(SOURCES))
 
 # Default target
 all: dirs $(TARGET)
-   @echo "Build complete: $(TARGET)"
+	@echo "Build complete: $(TARGET)"
 
 # Link executable from object files
 $(TARGET): $(OBJECTS) | $(BIN_DIR)
-   $(ECHO) "Linking ACE..."
-   $(Q)$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(ECHO) "Linking ACE..."
+	$(Q)$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 # Ensure directories exist before building
 .PHONY: dirs
 dirs:
-   -@makedir $(OBJ_DIR) >NIL:
-   -@makedir $(BIN_DIR) >NIL:
+	-@makedir $(OBJ_DIR) >NIL:
+	-@makedir $(BIN_DIR) >NIL:
 
 # Ensure directories exist (order-only prerequisites)
 $(OBJECTS): | $(OBJ_DIR)
 
 $(OBJ_DIR):
-   -@makedir $(OBJ_DIR) >NIL:
+	-@makedir $(OBJ_DIR) >NIL:
 
 $(BIN_DIR):
-   -@makedir $(BIN_DIR) >NIL:
+	-@makedir $(BIN_DIR) >NIL:
 
 # Compile source files to object files
-# Pattern rule without colon - VPATH finds sources in $(SRC_DIR)
-$(OBJ_DIR)/%.o: %.c
-   $(ECHO) "Compiling $<..."
-   $(Q)$(CC) $(CFLAGS) -I$(SRC_DIR) $< -o $@
+# Using explicit source path since VPATH doesn't work reliably on AmigaOS
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(ECHO) "Compiling $<..."
+	$(Q)$(CC) $(CFLAGS) -I$(SRC_DIR) $< -o $@
 
 ################################################################################
 # UTILITY TARGETS
@@ -135,31 +135,31 @@ $(OBJ_DIR)/%.o: %.c
 
 # Clean build artifacts
 clean:
-   $(ECHO) "Cleaning object files..."
-   -$(Q)delete $(OBJ_DIR)/#?.o QUIET
-   $(ECHO) "Cleaning executable..."
-   -$(Q)delete $(TARGET) QUIET
-   @echo "Clean complete"
+	$(ECHO) "Cleaning object files..."
+	-$(Q)delete $(OBJ_DIR)/#?.o QUIET
+	$(ECHO) "Cleaning executable..."
+	-$(Q)delete $(TARGET) QUIET
+	@echo "Clean complete"
 
 # Backup current executable
 backup:
-   $(ECHO) "Backing up ace..."
-   $(Q)copy $(TARGET) $(BIN_DIR)/ace.old CLONE QUIET
+	$(ECHO) "Backing up ace..."
+	$(Q)copy $(TARGET) $(BIN_DIR)/ace.old CLONE QUIET
 
 # Help text
 help:
-   @echo "ACE Compiler Makefile (Makefile-ace)"
-   @echo ""
-   @echo "Targets:"
-   @echo "  all      - Build ACE compiler (default)"
-   @echo "  clean    - Remove all object files and executable"
-   @echo "  backup   - Backup current executable to ace.old"
-   @echo "  help     - Show this help message"
-   @echo ""
-   @echo "Options:"
-   @echo "  V=1      - Verbose output (show all commands)"
-   @echo ""
-   @echo "Examples:"
-   @echo "  make -f Makefile-ace           # Build with quiet output"
-   @echo "  make -f Makefile-ace V=1       # Build with verbose output"
-   @echo "  make -f Makefile-ace clean all # Clean rebuild"
+	@echo "ACE Compiler Makefile (Makefile-ace)"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all      - Build ACE compiler (default)"
+	@echo "  clean    - Remove all object files and executable"
+	@echo "  backup   - Backup current executable to ace.old"
+	@echo "  help     - Show this help message"
+	@echo ""
+	@echo "Options:"
+	@echo "  V=1      - Verbose output (show all commands)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make -f Makefile-ace           # Build with quiet output"
+	@echo "  make -f Makefile-ace V=1       # Build with verbose output"
+	@echo "  make -f Makefile-ace clean all # Clean rebuild"
