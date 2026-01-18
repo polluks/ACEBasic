@@ -10,7 +10,7 @@
 		</data>
 		<key>Resources/fs-uae.dat</key>
 		<data>
-		6fdLuw0S6zJL2/PsFYGaS6qxsYY=
+		Dei4frH1+nyJ75T39hxk5w3pjiI=
 		</data>
 		<key>Resources/fs-uae.icns</key>
 		<data>
@@ -50,7 +50,7 @@
 		</data>
 		<key>Resources/locale/hu/LC_MESSAGES/fs-uae.mo</key>
 		<data>
-		TXref1UsRjvr0Pwq1Z395WszNO0=
+		JJcJeRyeZ43Prcfs+hej8nqDvmQ=
 		</data>
 		<key>Resources/locale/it/LC_MESSAGES/fs-uae.mo</key>
 		<data>
@@ -95,7 +95,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			cdpO9WBeUPLWk1nPLcA5Ut3pwQA=
+			WnTrGYYJQve05nDx8RNolgA0luw=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libSDL2-2" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -104,7 +104,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			vie/0oMTxF9OKRfCic2wBVFpN+0=
+			K1ljSID+yW9xUVB9qB6Uwssa5Gk=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libglib-2" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -113,16 +113,25 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			8u7Y42ukBAs7YaQvDhur4Cd5Muk=
+			MySQCGaNbMic+UXizReTkZucrFI=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libgthread-2" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
+		</dict>
+		<key>Frameworks/libiconv.2.dylib</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			y6GJerZB2PQcpwwowRs3CbOqZds=
+			</data>
+			<key>requirement</key>
+			<string>identifier "libiconv.2" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
 		</dict>
 		<key>Frameworks/libintl.8.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			VXoPRMwgkrwEDBYJaKYxku2fUwI=
+			NA7B2ZbCvS/8uno14eF8dbtnFOM=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libintl.8" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -131,7 +140,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			xHeTafm50Cbj1V/ys8xD83jkMQw=
+			wQ3aZbS1aYXVN/TqRiWwVEZfTPk=
 			</data>
 			<key>requirement</key>
 			<string>identifier libmpeg2 and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -140,16 +149,25 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			H+9DCe49Az8xl9CLIHGXhJlD5oI=
+			cngQ3uAJauFhUvbinkttcFxWGSU=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libmpeg2convert.0" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
+		</dict>
+		<key>Frameworks/libopenal.1.dylib</key>
+		<dict>
+			<key>cdhash</key>
+			<data>
+			llXhdeQVnveaZJrFbU0DZKY+fck=
+			</data>
+			<key>requirement</key>
+			<string>identifier "libopenal.1" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
 		</dict>
 		<key>Frameworks/libpng16.16.dylib</key>
 		<dict>
 			<key>cdhash</key>
 			<data>
-			Y9BiqusQOfUcvQ49jZ1+eAsPVHI=
+			W1omwLqZISKr0cWtJZ+XYMoTN4Y=
 			</data>
 			<key>requirement</key>
 			<string>identifier libpng16 and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -158,7 +176,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			kjysJp9Z2aIM5L3ZTS/DIImMuuM=
+			EKK4WDU9q7VVrD5Mp58sB88jQko=
 			</data>
 			<key>requirement</key>
 			<string>identifier "libz.1" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -167,7 +185,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			QHxzCRoh6lOTFR6Sq/jz2AgqIvI=
+			lje7MsRS55EM7AdPQPI+Vp9z+Bc=
 			</data>
 			<key>requirement</key>
 			<string>identifier "fs-uae-device-helper" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "69R669CQU7"</string>
@@ -187,11 +205,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			6fdLuw0S6zJL2/PsFYGaS6qxsYY=
+			Dei4frH1+nyJ75T39hxk5w3pjiI=
 			</data>
 			<key>hash2</key>
 			<data>
-			tkqa/psQS0Sa0VENxIfwqEoa2tPv8LAEKx3Kh9rKNOE=
+			MM5UqsWnhCV7N2tt3aCiR7t6+AjRjELyOdarzNIyVB0=
 			</data>
 		</dict>
 		<key>Resources/fs-uae.icns</key>
@@ -297,11 +315,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			TXref1UsRjvr0Pwq1Z395WszNO0=
+			JJcJeRyeZ43Prcfs+hej8nqDvmQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			dY5LfhSu/3B1QDaUK8B0qmjtB0bfyJ3u5vLtBj/LPJs=
+			pRE3pSakKrtkzKPUgi0c7JfjcgWc+8cHX4VDvvexDwI=
 			</data>
 		</dict>
 		<key>Resources/locale/it/LC_MESSAGES/fs-uae.mo</key>
