@@ -125,21 +125,20 @@ echo "" >>$LOGFILE
 
 cd ACE:tests
 rx runner.rexx >T:phase5_tests.out
-SET TEST_RC $RC
 
-echo "Test runner return code: " NOLINE >>$LOGFILE
-echo $TEST_RC >>$LOGFILE
-echo "" >>$LOGFILE
 echo "Test runner output:" >>$LOGFILE
 type T:phase5_tests.out >>$LOGFILE
 echo "" >>$LOGFILE
 
-IF $TEST_RC EQ 0
-   echo "Test 5.2: PASS - All tests passed" >>$LOGFILE
+; Check for "Failed: 0" in output to determine success
+; search returns 0 (WARN=5) if pattern found, 5 if not found
+search T:phase5_tests.out "Failed: 0" >NIL:
+IF WARN
+   echo "Test 5.2: FAIL - Some tests failed (see output above)" >>$LOGFILE
+   SET TESTS_PASSED 0
 ELSE
-   echo "Test 5.2: FAIL - Some tests failed (RC=" NOLINE >>$LOGFILE
-   echo $TEST_RC NOLINE >>$LOGFILE
-   echo ")" >>$LOGFILE
+   echo "Test 5.2: PASS - All tests passed" >>$LOGFILE
+   SET TESTS_PASSED 1
 ENDIF
 echo "" >>$LOGFILE
 
@@ -157,10 +156,12 @@ echo "" >>$LOGFILE
 echo "Review the output above for PASS/FAIL status of each test." >>$LOGFILE
 echo "" >>$LOGFILE
 
-IF $TEST_RC EQ 0
-   echo "OVERALL: SUCCESS - ACE compiler functional verification passed" >>$LOGFILE
-ELSE
+; Check if tests passed by searching output again
+search T:phase5_tests.out "Failed: 0" >NIL:
+IF WARN
    echo "OVERALL: PARTIAL - Some tests failed, review output" >>$LOGFILE
+ELSE
+   echo "OVERALL: SUCCESS - All tests passed!" >>$LOGFILE
 ENDIF
 echo "" >>$LOGFILE
 
@@ -188,5 +189,10 @@ type $LOGFILE
 
 ; Create completion marker for automated runs
 echo "Phase 5 complete" >ACE:scripts/verify/results/phase5-complete.marker
+
+; Quit the emulator after verification completes
+; Wait a moment for output to be visible, then shutdown
+wait 2
+C:UAEquit >NIL:
 
 LAB end
