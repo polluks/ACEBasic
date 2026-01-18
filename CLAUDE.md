@@ -2,19 +2,93 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Development Workflow - CRITICAL
+
+**ALWAYS work in small, incremental steps. Only proceed to the next step when the previous step has been verified working.**
+
+### The Small Steps Principle
+
+1. **Make ONE change at a time** - Don't bundle multiple changes together
+2. **Verify it works** - Test, build, or run verification before continuing
+3. **Only then proceed** - Move to the next change only after verification passes
+4. **Document what worked** - Update status files (e.g., laststep-problems.txt)
+
+### Why This Matters
+
+- **Amiga environment is fragile** - Path handling, toolchain differences, AmigaOS quirks
+- **Debugging is harder** - Limited tools, emulator environment, remote testing
+- **Changes interact unexpectedly** - A working feature can break when combined with others
+- **Rollback is easier** - Small steps mean small rollbacks if something breaks
+
+### Example: DON'T Do This
+
+```
+❌ BAD: Make multiple changes at once
+1. Update Makefile
+2. Change build scripts
+3. Modify verification tests
+4. Update documentation
+5. Then test everything together
+Result: 10 failures, can't tell which change broke what
+```
+
+### Example: DO This Instead
+
+```
+✅ GOOD: One step at a time
+1. Update Makefile → Test it works → Commit/document
+2. Change build scripts → Test they work → Commit/document
+3. Modify verification tests → Run them → Commit/document
+4. Update documentation → Review it → Commit/document
+Result: Each step verified, easy to identify issues
+```
+
+### Verification Points
+
+After each change, verify by:
+- **Build system changes**: Run a build, check executable exists
+- **Script changes**: Execute the script, check output
+- **Verification changes**: Run the test suite
+- **Documentation changes**: Read it through for accuracy
+
+### When Testing on Amiga
+
+Because Amiga testing uses fs-uae emulation:
+- **Each verification run takes 5-10 minutes** - Don't batch changes
+- **Test early, test often** - Catch issues immediately
+- **Use user-startup integration** - Automatic testing on boot
+- **Check logs carefully** - Detailed logs in T: and project root
+
+**Remember: "Make it work, then make it better" - not "Make everything at once and hope."**
+
 ## Project Overview
 
 ACE (Amiga BASIC Compiler) is a complete BASIC compiler for the Amiga platform that generates native 68000 assembly code. Originally developed 1991-1996, released as GPL v2 in 1998.
 
 ## Build System
 
-The build system provides two options:
-1. **GNU Makefile** (`make/Makefile-ace`) - Recommended for incremental builds
-2. **AmigaDOS scripts** (`make/cmake`, `make/makeace`) - Legacy build system
+The build system provides three options:
+1. **amake** (`make/Amakefile`) - Recommended for Amiga native builds
+2. **GNU Make** (`make/Makefile-ace`) - Alternative with advanced features
+3. **AmigaDOS scripts** (`make/cmake`, `make/makeace`) - Legacy build system
 
 ### Building the ACE Compiler
 
-#### Using GNU Make (Recommended)
+#### Using amake (Recommended for Amiga)
+
+```bash
+# Build with Amakefile (run from make/ directory or use -f flag)
+amake -f Amakefile           # Build ACE compiler
+amake -f Amakefile all       # Build ACE compiler (explicit)
+amake -f Amakefile clean     # Remove all build artifacts
+amake -f Amakefile clean all # Clean rebuild
+amake -f Amakefile backup    # Backup current executable to ace.old
+amake -f Amakefile help      # Show help
+```
+
+The Amakefile provides incremental builds (rebuilds only changed sources) and standard targets. Designed for amake V1.0, which is native to AmigaOS and handles Amiga path conventions better than GNU Make.
+
+#### Using GNU Make (Alternative)
 
 ```bash
 # Build with Makefile-ace (run from make/ directory or use -f flag)
@@ -26,7 +100,7 @@ make -f Makefile-ace backup    # Backup current executable to ace.old
 make -f Makefile-ace help      # Show help
 ```
 
-The Makefile provides incremental builds (rebuilds only changed sources), standard targets, and verbose/quiet modes. Requires GNU Make 3.80 or later.
+The Makefile provides incremental builds, standard targets, and verbose/quiet modes. Requires GNU Make 3.80 or later. May have path handling issues on some Amiga configurations.
 
 #### Using AmigaDOS Scripts (Legacy)
 

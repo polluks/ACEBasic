@@ -31,5 +31,5 @@ cmake sym
 cmake ver
 cmake window
 
-; make the ACE executbale.
-;cmake all
+; make the ACE executable.
+cmake all

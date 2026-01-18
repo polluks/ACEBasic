@@ -1,137 +1,173 @@
 ================================================================================
-  ACE Makefile Verification - Next Steps
+  SESSION STATUS - 2026-01-17 (AMAKE PORT)
 ================================================================================
 
-Date: 2026-01-17
-Status: DOCUMENTATION COMPLETE - READY FOR FS-UAE VERIFICATION
+## MIGRATION TO AMAKE
+
+Due to persistent file path issues with GNU Make on Amiga, the build system
+has been migrated to **amake** - an Amiga-native make tool by Alexis Wilke.
+
+## CHANGES MADE
+
+Created new `make/Amakefile` that is compatible with amake V1.0:
+
+**Key differences from GNU Makefile:**
+- Removed ifeq/ifneq conditionals (amake doesn't support them)
+- Removed V=0/V=1 verbose mode (no conditional support)
+- Replaced patsubst() with explicit object file list
+- Replaced pattern rules (%.o: %.c) with explicit rules for each module
+- Removed .PHONY declarations (not needed in amake)
+- Removed order-only prerequisites (|) - not supported
+- Simplified to use amake's native features
+
+**What was kept:**
+- Variable definitions (CC, CFLAGS, LDFLAGS, etc.)
+- VPATH for source file lookup
+- Standard targets (all, clean, backup, help)
+- Incremental build support via amake's timestamp tracking
+- Same directory structure and paths
+
+## BENEFITS OF AMAKE
+
+1. **Native to AmigaOS** - Better path handling
+2. **Simpler syntax** - Fewer advanced features = fewer compatibility issues
+3. **Proven on Amiga** - Designed specifically for AmigaOS environment
+4. **No colon conflicts** - Handles Amiga assigns naturally
+
+## CURRENT STATUS
+
+**Created:**
+- ✅ make/Amakefile - Full amake-compatible makefile
+- ✅ Updated CLAUDE.md with amake instructions
+- ✅ Documented in laststep-problems.txt
+- ✅ scripts/verify/verify-amakefile.rexx - 13-test verification suite
+- ✅ scripts/verify/auto-verify-amakefile.rexx - Auto-run wrapper
+- ✅ scripts/verify/run-amakefile-verify.sh - Host launcher script
+- ✅ Updated user-startup to call verification automatically
+- ✅ AMAKEFILE-VERIFICATION.md - Complete documentation
+
+**Verification System:**
+- ✅ User-startup integration - AmigaOS calls verification on boot
+- ✅ 13 comprehensive tests (vs 15 for GNU Make)
+- ✅ Automatic result logging to project directory
+- ✅ Background and wait modes supported
+
+**Ready for Testing:**
+- ⏳ Run: ./run-amakefile-verify.sh --wait
+- ⏳ Verify all 13 tests pass
+- ⏳ Confirm amake handles Amiga paths correctly
+- ⏳ Compare with GNU Make results
+
+## PREVIOUS GNU MAKE STATUS
+
+**What Worked** (User Confirmed):
+- ✅ make -f Makefile-ace all - Builds ACE compiler
+- ✅ make -f Makefile-ace help - Shows help
+- ✅ make -f Makefile-ace clean - Cleans artifacts
+- ✅ Test 15 (Full Test Suite) - Passes consistently
+- ✅ No syntax errors
+
+**Issues:**
+- ❌ Path handling problems on some Amiga configurations
+- ❌ Colon conflicts with ACE: assign
+- ❌ Inconsistent automated verification results
+
+## RECOMMENDATION
+
+**Test the new Amakefile on Amiga**
+
+The amake port should resolve the file path issues while maintaining all the
+incremental build benefits. The GNU Makefile (Makefile-ace) remains available
+as an alternative.
+
+## USER-STARTUP INTEGRATION (IMPORTANT!)
+
+The verification system uses the **standard AmigaOS user-startup mechanism** to
+automatically run tests on system boot. This is the proper Amiga way to run
+startup tasks.
+
+**How it works:**
+
+1. FS-UAE launches with ACE repository mounted as ACE:
+2. AmigaOS boots and runs S:startup-sequence
+3. startup-sequence calls S:user-startup (if exists)
+4. user-startup contains this block:
+
+   ```amigados
+   ;BEGIN ACE Verification
+   if exists ACE:scripts/verify/auto-verify-amakefile.rexx
+      echo ""
+      echo "Starting ACE Amakefile verification..."
+      echo ""
+      rx ACE:scripts/verify/auto-verify-amakefile.rexx
+   endif
+   ;END ACE Verification
+   ```
+
+5. The verification script runs and saves results to ACE:
+6. Results appear in project directory (shared mount)
+
+**Why user-startup?**
+
+- Native AmigaOS pattern (like .bashrc on Unix)
+- No polling or manual intervention needed
+- Conditional execution (checks file exists)
+- Clean separation from system startup
+- Standard way to run ARexx scripts on boot
+
+**Location:**
+- File: scripts/verify/otherthenamiga/aos3/s/user-startup
+- Gets copied to Workbench: by FS-UAE configuration
+- Executed automatically on every AmigaOS boot
+
+## NEXT STEPS
+
+1. Run: cd scripts/verify && ./run-amakefile-verify.sh --wait
+2. Verify all 13 tests pass
+3. Compare results with GNU Make verification
+4. If successful, make amake the recommended build method
+5. Keep both Makefile-ace and Amakefile for flexibility
+
+**To run verification:**
+```bash
+cd scripts/verify
+./run-amakefile-verify.sh --wait   # Waits for completion (10 min)
+# OR
+./run-amakefile-verify.sh          # Background mode
+```
 
 ================================================================================
-COMPLETED IN THIS ITERATION
+FILES MODIFIED THIS SESSION (AMAKE PORT)
 ================================================================================
 
-✓ Fixed documentation discrepancy in specs/Makefile-Verification-Plan.txt
-  - Updated VERIFICATION SCRIPTS section (lines 77-79) to reflect actual
-    implementation (verify-makefile.rexx, quick-test.rexx, README.txt)
-  - Updated APPENDIX B (lines 526-528) to list actual verification scripts
-  - Documentation now matches the consolidated script approach
+1. make/Amakefile (NEW)
+   - Full amake V1.0 compatible makefile
+   - Explicit object file list (29 modules)
+   - Explicit compilation rules for each module
+   - Standard targets: all, clean, backup, help
+   - Uses relative paths from make/ directory
+   - VPATH for source file lookup
 
-All host-side preparation is now complete.
+2. CLAUDE.md
+   - Added amake as recommended build method
+   - Documented Amakefile usage
+   - Kept GNU Make and scripts as alternatives
 
-================================================================================
-REMAINING WORK: FS-UAE VERIFICATION
-================================================================================
-
-The Makefile-ace implementation and all documentation are complete. The only
-remaining step is to run the verification tests in the fs-uae environment.
-
-NEXT ACTION: Run Tests in fs-uae
----------------------------------
-
-To complete the Makefile migration, the 15 verification tests must be executed
-in AmigaOS via fs-uae emulation.
-
-Step 1: Launch fs-uae
-  Command:
-    ~/Applications/Emu/Amiga/FS-UAE/FS-UAE.app/Contents/MacOS/fs-uae \
-      /Users/mbergmann/Documents/FS-UAE/Configurations/sys3xdev.fs-uae
-
-Step 2: Verify ACE: assign in AmigaOS Shell
-  Command: assign
-  Expected: ACE: points to repository root
-
-Step 3: Run verification suite
-  Commands:
-    cd ACE:scripts/verify
-    rx verify-makefile.rexx
-
-Step 4: Review results
-  - Check console output for PASS/FAIL status
-  - Review detailed log: T:makefile-verification.log
-  - Expected duration: 5-10 minutes
-
-Step 5: Archive results
-  If all tests pass:
-    copy T:makefile-verification.log ACE:verification-results.log
+3. laststep-problems.txt
+   - Documented amake migration
+   - Listed key differences from GNU Make
+   - Noted benefits of amake for Amiga
+   - Updated next steps
 
 ================================================================================
-VERIFICATION TEST CHECKLIST (Pending)
+MIGRATION STATUS: AMAKE PORT COMPLETE - READY FOR TESTING
 ================================================================================
 
-[PENDING] Test 1: Clean Build with Makefile
-[PENDING] Test 2: No-Op Build (Timestamp Check)
-[PENDING] Test 3: Incremental Build (Single File Change)
-[PENDING] Test 4: Clean Target
-[PENDING] Test 5: Verbose Mode
-[PENDING] Test 6: Quiet Mode (Default)
-[PENDING] Test 7: Script-Based Build (Baseline)
-[PENDING] Test 8: Makefile Build (Comparison)
-[PENDING] Test 9: Binary Comparison
-[PENDING] Test 10: Functional Equivalence
-[PENDING] Test 11: Backup Target
-[PENDING] Test 12: Help Target
-[PENDING] Test 13: Build Time Comparison
-[PENDING] Test 14: Error Handling (Invalid Source)
-[PENDING] Test 15: Full Test Suite (Regression)
+The Amakefile has been created and should provide better Amiga compatibility
+than GNU Make. Both build systems (amake and GNU make) are now available:
 
-================================================================================
-POST-VERIFICATION ACTIONS
-================================================================================
+- **make/Amakefile** - Recommended for Amiga (amake V1.0)
+- **make/Makefile-ace** - Alternative (GNU Make 3.80)
+- **make/makeace** - Legacy AmigaDOS script
 
-After running fs-uae verification:
-
-If ALL Tests Pass:
-  1. Archive verification log to repository
-  2. Update this file with test results
-  3. Create commit with verification results
-  4. Update pull request status
-  5. Request code review
-  6. Merge to master branch
-
-If Any Tests Fail:
-  1. Document failures in detail
-  2. Investigate root causes
-  3. Fix issues in Makefile-ace
-  4. Re-run verification
-  5. Update this file with findings
-
-================================================================================
-CURRENT STATUS SUMMARY
-================================================================================
-
-Host-Side Work:        ✓ COMPLETE
-  - Makefile-ace:      ✓ Implemented
-  - Source files:      ✓ All present (29 modules)
-  - Verification scripts: ✓ Created (verify-makefile.rexx, quick-test.rexx)
-  - Documentation:     ✓ Complete and accurate
-  - Directory structure: ✓ Verified
-
-fs-uae Verification:   ⏳ PENDING
-  - Test suite ready:  ✓ Yes
-  - Environment ready: ✓ Yes (sys3xdev.fs-uae)
-  - ACE: assign:       ⏳ To be verified
-  - Tests executed:    ⏳ Not yet run
-
-Branch Status:         Ready for verification
-Next Action:           Run rx verify-makefile.rexx in fs-uae
-
-================================================================================
-REFERENCE FILES
-================================================================================
-
-Build System:
-  make/Makefile-ace                    - GNU Makefile implementation
-  make/makeace                         - Legacy build script (for comparison)
-
-Verification:
-  scripts/verify/verify-makefile.rexx  - Main test suite (all 15 tests)
-  scripts/verify/quick-test.rexx       - Quick subset for iteration
-  scripts/verify/README.txt            - Usage documentation
-
-Documentation:
-  CLAUDE.md                            - Build system documentation
-  specs/Makefile-Migration-Spec.txt    - Migration specification
-  specs/Makefile-Verification-Plan.txt - Verification test plan (now updated)
-
-================================================================================
-END OF STATUS
-================================================================================
+Next: Test amake -f Amakefile on Amiga system.
