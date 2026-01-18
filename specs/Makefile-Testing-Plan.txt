@@ -1,0 +1,316 @@
+================================================================================
+  ACE Compiler Makefile Migration - Step-by-Step Testing Plan
+================================================================================
+
+Version: 1.0
+Date: 2026-01-18
+Related: Makefile-Migration-Spec.txt, Makefile-Verification-Plan.txt
+
+================================================================================
+OVERVIEW
+================================================================================
+
+This document provides a practical, step-by-step testing approach for verifying
+the Makefile-ace migration. Tests progress from simple to complex, with each
+phase building on the previous one.
+
+Principle: ONE STEP AT A TIME - verify each step works before proceeding.
+
+================================================================================
+CURRENT STATE
+================================================================================
+
+- Makefile-ace exists at: ACE:make/Makefile-ace
+- fs-uae configured via: scripts/verify/otherthenamiga/ace-verify.fs-uae
+- ACE: assign maps to project as hard_drive_1
+- user-startup has ACE verification section (commented out)
+- Test runner exists: tests/runner.rexx
+
+================================================================================
+PHASE 1: PRE-FLIGHT CHECKS (Host-Side)
+================================================================================
+
+Before launching fs-uae, verify setup from macOS host.
+
+Test 1.1: Makefile Syntax Check
+-------------------------------
+Purpose: Verify Make can parse the Makefile (catches syntax errors)
+Command: cd make && make -f Makefile-ace -n all 2>&1 | head -20
+Note: AmigaDOS commands won't exist on host, but syntax errors are caught.
+
+Test 1.2: Source File List Verification
+---------------------------------------
+Purpose: Verify all 29 source files exist
+Command: ls -1 src/ace/c/*.c | wc -l
+Expected: 31 files (29 compiled + 2 included: lexvar.c, symvar.c)
+
+Test 1.3: Object Directory Exists
+---------------------------------
+Purpose: Verify obj directory exists for compiled output
+Command: ls -d src/ace/obj/
+Expected: Directory exists
+
+Test 1.4: Bin Directory Exists
+------------------------------
+Purpose: Verify bin directory exists for executable
+Command: ls -d bin/
+Expected: Directory exists
+
+Findings: See scripts/verify/results/phase1-findings.txt
+
+================================================================================
+PHASE 2: BASIC MAKEFILE OPERATION (In fs-uae)
+================================================================================
+
+Launch fs-uae and test basic Makefile targets.
+
+Test 2.1: Help Target Works
+---------------------------
+Purpose: Verify Makefile loads and help displays
+Command: cd ACE:make && make -f Makefile-ace help
+Expected: Help text displays without errors
+
+Test 2.2: Clean Target Works (Empty State)
+------------------------------------------
+Purpose: Verify clean target handles missing files gracefully
+Command: cd ACE:make && make -f Makefile-ace clean
+Expected: No errors (QUIET flag suppresses file-not-found)
+
+Test 2.3: Single Module Compilation (Manual)
+--------------------------------------------
+Purpose: Verify gcc toolchain works before involving Make
+Command:
+  cd ACE:src/ace/c
+  gcc ver.c -m68020 -c -s -O -pedantic -Wcast-qual -noixemul -I. -o ACE:src/ace/obj/ver.o
+Expected: ver.o created without errors
+
+Test 2.4: Make Path Resolution (Source Directory)
+-------------------------------------------------
+Purpose: Verify Make correctly resolves /src/ace/c paths
+         GNU Make may not handle AmigaDOS paths correctly.
+Command: make -f Makefile-ace -p | search SRC_DIR
+Expected:
+  - SRC_DIR shows /src/ace/c
+  - /src/ace/c/ver.c is accessible via root-relative path
+
+Test 2.5: Make Path Resolution (Object Directory)
+-------------------------------------------------
+Purpose: Verify Make correctly resolves /src/ace/obj paths
+Command: Check OBJ_DIR in Make's database, verify directory accessible
+Expected:
+  - OBJ_DIR shows /src/ace/obj
+  - Directory exists or can be created via root-relative path
+
+Test 2.6: Make Can Invoke GCC
+-----------------------------
+Purpose: Verify Make can start a build and invoke gcc
+         This is a quick sanity check before full build
+Command: make -f Makefile-ace V=1 (run for 5 seconds, check results)
+Expected:
+  - Make starts and invokes gcc
+  - At least one .o file is created in /src/ace/obj/
+
+Test 2.7: Cross-Volume Path Test
+--------------------------------
+Purpose: Verify root-relative paths work from ACE: volume
+         The paths /src, /bin use leading slash meaning
+         'relative to root of current volume'
+Command: list / QUICK (from ACE:make directory)
+Expected:
+  - Root (/) lists ACE: volume contents
+  - src directory visible at root
+  - This confirms Make runs with ACE: as current volume
+
+Findings: See scripts/verify/results/phase2-findings.txt
+
+================================================================================
+PHASE 3: FULL BUILD VERIFICATION (In fs-uae)
+================================================================================
+
+Test complete build cycle.
+
+Test 3.1: Clean Build
+---------------------
+Purpose: Verify full build from clean state
+Commands:
+  cd ACE:make
+  make -f Makefile-ace clean
+  make -f Makefile-ace
+Expected:
+  - All 29 modules compile
+  - ACE:bin/ace created
+  - No errors
+
+Test 3.2: No-Op Build (Timestamp Test)
+--------------------------------------
+Purpose: Verify Make skips rebuild when nothing changed
+Command: make -f Makefile-ace
+Expected: Message like "nothing to be done" or "up to date"
+
+Test 3.3: Incremental Build
+---------------------------
+Purpose: Verify only changed files rebuild
+Commands:
+  echo ; >>ACE:src/ace/c/ver.c
+  make -f Makefile-ace
+Expected: Only ver.o recompiles, then relinking occurs
+
+Test 3.4: Verbose Mode
+----------------------
+Purpose: Verify V=1 shows full commands
+Commands:
+  make -f Makefile-ace clean
+  make -f Makefile-ace V=1
+Expected: Full gcc command lines visible
+
+Findings: See scripts/verify/results/phase3-findings.txt
+
+================================================================================
+PHASE 4: OUTPUT COMPARISON (In fs-uae)
+================================================================================
+
+Compare Makefile build with legacy script build.
+
+Test 4.1: Build Baseline with Legacy Script
+-------------------------------------------
+Purpose: Create reference build with existing scripts
+Commands:
+  cd ACE:make
+  makeace
+  copy ACE:bin/ace ACE:bin/ace.script CLONE
+Expected: ace.script created successfully
+
+Test 4.2: Build with Makefile
+-----------------------------
+Purpose: Create Makefile build for comparison
+Commands:
+  make -f Makefile-ace clean
+  make -f Makefile-ace
+  copy ACE:bin/ace ACE:bin/ace.makefile CLONE
+Expected: ace.makefile created successfully
+
+Test 4.3: Compare File Sizes
+----------------------------
+Purpose: Verify identical output
+Commands:
+  list ACE:bin/ace.script
+  list ACE:bin/ace.makefile
+Expected: Identical file sizes
+
+Findings: See scripts/verify/results/phase4-findings.txt
+
+================================================================================
+PHASE 5: FUNCTIONAL VERIFICATION (In fs-uae)
+================================================================================
+
+Verify the compiled ACE compiler works correctly.
+
+Test 5.1: Compile a Simple Program
+----------------------------------
+Purpose: Verify ace can compile BASIC code
+Command: ACE:bin/ace ACE:tests/cases/syntax/hello.b
+Expected: Produces .s file without errors
+
+Test 5.2: Run Full Test Suite
+-----------------------------
+Purpose: Verify all tests pass with Makefile-built compiler
+Commands:
+  cd ACE:tests
+  rx runner.rexx
+Expected: All tests pass
+
+Findings: See scripts/verify/results/phase5-findings.txt
+
+================================================================================
+PHASE 6: AUTOMATED VERIFICATION (In fs-uae)
+================================================================================
+
+Create and run automated verification script.
+
+Test 6.1: Create Verification Script
+------------------------------------
+Location: ACE:scripts/verify/verify-makefile.rexx
+Purpose: Automated test runner for CI-like workflow
+
+Test 6.2: Run Automated Verification
+------------------------------------
+Command: rx ACE:scripts/verify/verify-makefile.rexx
+Expected: All automated tests pass
+
+Test 6.3: Enable user-startup Integration
+-----------------------------------------
+Purpose: Run verification on fs-uae boot
+Edit: scripts/verify/otherthenamiga/aos3/S/user-startup
+Uncomment ACE verification section
+
+Findings: See scripts/verify/results/phase6-findings.txt
+
+================================================================================
+TESTING ORDER SUMMARY
+================================================================================
+
+| Step | Test                      | Complexity | Est. Time  |
+|------|---------------------------|------------|------------|
+| 1.1  | Makefile syntax check     | Trivial    | 1 min      |
+| 1.2  | Source file count         | Trivial    | 1 min      |
+| 1.3  | Object directory exists   | Trivial    | 1 min      |
+| 1.4  | Bin directory exists      | Trivial    | 1 min      |
+| 2.1  | Help target               | Low        | 1 min      |
+| 2.2  | Clean target (empty)      | Low        | 1 min      |
+| 2.3  | Single gcc command        | Low        | 2 min      |
+| 2.4  | Path resolution (src)     | Medium     | 1 min      |
+| 2.5  | Path resolution (obj)     | Medium     | 1 min      |
+| 2.6  | Pattern rule expansion    | Medium     | 1 min      |
+| 2.7  | Cross-volume paths        | Medium     | 1 min      |
+| 3.1  | Full clean build          | Medium     | 5-10 min   |
+| 3.2  | No-op build               | Low        | 1 min      |
+| 3.3  | Incremental build         | Medium     | 2 min      |
+| 3.4  | Verbose mode              | Low        | 5 min      |
+| 4.1  | Legacy script build       | Medium     | 5-10 min   |
+| 4.2  | Makefile build            | Medium     | 5-10 min   |
+| 4.3  | Compare sizes             | Low        | 1 min      |
+| 5.1  | Compile simple program    | Low        | 2 min      |
+| 5.2  | Full test suite           | High       | 15-20 min  |
+| 6.1  | Create verification script| Medium     | 10 min     |
+| 6.2  | Run automated verification| Medium     | 5 min      |
+| 6.3  | Enable user-startup       | Low        | 2 min      |
+
+================================================================================
+FINDINGS FILE FORMAT
+================================================================================
+
+Each phase findings file should follow this format:
+
+  ============================================================
+  Phase N Findings - [Date]
+  ============================================================
+
+  Test N.1: [Test Name]
+  ---------------------
+  Status: PASS / FAIL / SKIP
+  Command: [actual command run]
+  Output: [relevant output]
+  Notes: [any observations]
+
+  Test N.2: [Test Name]
+  ---------------------
+  ...
+
+  ============================================================
+  Phase Summary
+  ============================================================
+  Tests Passed: X
+  Tests Failed: X
+  Tests Skipped: X
+
+  Issues Found:
+  - [issue 1]
+  - [issue 2]
+
+  Next Steps:
+  - [action item 1]
+  - [action item 2]
+
+================================================================================
+END OF TESTING PLAN
+================================================================================
