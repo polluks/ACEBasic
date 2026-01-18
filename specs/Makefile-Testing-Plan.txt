@@ -4,7 +4,7 @@
 
 Version: 1.0
 Date: 2026-01-18
-Related: Makefile-Migration-Spec.txt, Makefile-Verification-Plan.txt
+Related: Makefile-Migration-Spec.txt
 
 ================================================================================
 OVERVIEW
@@ -31,8 +31,8 @@ Emulator Setup
 --------------
 
 Platform: fs-uae (FS-UAE.app)
-Location: scripts/verify/otherthanamiga/FS-UAE.app/Contents/MacOS/fs-uae
-Configuration: scripts/verify/otherthanamiga/ace-verify.fs-uae
+Location: scripts/verify/otherthenamiga/FS-UAE.app/Contents/MacOS/fs-uae
+Configuration: scripts/verify/otherthenamiga/ace-verify.fs-uae
 
 
 ================================================================================
