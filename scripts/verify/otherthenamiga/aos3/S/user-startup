@@ -69,30 +69,30 @@ path ACE:bin add
 
 ; --- Phase 2: Basic Makefile Operation ---
 ; Tests help target, clean target, single gcc compilation, AND path handling
-;if exists ACE:scripts/verify/phase2-verify.script
-;   echo ""
-;   echo "Starting ACE Phase 2 Makefile verification..."
-;   echo ""
-;   execute ACE:scripts/verify/phase2-verify.script
-;endif
+if exists ACE:scripts/verify/phase2-verify.script
+   echo ""
+   echo "Starting ACE Phase 2 Makefile verification..."
+   echo ""
+   execute ACE:scripts/verify/phase2-verify.script
+endif
 
 ; --- Phase 3: Full Build Verification ---
 ; Tests clean build, no-op build, incremental build, verbose mode
-;if exists ACE:scripts/verify/phase3-verify.script
-;   echo ""
-;   echo "Starting ACE Phase 3 Full Build verification..."
-;   echo ""
-;   execute ACE:scripts/verify/phase3-verify.script
-;endif
+if exists ACE:scripts/verify/phase3-verify.script
+   echo ""
+   echo "Starting ACE Phase 3 Full Build verification..."
+   echo ""
+   execute ACE:scripts/verify/phase3-verify.script
+endif
 
 ; --- Phase 4: Build and Executable Verification ---
 ; Tests Makefile build, executable loads and runs, functional test
-;if exists ACE:scripts/verify/phase4-verify.script
-;   echo ""
-;   echo "Starting ACE Phase 4 Build verification..."
-;   echo ""
-;   execute ACE:scripts/verify/phase4-verify.script
-;endif
+if exists ACE:scripts/verify/phase4-verify.script
+   echo ""
+   echo "Starting ACE Phase 4 Build verification..."
+   echo ""
+   execute ACE:scripts/verify/phase4-verify.script
+endif
 
 ; --- Phase 5: Functional Verification ---
 ; Tests compile simple program, runs full test suite

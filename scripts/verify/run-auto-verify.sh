@@ -54,8 +54,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FS_UAE_CONFIG="$SCRIPT_DIR/otherthenamiga/ace-verify.fs-uae"
 FS_UAE_BIN="$HOME/Applications/Emu/Amiga/FS-UAE/FS-UAE.app/Contents/MacOS/fs-uae"
-COMPLETION_MARKER="$PROJECT_ROOT/scripts/verify/results/phase4-complete.marker"
-RESULTS_LOG="$PROJECT_ROOT/scripts/verify/results/phase4.log"
+PHASE1_SCRIPT="$SCRIPT_DIR/phase1-verify.sh"
+COMPLETION_MARKER="$PROJECT_ROOT/scripts/verify/results/phase5-complete.marker"
+RESULTS_LOG="$PROJECT_ROOT/scripts/verify/results/phase5.log"
 WAIT_MODE=false
 
 # Parse arguments
@@ -64,24 +65,43 @@ if [[ "${1:-}" == "--wait" ]]; then
 fi
 
 echo "================================================================================"
-echo " ACE Makefile - Automated Verification Launcher"
+echo " ACE Makefile - Phase 6: Full Automated Verification"
 echo "================================================================================"
 echo ""
 echo "Project root: $PROJECT_ROOT"
 echo "FS-UAE config: $FS_UAE_CONFIG"
 echo ""
 
-# Clean up previous results
-if [[ -f "$COMPLETION_MARKER" ]]; then
-    echo "Removing previous completion marker..."
-    rm -f "$COMPLETION_MARKER"
+# ================================================================================
+# PHASE 1: Host-side Pre-flight Checks
+# ================================================================================
+echo "--------------------------------------------------------------------------------"
+echo " Phase 1: Running host-side pre-flight checks..."
+echo "--------------------------------------------------------------------------------"
+echo ""
+
+if [[ ! -f "$PHASE1_SCRIPT" ]]; then
+    echo "ERROR: Phase 1 script not found at: $PHASE1_SCRIPT"
+    exit 1
 fi
 
-if [[ -f "$RESULTS_LOG" ]]; then
-    echo "Removing previous results log..."
-    rm -f "$RESULTS_LOG"
+if ! "$PHASE1_SCRIPT"; then
+    echo ""
+    echo "ERROR: Phase 1 pre-flight checks failed!"
+    echo "Fix the issues above before proceeding."
+    exit 1
 fi
 
+echo ""
+echo "Phase 1: PASSED - proceeding to Phases 2-5 (Amiga)"
+echo ""
+
+# Clean up previous results (phases 2-5)
+echo "Cleaning previous phase 2-5 results..."
+for phase in 2 3 4 5; do
+    rm -f "$PROJECT_ROOT/scripts/verify/results/phase${phase}-complete.marker" 2>/dev/null || true
+    rm -f "$PROJECT_ROOT/scripts/verify/results/phase${phase}.log" 2>/dev/null || true
+done
 echo ""
 
 # Launch fs-uae
@@ -123,7 +143,7 @@ echo ""
 
 MAX_WAIT=900  # 15 minutes max
 ELAPSED=0
-INTERVAL=10
+INTERVAL=5
 
 while [[ $ELAPSED -lt $MAX_WAIT ]]; do
     if [[ -f "$COMPLETION_MARKER" ]]; then
