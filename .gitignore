@@ -3,3 +3,5 @@ uaem
 *.uaem
 aos3
 src/ace/obj/
+*.log
+*.marker
