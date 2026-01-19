@@ -55,8 +55,8 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 FS_UAE_CONFIG="$SCRIPT_DIR/otherthenamiga/ace-verify.fs-uae"
 FS_UAE_BIN="$HOME/Applications/Emu/Amiga/FS-UAE/FS-UAE.app/Contents/MacOS/fs-uae"
 PHASE1_SCRIPT="$SCRIPT_DIR/phase1-verify.sh"
-COMPLETION_MARKER="$PROJECT_ROOT/scripts/verify/results/phase5-complete.marker"
-RESULTS_LOG="$PROJECT_ROOT/scripts/verify/results/phase5.log"
+COMPLETION_MARKER="$PROJECT_ROOT/verify/scripts/results/phase5-complete.marker"
+RESULTS_LOG="$PROJECT_ROOT/verify/scripts/results/phase5.log"
 WAIT_MODE=false
 
 # Parse arguments
@@ -99,8 +99,8 @@ echo ""
 # Clean up previous results (phases 2-5)
 echo "Cleaning previous phase 2-5 results..."
 for phase in 2 3 4 5; do
-    rm -f "$PROJECT_ROOT/scripts/verify/results/phase${phase}-complete.marker" 2>/dev/null || true
-    rm -f "$PROJECT_ROOT/scripts/verify/results/phase${phase}.log" 2>/dev/null || true
+    rm -f "$PROJECT_ROOT/verify/scripts/results/phase${phase}-complete.marker" 2>/dev/null || true
+    rm -f "$PROJECT_ROOT/verify/scripts/results/phase${phase}.log" 2>/dev/null || true
 done
 echo ""
 

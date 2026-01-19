@@ -5,12 +5,12 @@
 ; Phase 3 Verification Script - Full Build Verification Tests
 ; Run from within AmigaOS (fs-uae)
 ;
-; Usage: execute ACE:scripts/verify/phase3-verify.script LOG=ACE:scripts/verify/results/phase3.log
-; Or just: execute ACE:scripts/verify/phase3-verify.script
+; Usage: execute ACE:verify/scripts/phase3-verify.script LOG=ACE:verify/scripts/results/phase3.log
+; Or just: execute ACE:verify/scripts/phase3-verify.script
 
 ; Set default log location
 IF "{LOG}" EQ ""
-   SET LOGFILE "ACE:scripts/verify/results/phase3.log"
+   SET LOGFILE "ACE:verify/scripts/results/phase3.log"
 ELSE
    SET LOGFILE "{LOG}"
 ENDIF
@@ -34,7 +34,7 @@ echo "Purpose: Verify full build from clean state" >>$LOGFILE
 echo "" >>$LOGFILE
 
 echo "Step 1: Running make clean..." >>$LOGFILE
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace clean >T:test31_clean.out
 IF WARN
    echo "Clean step returned warning/error" >>$LOGFILE
@@ -126,7 +126,7 @@ echo "Purpose: Verify Make skips rebuild when nothing changed" >>$LOGFILE
 echo "Command: make -f Makefile-ace" >>$LOGFILE
 echo "" >>$LOGFILE
 
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace >T:test32.out
 SET NOOP_RESULT $RC
 
@@ -172,7 +172,7 @@ list ACE:src/ace/c/ver.c >>$LOGFILE
 echo "" >>$LOGFILE
 
 echo "Command: make -f Makefile-ace V=1" >>$LOGFILE
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace V=1 >T:test33.out
 SET INCR_RESULT $RC
 
@@ -214,7 +214,7 @@ echo "" >>$LOGFILE
 
 ; First do a clean build to see full verbose output
 echo "Step 1: Clean before verbose build" >>$LOGFILE
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace clean >T:test34_clean.out
 type T:test34_clean.out >>$LOGFILE
 echo "" >>$LOGFILE
@@ -297,4 +297,4 @@ echo "Summary:"
 type $LOGFILE
 
 ; Create completion marker for automated runs
-echo "Phase 3 complete" >ACE:scripts/verify/results/phase3-complete.marker
+echo "Phase 3 complete" >ACE:verify/scripts/results/phase3-complete.marker

@@ -71,13 +71,13 @@ cd "$PROJECT_ROOT"
 
 # Test 1.1: Makefile Syntax Check
 test_1_1() {
-    log "Command: cd make && make -f Makefile-ace -n all 2>&1 | head -20"
+    log "Command: cd src/make && make -f Makefile-ace -n all 2>&1 | head -20"
     log ""
 
     local output
     # Run make in dry-run mode - syntax errors will cause non-zero exit
     # We expect some command-not-found errors (AmigaDOS commands) but no Make syntax errors
-    if output=$(cd make && make -f Makefile-ace -n all 2>&1); then
+    if output=$(cd src/make && make -f Makefile-ace -n all 2>&1); then
         log "Make parsed Makefile-ace successfully (dry-run mode)"
         log "First 10 lines of output:"
         echo "$output" | head -10 | tee -a "$LOG_FILE"

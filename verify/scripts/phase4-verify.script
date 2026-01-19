@@ -5,14 +5,14 @@
 ; Phase 4 Verification Script - Makefile Build and Functional Test
 ; Run from within AmigaOS (fs-uae)
 ;
-; Usage: execute ACE:scripts/verify/phase4-verify.script LOG=ACE:scripts/verify/results/phase4.log
-; Or just: execute ACE:scripts/verify/phase4-verify.script
+; Usage: execute ACE:verify/scripts/phase4-verify.script LOG=ACE:verify/scripts/results/phase4.log
+; Or just: execute ACE:verify/scripts/phase4-verify.script
 ;
 ; Purpose: Verify that Makefile-ace builds correctly and produces working executable
 
 ; Set default log location
 IF "{LOG}" EQ ""
-   SET LOGFILE "ACE:scripts/verify/results/phase4.log"
+   SET LOGFILE "ACE:verify/scripts/results/phase4.log"
 ELSE
    SET LOGFILE "{LOG}"
 ENDIF
@@ -37,7 +37,7 @@ echo "" >>$LOGFILE
 
 ; Clean object files and executable
 echo "Step 1: Cleaning build artifacts..." >>$LOGFILE
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace clean >T:phase4_clean.out
 type T:phase4_clean.out >>$LOGFILE
 echo "" >>$LOGFILE
@@ -46,7 +46,7 @@ echo "" >>$LOGFILE
 echo "Step 2: Building with Makefile-ace..." >>$LOGFILE
 echo "Command: make -f Makefile-ace V=1" >>$LOGFILE
 echo "" >>$LOGFILE
-cd ACE:make
+cd ACE:src/make
 make -f Makefile-ace V=1 >T:phase4_make.out
 echo $RC >T:phase4_make_rc.txt
 echo "" >>$LOGFILE
@@ -199,6 +199,6 @@ echo "Summary:"
 type $LOGFILE
 
 ; Create completion marker for automated runs
-echo "Phase 4 complete" >ACE:scripts/verify/results/phase4-complete.marker
+echo "Phase 4 complete" >ACE:verify/scripts/results/phase4-complete.marker
 
 LAB end

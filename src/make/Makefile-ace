@@ -8,10 +8,10 @@
 #   with the existing ACE: assign structure.
 #
 # Location:
-#   ACE:make/Makefile-ace
+#   ACE:src/make/Makefile-ace
 #
 # Usage:
-#   From make/ directory:
+#   From src/make/ directory:
 #     make -f Makefile-ace           # Build ACE compiler (quiet mode)
 #     make -f Makefile-ace V=1       # Build with verbose output
 #     make -f Makefile-ace clean     # Remove all build artifacts
@@ -19,7 +19,7 @@
 #     make -f Makefile-ace help      # Show help
 #
 #   From root directory:
-#     make -f make/Makefile-ace
+#     make -f src/make/Makefile-ace
 #
 # Requirements:
 #   - GNU Make 3.80 or later (AmigaOS)
@@ -45,12 +45,12 @@ CFLAGS = -m68020 -c -s -O -pedantic -Wcast-qual -noixemul
 LDFLAGS = -m68020 -s -noixemul
 INCLUDES = -I.
 
-# Paths - Using relative paths from make/ directory
+# Paths - Using relative paths from src/make/ directory
 # Pattern rules require relative paths for Make to find source files correctly
-# The ../ prefix works when running from ACE:make/
-SRC_DIR = ../src/ace/c
-OBJ_DIR = ../src/ace/obj
-BIN_DIR = ../bin
+# The ../ prefix works when running from ACE:src/make/
+SRC_DIR = ../ace/c
+OBJ_DIR = ../ace/obj
+BIN_DIR = ../../bin
 TARGET_NAME = ace
 TARGET = $(BIN_DIR)/$(TARGET_NAME)
 
