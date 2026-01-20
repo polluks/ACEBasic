@@ -67,7 +67,7 @@ Because Amiga testing uses fs-uae emulation:
 
 ### Build System
 - **Makefile location**: `src/make/Makefile-ace` (must run from `src/make/` directory)
-- **Build scripts**: `src/make/` (lcmake, lmake, makedb)
+- **Build scripts**: `src/make/` (Makefile-ace, Makefile-lib)
 - **Output binaries**: `bin/ace` (compiler), `lib/db.lib` (runtime), `lib/startup.lib` (startup)
 
 ### Source Code
@@ -134,9 +134,9 @@ Because Amiga testing uses fs-uae emulation:
 
 ### Modifying the Runtime Library
 1. **Identify if C or assembly** - `src/lib/c/` vs `src/lib/asm/`
-2. **Use appropriate build script** - `lcmake` for C, `lmake` for assembly
-3. **Rebuild entire library** - `makedb` to create `lib/db.lib`
-4. **Test with example programs** - Runtime changes affect all compiled programs
+2. **Rebuild libraries** - `make -f Makefile-lib` from `src/make/`
+3. **Test with example programs** - Runtime changes affect all compiled programs
+4. **See src/lib/README.md** - Documents library structure and ami.lib
 
 ### Modifying Build Scripts
 1. **AmigaDOS syntax** - Scripts use `.key` directives, not bash
@@ -170,7 +170,7 @@ When working with specific areas:
 
 **Build System:**
 - `src/make/Makefile-ace` - Compiler build makefile
-- `src/make/makedb` - Runtime library build script
+- `src/make/Makefile-lib` - Runtime library build (db.lib, startup.lib)
 - `bin/bas.vb` - Modern toolchain compile/link wrapper (vasm/vlink)
 
 **Testing:**
@@ -207,8 +207,8 @@ rx verify/tests/runner.rexx floats
 # Compile BASIC program (modern toolchain)
 bas.vb myprogram.b
 
-# Rebuild runtime library (from src/make/)
-makedb
+# Rebuild runtime libraries (from src/make/)
+make -f Makefile-lib
 
 # Git workflow
 git commit -m "message"

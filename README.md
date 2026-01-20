@@ -67,23 +67,19 @@ make -f Makefile-ace help      # Show help
 
 The Makefile provides incremental builds, standard targets, and verbose/quiet modes. Requires GNU Make 3.80 or later with ADE shell environment.
 
-### Building the Runtime Library (db.lib)
+### Building the Runtime Libraries (db.lib and startup.lib)
 
 ```bash
-# Build library (run from src/make/ directory)
-lcmake <module>       # Compile a C library module
-lmake <module>        # Assemble an assembly library module
-makedb               # Build entire db.lib from sources
+# Build both libraries (run from src/make/ directory)
+make -f Makefile-lib           # Build db.lib and startup.lib
+make -f Makefile-lib V=1       # Verbose output
+make -f Makefile-lib clean     # Remove build artifacts
+make -f Makefile-lib help      # Show all targets
 ```
 
-The `makedb` script compiles C sources from `src/lib/c/` and assembles sources from `src/lib/asm/`, then joins all objects into `lib/db.lib`.
+Uses vbcc/vasm toolchain to compile C sources from `src/lib/c/`, assemble sources from `src/lib/asm/`, and create the libraries in `lib/`.
 
-### Building the Startup Library
-
-```bash
-# From src/lib/startup/
-make                  # Creates startup.lib from startup.s
-```
+See `src/lib/README.md` for details about the libraries, including information about `ami.lib`.
 
 ### Compiling BASIC Programs
 
