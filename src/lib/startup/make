@@ -1,3 +1,0 @@
-; Make startup.lib
-
-a68k startup.s ACElib:startup.lib
