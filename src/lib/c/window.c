@@ -84,7 +84,8 @@ typedef struct wdw_list_type
 		USHORT	bgpen;
 	} WDW;
 
-WDW Wdw_list[MAXWDW] = { 
+/* Made static to avoid symbol conflict with _Wdw_list in scrwin_data.s */
+static WDW Wdw_list[MAXWDW] = {
 {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0},
 {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0},
 {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0}, {NULL,NULL,0,0},
@@ -376,7 +377,7 @@ USHORT   width, height,id;
 
 	if (Wdw == NULL) error_code = WINDOW_OPEN_ERR;
 
-	return(Wdw);	/* NULL (error) or Wdw handle */
+	return((ULONG)Wdw);	/* NULL (error) or Wdw handle */
 }
 
 void CloseWdw(window_id)

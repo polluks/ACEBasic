@@ -372,16 +372,7 @@ _changetextcolor:
 _exitchangetextcolor:
 	rts
 
-;
-; turn cursor ON (after printing).
-;
-_turncursoron:
-	move.l	_stdout,d1
-	move.l	#_cursorON,d2
-	moveq	#3,d3
-	move.l	_DOSBase,a6
-	jsr	_LVOWrite(a6)
-	rts
+; _turncursoron removed - uses external definition from startup.s (xref at line 201)
 
 ;
 ; open a screen - d0=screen-id,d1=width,d2=height,d3=depth,d4=mode.

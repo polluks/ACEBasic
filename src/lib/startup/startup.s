@@ -56,6 +56,7 @@ wa_Lock		equ	0
 	xdef    _MathBase
         xdef    _MathTransBase
         xdef    _MathIeeeSingTransBase
+        xdef    _MathIeeeDoubTransBase
 	xdef	_GfxBase
 	xdef	_IntuitionBase
 	xdef	_TransBase
@@ -270,12 +271,26 @@ _openieeesingtranslib:
 	; FFP exponentiation function is used instead, so don't
 	; set _starterr if we can't open mathieeesingtrans.library.
 	; See ACE/src/lib/c/pow.c for more details.
-	; 
+	;
 	movea.l #_mathieeesingtranslib,a1
 	move.l  #0,d0
 	movea.l _AbsExecBase,a6
 	jsr     _LVOOpenLibrary(a6)
-	move.l  d0,_MathIeeeSingTransBase	
+	move.l  d0,_MathIeeeSingTransBase
+
+	; fall through to open IEEE DP library
+
+_openieeedoubtranslib:
+	;
+	; IEEE DP Transcendental library is needed by vbcc-compiled
+	; code that uses floating-point operations. Don't set _starterr
+	; if we can't open it - some programs may not need it.
+	;
+	movea.l #_mathieeedoubtranslib,a1
+	move.l  #0,d0
+	movea.l _AbsExecBase,a6
+	jsr     _LVOOpenLibrary(a6)
+	move.l  d0,_MathIeeeDoubTransBase
 
         rts
 
@@ -567,6 +582,7 @@ _doslib:		dc.b	'dos.library',0
 _mathffplib:    	dc.b	'mathffp.library',0
 _mathtranslib:  	dc.b	'mathtrans.library',0
 _mathieeesingtranslib: 	dc.b	'mathieeesingtrans.library',0
+_mathieeedoubtranslib:	dc.b	'mathieeedoubtrans.library',0
 _gfxlib:		dc.b	'graphics.library',0
 _intuitionlib:		dc.b	'intuition.library',0
 _translatorlib: 	dc.b	'translator.library',0
@@ -590,6 +606,7 @@ _stdin:		ds.l 1
 _MathBase:      	ds.l 1
 _MathTransBase: 	ds.l 1
 _MathIeeeSingTransBase: ds.l 1
+_MathIeeeDoubTransBase: ds.l 1
 _GfxBase:		ds.l 1
 _IntuitionBase: 	ds.l 1
 _TransBase:		ds.l 1

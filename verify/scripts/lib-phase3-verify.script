@@ -1,0 +1,356 @@
+.KEY LOG/K
+.BRA {
+.KET }
+
+; Lib Phase 3 Verification Script - Functional Test
+; Run from within AmigaOS (fs-uae)
+;
+; Usage: execute ACE:verify/scripts/lib-phase3-verify.script LOG=ACE:verify/scripts/results/lib-phase3.log
+; Or just: execute ACE:verify/scripts/lib-phase3-verify.script
+
+; Set default log location
+IF "{LOG}" EQ ""
+   SET LOGFILE "ACE:verify/scripts/results/lib-phase3.log"
+ELSE
+   SET LOGFILE "{LOG}"
+ENDIF
+
+echo "" >$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "Lib Phase 3 Findings - `date`" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Runtime library functional tests executed in AmigaOS." >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Set up test environment
+SET TESTDIR "ACE:verify/tests/cases/lib-test"
+SET TESTPROG "hello"
+
+; ------------------------------------------------------------------
+; Test 3.1: Compile and Link Test Program
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 3.1: Compile and Link Test Program" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Source: $TESTDIR/$TESTPROG.b" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Verify source file exists
+IF NOT EXISTS $TESTDIR/$TESTPROG.b
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Source file $TESTDIR/$TESTPROG.b not found!" >>$LOGFILE
+   echo "" >>$LOGFILE
+   SKIP ENDSCRIPT
+ENDIF
+
+echo "Source file exists: YES" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Source content:" >>$LOGFILE
+type $TESTDIR/$TESTPROG.b >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Change to test directory for compilation
+cd $TESTDIR
+
+; Remove any previous executable
+IF EXISTS $TESTPROG
+   delete $TESTPROG QUIET
+ENDIF
+
+echo "Command: bas $TESTPROG" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Debug: Check what tools are available
+echo "Debug: Checking for required tools..." >>$LOGFILE
+which ace >>$LOGFILE
+which app >>$LOGFILE
+which vasmm68k_mot >>$LOGFILE
+which vlink >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Run compilation steps manually for better debugging
+FAILAT 30
+
+; Step 1: Preprocess
+echo "Step 1: Preprocessing with app..." >>$LOGFILE
+app $TESTPROG.b ram:t/$TESTPROG.b >T:step1.out *>T:step1.err
+SET STEP1RC $RC
+echo "  app exit code: $STEP1RC" >>$LOGFILE
+IF EXISTS T:step1.out
+   type T:step1.out >>$LOGFILE
+ENDIF
+IF EXISTS T:step1.err
+   type T:step1.err >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+IF $STEP1RC GT 10
+   echo "  FAILED at preprocessing step" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+
+; Check preprocessed file exists
+IF NOT EXISTS ram:t/$TESTPROG.b
+   echo "  FAILED: Preprocessed file not created" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+echo "  Preprocessed file created: ram:t/$TESTPROG.b" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Step 2: Compile to assembly
+echo "Step 2: Compiling with ace..." >>$LOGFILE
+ace ram:t/$TESTPROG.b >T:step2.out *>T:step2.err
+SET STEP2RC $RC
+echo "  ace exit code: $STEP2RC" >>$LOGFILE
+IF EXISTS T:step2.out
+   type T:step2.out >>$LOGFILE
+ENDIF
+IF EXISTS T:step2.err
+   type T:step2.err >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+IF $STEP2RC GT 10
+   echo "  FAILED at compilation step" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+
+; Check assembly file exists
+IF NOT EXISTS ram:t/$TESTPROG.s
+   echo "  FAILED: Assembly file not created" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+echo "  Assembly file created: ram:t/$TESTPROG.s" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Step 3: Assemble
+; Use vasm with Motorola syntax to produce hunk format
+echo "Step 3: Assembling with vasm..." >>$LOGFILE
+vasmm68k_mot -Fhunk -o ram:t/$TESTPROG.o ram:t/$TESTPROG.s >T:step3.out *>T:step3.err
+SET STEP3RC $RC
+echo "  vasm exit code: $STEP3RC" >>$LOGFILE
+IF EXISTS T:step3.out
+   type T:step3.out >>$LOGFILE
+ENDIF
+IF EXISTS T:step3.err
+   type T:step3.err >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+IF $STEP3RC GT 0
+   echo "  FAILED at assembly step" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+
+; Check object file exists
+IF NOT EXISTS ram:t/$TESTPROG.o
+   echo "  FAILED: Object file not created" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+echo "  Object file created: ram:t/$TESTPROG.o" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Step 4: Link
+; Use vlink for hunk format linking
+echo "Step 4: Linking with vlink..." >>$LOGFILE
+vlink -bamigahunk -x -Bstatic -Cgnu -nostdlib -mrel -s -o ram:t/$TESTPROG ram:t/$TESTPROG.o ACElib:startup.lib ACElib:db.lib ACElib:ami.lib >T:step4.out *>T:step4.err
+SET STEP4RC $RC
+echo "  vlink exit code: $STEP4RC" >>$LOGFILE
+IF EXISTS T:step4.out
+   type T:step4.out >>$LOGFILE
+ENDIF
+IF EXISTS T:step4.err
+   type T:step4.err >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+IF $STEP4RC GT 0
+   echo "  FAILED at linking step" >>$LOGFILE
+   SKIP COMPILEFAIL
+ENDIF
+
+; Copy executable to current directory
+IF EXISTS ram:t/$TESTPROG
+   echo "  Executable created in ram:t, copying..." >>$LOGFILE
+   copy ram:t/$TESTPROG $TESTPROG
+ENDIF
+
+; Clean up temp files
+delete ram:t/$TESTPROG#? QUIET
+
+LAB COMPILEFAIL
+
+FAILAT 21
+
+SET COMPRESULT $STEP4RC
+IF $STEP1RC GT 10
+   SET COMPRESULT $STEP1RC
+ENDIF
+IF $STEP2RC GT 10
+   SET COMPRESULT $STEP2RC
+ENDIF
+IF $STEP3RC GT 10
+   SET COMPRESULT $STEP3RC
+ENDIF
+
+echo "Overall compile result: $COMPRESULT" >>$LOGFILE
+echo "" >>$LOGFILE
+
+IF $COMPRESULT GT 10
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Compilation returned error code: $COMPRESULT" >>$LOGFILE
+   echo "" >>$LOGFILE
+   ; Don't skip - continue to show more debug info
+ENDIF
+
+; Check executable was created
+IF EXISTS $TESTPROG
+   echo "Status: PASS" >>$LOGFILE
+   echo "Executable created: $TESTPROG" >>$LOGFILE
+   list $TESTPROG >>$LOGFILE
+ELSE
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Executable was NOT created" >>$LOGFILE
+   echo "" >>$LOGFILE
+   SKIP ENDSCRIPT
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 3.2: Execute Compiled Program
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 3.2: Execute Compiled Program" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Command: $TESTPROG" >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Run the compiled program and capture output
+$TESTPROG >T:lib32.out
+SET RUNRESULT $RC
+
+echo "Program exit code: $RUNRESULT" >>$LOGFILE
+echo "" >>$LOGFILE
+
+IF $RUNRESULT GT 0
+   echo "Status: WARN" >>$LOGFILE
+   echo "Program returned non-zero exit code" >>$LOGFILE
+ELSE
+   echo "Status: PASS" >>$LOGFILE
+   echo "Program executed successfully" >>$LOGFILE
+ENDIF
+
+echo "" >>$LOGFILE
+echo "Program output:" >>$LOGFILE
+IF EXISTS T:lib32.out
+   type T:lib32.out >>$LOGFILE
+ELSE
+   echo "(no output captured)" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 3.3: Verify Correct Output
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 3.3: Verify Correct Output" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+
+SET EXPECTEDFILE "ACE:verify/tests/expected/$TESTPROG.expected"
+
+IF NOT EXISTS $EXPECTEDFILE
+   echo "WARNING: Expected output file not found: $EXPECTEDFILE" >>$LOGFILE
+   echo "Cannot verify output correctness" >>$LOGFILE
+   echo "Status: SKIP" >>$LOGFILE
+   echo "" >>$LOGFILE
+   SKIP SUMMARY
+ENDIF
+
+echo "Expected output:" >>$LOGFILE
+type $EXPECTEDFILE >>$LOGFILE
+echo "" >>$LOGFILE
+
+echo "Actual output:" >>$LOGFILE
+type T:lib32.out >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Use search to compare - if expected string is in output, it's a pass
+; Looking for "Hello from ACE!"
+search T:lib32.out "Hello from ACE!" >T:lib33.search QUIET
+IF WARN
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Output does not match expected: 'Hello from ACE!' not found" >>$LOGFILE
+ELSE
+   echo "Status: PASS" >>$LOGFILE
+   echo "Output matches expected: 'Hello from ACE!' found" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Lib Phase 3 Summary
+; ------------------------------------------------------------------
+LAB SUMMARY
+echo "============================================================" >>$LOGFILE
+echo "Lib Phase 3 Summary" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Tests Executed: 3" >>$LOGFILE
+echo "  3.1 - Compile and link test program" >>$LOGFILE
+echo "  3.2 - Execute compiled program" >>$LOGFILE
+echo "  3.3 - Verify correct output" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "This test verifies that the newly built runtime libraries" >>$LOGFILE
+echo "(db.lib and startup.lib) work correctly when compiling" >>$LOGFILE
+echo "and running a real BASIC program." >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Review the output above for PASS/FAIL status of each test." >>$LOGFILE
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; End of Script
+; ------------------------------------------------------------------
+LAB ENDSCRIPT
+echo "============================================================" >>$LOGFILE
+echo "END OF LIB PHASE 3 VERIFICATION" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+
+; Clean up temp files
+IF EXISTS T:step1.out
+   delete T:step1.out QUIET
+ENDIF
+IF EXISTS T:step1.err
+   delete T:step1.err QUIET
+ENDIF
+IF EXISTS T:step2.out
+   delete T:step2.out QUIET
+ENDIF
+IF EXISTS T:step2.err
+   delete T:step2.err QUIET
+ENDIF
+IF EXISTS T:step3.out
+   delete T:step3.out QUIET
+ENDIF
+IF EXISTS T:step3.err
+   delete T:step3.err QUIET
+ENDIF
+IF EXISTS T:lib32.out
+   delete T:lib32.out QUIET
+ENDIF
+IF EXISTS T:lib33.search
+   delete T:lib33.search QUIET
+ENDIF
+
+; Show results on screen
+echo ""
+echo "Lib Phase 3 verification complete!"
+echo "Results saved to: $LOGFILE"
+echo ""
+echo "Summary:"
+type $LOGFILE
+
+; Create completion marker for automated runs
+echo "Lib Phase 3 complete" >ACE:verify/scripts/results/lib-phase3-complete.marker
