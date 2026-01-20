@@ -1,0 +1,241 @@
+================================================================================
+  FFP/vbcc Compatibility Fix Specification
+================================================================================
+
+Version: 1.0
+Date: 2026-01-20
+
+================================================================================
+PROBLEM SUMMARY
+================================================================================
+
+The ACE compiler generates FFP (Motorola Fast Floating Point) format for
+single-precision floats. When the runtime library (db.lib) is compiled with
+vbcc, there's a format mismatch:
+
+  - ACE generates: FFP format (32-bit, Motorola-specific layout)
+  - vbcc expects:  IEEE format (32-bit, standard IEEE 754 layout)
+
+Example: The value 1.1
+  - FFP:  0x8ccccd41
+  - IEEE: 0x3f8ccccd
+
+This causes crashes when:
+1. Float parameters are passed to library functions
+2. Float literals in C code are interpreted differently than expected
+3. Float return values are misinterpreted
+
+================================================================================
+AFFECTED FILES
+================================================================================
+
+src/lib/c/print.c
+  - Usingleprint(float num)
+  - Issue: Parameter passed from ACE is FFP, vbcc expects IEEE
+
+src/lib/c/ffpstr.c
+  - strsingle(float fnum)
+  - Issue: Parameter and calls to ami.lib functions (fpa, afp)
+  - Uses: fpa(), SPTst(), afp() - all expect FFP
+
+src/lib/c/val.c
+  - val(char *str) returns float
+  - Issue: Float literals (0.0, 1.0, -1.0, 10.0) compiled as IEEE
+  - Uses: SPFlt(), SPAdd(), SPDiv(), SPMul(), SPPow() - all expect FFP
+
+src/lib/c/pow.c
+  - power(float y, float x)
+  - Issue: Parameters and return value format mismatch
+  - Uses: SPPow(), SPFieee(), SPTieee(), IEEESPPow()
+
+================================================================================
+SOLUTION STRATEGY
+================================================================================
+
+Treat FFP values as opaque 32-bit quantities (long) in C code, and use
+FFP library functions for all conversions.
+
+PRINCIPLE: Never let vbcc interpret a value as `float` - always use `long`
+           for FFP values and call FFP library functions for operations.
+
+--------------------------------------------------------------------------------
+Part 1: Change Function Signatures
+--------------------------------------------------------------------------------
+
+Replace `float` with `long` in function parameters and return types.
+
+Before:
+  void Usingleprint(num)
+  float num;
+
+After:
+  void Usingleprint(num)
+  long num;    /* FFP value as raw 32-bit */
+
+--------------------------------------------------------------------------------
+Part 2: Replace Float Literals with SPFlt() Calls
+--------------------------------------------------------------------------------
+
+Replace all float literals with SPFlt() calls to generate FFP values.
+
+Before:
+  sign = -1.0;
+  singleval = 0.0;
+  SPMul(SPPow(SPFlt(ex), 10.0), singleval);
+
+After:
+  sign = SPNeg(SPFlt(1));        /* -1.0 in FFP */
+  singleval = SPFlt(0);          /* 0.0 in FFP */
+  SPMul(SPPow(SPFlt(ex), SPFlt(10)), singleval);
+
+Note: SPFlt(n) converts integer n to FFP format. For negative floats,
+use SPNeg(SPFlt(abs_value)) since SPFlt may not handle negative integers.
+
+--------------------------------------------------------------------------------
+Part 3: Update External Function Declarations
+--------------------------------------------------------------------------------
+
+Change return types from `float` to `long` for FFP functions.
+
+Before:
+  extern float SPFlt();
+  extern float SPAdd();
+  extern float afp();
+
+After:
+  extern long SPFlt();
+  extern long SPAdd();
+  extern long afp();
+
+================================================================================
+FILE-BY-FILE CHANGES
+================================================================================
+
+--------------------------------------------------------------------------------
+src/lib/c/print.c
+--------------------------------------------------------------------------------
+
+Change Usingleprint signature:
+
+  void Usingleprint(num)
+  long num;    /* FFP format */
+  {
+      Ustringprint(strsingle(num));
+  }
+
+--------------------------------------------------------------------------------
+src/lib/c/ffpstr.c
+--------------------------------------------------------------------------------
+
+1. Change external declarations:
+   - long SPTst();      (unchanged - already returns long)
+   - long afp();        (was float)
+
+2. Change strsingle signature:
+   char *strsingle(fnum)
+   long fnum;    /* FFP format */
+
+3. Update internal variable:
+   - Change `float fnum` parameter to `long fnum`
+   - The fnum=afp(fpabuf) assignment works since afp returns long now
+
+--------------------------------------------------------------------------------
+src/lib/c/val.c
+--------------------------------------------------------------------------------
+
+1. Change external declarations:
+   extern long SPFlt();
+   extern long SPAdd();
+   extern long SPDiv();
+   extern long SPMul();
+   extern long SPPow();
+
+2. Change val() signature:
+   long val(str)
+   char *str;
+
+3. Change local variables:
+   long sign;        /* was float */
+   long singleval;   /* was float */
+
+4. Replace float literals:
+
+   Line 172: return(0.0);
+   After:    return(SPFlt(0));
+
+   Line 180: sign = -1.0;
+   After:    sign = SPNeg(SPFlt(1));
+
+   Line 183: sign = 1.0;
+   After:    sign = SPFlt(1);
+
+   Line 186: sign = 1.0;
+   After:    sign = SPFlt(1);
+
+   Line 244: singleval = 0.0;
+   After:    singleval = SPFlt(0);
+
+   Line 254: SPMul(SPPow(SPFlt(ex),10.0),singleval)
+   After:    SPMul(SPPow(SPFlt(ex),SPFlt(10)),singleval)
+
+   Line 257: singleval=0.0;
+   After:    singleval = SPFlt(0);
+
+   Line 261: singleval=0.0;
+   After:    singleval = SPFlt(0);
+
+--------------------------------------------------------------------------------
+src/lib/c/pow.c
+--------------------------------------------------------------------------------
+
+1. Change external declarations:
+   extern long SPFieee();
+   extern long SPTieee();
+   extern long SPPow();
+   extern long IEEESPPow();
+
+2. Change power() signature:
+   long power(y,x)
+   long y;
+   long x;
+
+3. Update return statement:
+   return SPFieee(IEEESPPow(SPTieee(y),SPTieee(x)));
+   (No change needed - just uses long values now)
+
+================================================================================
+ADDITIONAL REQUIRED CHANGES
+================================================================================
+
+Need to verify/add SPNeg declaration for negating FFP values:
+  extern long SPNeg();
+
+If SPNeg is not available, use SPMul with FFP -1:
+  #define FFP_NEG_ONE 0x800000C1   /* -1.0 in FFP format */
+  sign = SPMul(SPFlt(1), FFP_NEG_ONE);
+
+Actually, simpler: SPFlt might handle negative integers. Test with SPFlt(-1).
+If it works, no need for SPNeg.
+
+================================================================================
+TESTING PLAN
+================================================================================
+
+1. Rebuild db.lib with changes
+2. Test SimpleHelloFloat.b - should print " 1.1" correctly
+3. Test VAL function: x = VAL("123.45")
+4. Test exponentiation: PRINT 2^3
+5. Run full verification test suite
+
+================================================================================
+NOTES
+================================================================================
+
+- ami.lib contains fpa(), arnd(), afp() - these expect FFP and return FFP
+- mathffp.library contains SPxxx functions - all use FFP format
+- The changes make db.lib treat FFP as an opaque 32-bit type
+- This is the cleanest long-term solution for vbcc compatibility
+
+================================================================================
+END OF SPECIFICATION
+================================================================================
