@@ -54,7 +54,8 @@
       "Bash(while [ ! -f /Users/mbergmann/Development/MySources/amigasources/acec/scripts/verify/results/crash-diagnosis.marker ])",
       "Bash(do sleep 3)",
       "Bash(git reset:*)",
-      "Bash(/Users/mbergmann/Development/MySources/amigasources/acec/scripts/verify/otherthenamiga/FS-UAE.app/Contents/MacOS/fs-uae:*)"
+      "Bash(/Users/mbergmann/Development/MySources/amigasources/acec/scripts/verify/otherthenamiga/FS-UAE.app/Contents/MacOS/fs-uae:*)",
+      "Bash(sort echo echo '=== ASM source files in src/lib/asm ===' ls -la src/lib/asm/*.s)"
     ]
   }
 }
