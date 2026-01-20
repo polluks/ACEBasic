@@ -1,0 +1,247 @@
+.KEY LOG/K
+.BRA {
+.KET }
+
+; Lib Phase 2 Verification Script - Runtime Library Build Tests
+; Run from within AmigaOS (fs-uae)
+;
+; Usage: execute ACE:verify/scripts/lib-phase2-verify.script LOG=ACE:verify/scripts/results/lib-phase2.log
+; Or just: execute ACE:verify/scripts/lib-phase2-verify.script
+
+; Set default log location
+IF "{LOG}" EQ ""
+   SET LOGFILE "ACE:verify/scripts/results/lib-phase2.log"
+ELSE
+   SET LOGFILE "{LOG}"
+ENDIF
+
+echo "" >$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "Lib Phase 2 Findings - `date`" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Runtime library build tests executed in AmigaOS." >>$LOGFILE
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.1: Help Target Works
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.1: Help Target Works" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Command: cd ACE:src/make && make -f Makefile-lib help" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Output:" >>$LOGFILE
+
+cd ACE:src/make
+make -f Makefile-lib help >T:lib21.out
+IF WARN
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Exit code indicates error" >>$LOGFILE
+ELSE
+   echo "Status: PASS" >>$LOGFILE
+ENDIF
+
+echo "" >>$LOGFILE
+type T:lib21.out >>$LOGFILE
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.2: Clean Target Works
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.2: Clean Target Works" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Command: make -f Makefile-lib clean" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Output:" >>$LOGFILE
+
+cd ACE:src/make
+make -f Makefile-lib clean >T:lib22.out
+IF WARN
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Exit code indicates error" >>$LOGFILE
+ELSE
+   echo "Status: PASS" >>$LOGFILE
+ENDIF
+
+echo "" >>$LOGFILE
+type T:lib22.out >>$LOGFILE
+echo "" >>$LOGFILE
+
+; Verify libraries are removed
+echo "Verifying libraries removed:" >>$LOGFILE
+IF EXISTS ACE:lib/db.lib
+   echo "  WARNING: db.lib still exists after clean" >>$LOGFILE
+ELSE
+   echo "  db.lib removed: OK" >>$LOGFILE
+ENDIF
+IF EXISTS ACE:lib/startup.lib
+   echo "  WARNING: startup.lib still exists after clean" >>$LOGFILE
+ELSE
+   echo "  startup.lib removed: OK" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.3: Full Build Succeeds
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.3: Full Build Succeeds" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Command: make -f Makefile-lib V=1" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Starting build..." >>$LOGFILE
+
+cd ACE:src/make
+make -f Makefile-lib V=1 >T:lib23.out *>T:lib23.err
+SET BUILDRESULT $RC
+
+IF $BUILDRESULT GT 0
+   echo "Status: FAIL" >>$LOGFILE
+   echo "Build returned error code: $BUILDRESULT" >>$LOGFILE
+ELSE
+   echo "Status: PASS" >>$LOGFILE
+   echo "Build completed successfully" >>$LOGFILE
+ENDIF
+
+echo "" >>$LOGFILE
+echo "Build stdout:" >>$LOGFILE
+type T:lib23.out >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Build stderr:" >>$LOGFILE
+IF EXISTS T:lib23.err
+   type T:lib23.err >>$LOGFILE
+ELSE
+   echo "(no stderr captured)" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.4: db.lib Created and Non-Empty
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.4: db.lib Created and Non-Empty" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+
+IF EXISTS ACE:lib/db.lib
+   echo "db.lib exists: YES" >>$LOGFILE
+   list ACE:lib/db.lib >>$LOGFILE
+
+   ; Get file size (list shows it)
+   list ACE:lib/db.lib LFORMAT="%l" >T:dbsize.out
+   SET DBSIZE `type T:dbsize.out`
+
+   IF $DBSIZE GT 0
+      echo "Status: PASS" >>$LOGFILE
+      echo "db.lib size: $DBSIZE bytes" >>$LOGFILE
+   ELSE
+      echo "Status: FAIL" >>$LOGFILE
+      echo "db.lib exists but is empty" >>$LOGFILE
+   ENDIF
+ELSE
+   echo "Status: FAIL" >>$LOGFILE
+   echo "db.lib was NOT created" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.5: startup.lib Created and Non-Empty
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.5: startup.lib Created and Non-Empty" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+
+IF EXISTS ACE:lib/startup.lib
+   echo "startup.lib exists: YES" >>$LOGFILE
+   list ACE:lib/startup.lib >>$LOGFILE
+
+   ; Get file size
+   list ACE:lib/startup.lib LFORMAT="%l" >T:startupsize.out
+   SET STARTUPSIZE `type T:startupsize.out`
+
+   IF $STARTUPSIZE GT 0
+      echo "Status: PASS" >>$LOGFILE
+      echo "startup.lib size: $STARTUPSIZE bytes" >>$LOGFILE
+   ELSE
+      echo "Status: FAIL" >>$LOGFILE
+      echo "startup.lib exists but is empty" >>$LOGFILE
+   ENDIF
+ELSE
+   echo "Status: FAIL" >>$LOGFILE
+   echo "startup.lib was NOT created" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Test 2.6: Object Files Created
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Test 2.6: Object Files Created" >>$LOGFILE
+echo "------------------------------------------------------------" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Checking object files in ACE:src/lib/obj:" >>$LOGFILE
+
+list ACE:src/lib/obj/#?.o >T:lib_objs.out
+IF NOT WARN
+   ; Count object files
+   search T:lib_objs.out ".o" >T:lib_objcount.out
+   echo "Object files found:" >>$LOGFILE
+   echo "Status: PASS" >>$LOGFILE
+   echo "" >>$LOGFILE
+   type T:lib_objs.out >>$LOGFILE
+ELSE
+   echo "Status: FAIL" >>$LOGFILE
+   echo "No object files found in lib/obj directory" >>$LOGFILE
+ENDIF
+echo "" >>$LOGFILE
+
+; ------------------------------------------------------------------
+; Lib Phase 2 Summary
+; ------------------------------------------------------------------
+echo "============================================================" >>$LOGFILE
+echo "Lib Phase 2 Summary" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Tests Executed: 6" >>$LOGFILE
+echo "  2.1 - Help target" >>$LOGFILE
+echo "  2.2 - Clean target" >>$LOGFILE
+echo "  2.3 - Full build" >>$LOGFILE
+echo "  2.4 - db.lib created and non-empty" >>$LOGFILE
+echo "  2.5 - startup.lib created and non-empty" >>$LOGFILE
+echo "  2.6 - Object files created" >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Review the output above for PASS/FAIL status of each test." >>$LOGFILE
+echo "" >>$LOGFILE
+echo "Next Steps:" >>$LOGFILE
+echo "  If all tests pass, proceed to Lib Phase 3 (Functional Test)." >>$LOGFILE
+echo "  If build fails, check error messages above for issues." >>$LOGFILE
+echo "" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+echo "END OF LIB PHASE 2 VERIFICATION" >>$LOGFILE
+echo "============================================================" >>$LOGFILE
+
+; Clean up temp files
+delete T:lib21.out QUIET
+delete T:lib22.out QUIET
+delete T:lib23.out QUIET
+delete T:lib_objs.out QUIET
+delete T:lib_objcount.out QUIET
+delete T:dbsize.out QUIET
+delete T:startupsize.out QUIET
+
+; Show results on screen
+echo ""
+echo "Lib Phase 2 verification complete!"
+echo "Results saved to: $LOGFILE"
+echo ""
+echo "Summary:"
+type $LOGFILE
+
+; Create completion marker for automated runs
+echo "Lib Phase 2 complete" >ACE:verify/scripts/results/lib-phase2-complete.marker

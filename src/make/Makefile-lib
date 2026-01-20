@@ -1,0 +1,189 @@
+################################################################################
+# ACE Runtime Library Makefile
+################################################################################
+#
+# Description:
+#   GNU Makefile for building the ACE runtime libraries (db.lib, startup.lib).
+#   Provides incremental builds, standard targets, and backward compatibility
+#   with the existing ACE: assign structure.
+#
+# Location:
+#   ACE:src/make/Makefile-lib
+#
+# Usage:
+#   From src/make/ directory:
+#     make -f Makefile-lib           # Build both libraries (quiet mode)
+#     make -f Makefile-lib V=1       # Build with verbose output
+#     make -f Makefile-lib db.lib    # Build only db.lib
+#     make -f Makefile-lib startup   # Build only startup.lib
+#     make -f Makefile-lib clean     # Remove all build artifacts
+#     make -f Makefile-lib help      # Show help
+#
+# Requirements:
+#   - GNU Make 3.80 or later (AmigaOS)
+#   - gcc 2.95.3 (for C modules)
+#   - a68k (for assembly modules)
+#   - ACE: assign must be configured
+#   - UnixDirsII package
+#
+# Author: Generated from Makefile-Lib-Plan.txt
+# Date: 2026-01-20
+#
+################################################################################
+
+################################################################################
+# CONFIGURATION
+################################################################################
+
+# Shell - use AmigaDOS shell instead of /bin/sh
+SHELL = sh
+
+# Toolchain
+CC = gcc
+CFLAGS = -m68020 -c -s -O -noixemul
+AS = ../../bin/a68k
+ASFLAGS =
+
+# Paths - Using relative paths from src/make/ directory
+LIB_C_SRC = ../lib/c
+LIB_ASM_SRC = ../lib/asm
+LIB_OBJ = ../lib/obj
+STARTUP_SRC = ../lib/startup
+LIB_OUT = ../../lib
+
+# Verbose control
+# V=0 (default): Quiet mode - shows only high-level progress
+# V=1: Verbose mode - shows all commands
+V = 0
+ifeq ($(V),1)
+  Q =
+  ECHO = @true
+else
+  Q = @
+  ECHO = @echo
+endif
+
+################################################################################
+# SOURCE FILES
+################################################################################
+
+# C source files (30 modules)
+C_SOURCES = aceports.c alloc.c arg.c base.c bevel.c c_string.c ffpstr.c \
+            fgets.c filereq.c files.c gadget.c iff.c ILBMLib_bytes.c \
+            inpbox.c input.c intuievent.c make_ILBMLib.c menu.c pow.c \
+            print.c rfiles.c say.c scrfunc.c ser.c sleep.c sysreq.c \
+            system.c text.c val.c window.c
+
+# Assembly source files (23 modules)
+ASM_SOURCES = common_data.s csrpos.s ffp.s file.s file_data.s gfx.s \
+              lmath.s locate.s logic.s misc.s scroll.s scrwin.s \
+              scrwin_data.s simple_str.s sound.s sound_data.s string.s \
+              string_data.s time.s turtle.s turtle_data.s ver.s windowfunc.s
+
+# Object files (pattern substitution from source lists)
+C_OBJECTS = $(patsubst %.c,$(LIB_OBJ)/%.o,$(C_SOURCES))
+ASM_OBJECTS = $(patsubst %.s,$(LIB_OBJ)/%.o,$(ASM_SOURCES))
+ALL_OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
+
+# Output targets
+DB_LIB = $(LIB_OUT)/db.lib
+STARTUP_LIB = $(LIB_OUT)/startup.lib
+
+################################################################################
+# PHONY TARGETS
+################################################################################
+
+.PHONY: all clean help dirs db.lib startup
+
+# Prevent parallel builds which can cause issues on AmigaOS
+.NOTPARALLEL:
+
+################################################################################
+# BUILD TARGETS
+################################################################################
+
+# Default target - build both libraries
+all: dirs $(DB_LIB) $(STARTUP_LIB)
+	@echo "Build complete: $(DB_LIB) $(STARTUP_LIB)"
+
+# Convenience target for db.lib
+db.lib: dirs $(DB_LIB)
+	@echo "Build complete: $(DB_LIB)"
+
+# Convenience target for startup.lib
+startup: dirs $(STARTUP_LIB)
+	@echo "Build complete: $(STARTUP_LIB)"
+
+# Build db.lib by concatenating all object files
+# Note: Use cat instead of join (AmigaDOS join != Unix join)
+$(DB_LIB): $(ALL_OBJECTS) | $(LIB_OUT)
+	$(ECHO) "Creating db.lib..."
+	$(Q)cat $(ALL_OBJECTS) >$@
+
+# Build startup.lib directly from assembly source
+# Note: a68k uses positional args (source, object), not -o flag
+$(STARTUP_LIB): $(STARTUP_SRC)/startup.s | $(LIB_OUT)
+	$(ECHO) "Assembling startup.lib..."
+	$(Q)$(AS) $(ASFLAGS) $(STARTUP_SRC)/startup.s $@
+
+# Ensure directories exist before building
+.PHONY: dirs
+dirs:
+	-@mkdir -p $(LIB_OBJ)
+	-@mkdir -p $(LIB_OUT)
+
+# Ensure directories exist (order-only prerequisites)
+$(ALL_OBJECTS): | $(LIB_OBJ)
+
+$(LIB_OBJ):
+	-@mkdir -p $(LIB_OBJ)
+
+$(LIB_OUT):
+	-@mkdir -p $(LIB_OUT)
+
+################################################################################
+# PATTERN RULES
+################################################################################
+
+# Compile C source files to object files
+$(LIB_OBJ)/%.o: $(LIB_C_SRC)/%.c
+	$(ECHO) "Compiling $<..."
+	$(Q)$(CC) $(CFLAGS) -I$(LIB_C_SRC) $< -o $@
+
+# Assemble assembly source files to object files
+# Note: a68k uses positional args (source, object), not -o flag
+$(LIB_OBJ)/%.o: $(LIB_ASM_SRC)/%.s
+	$(ECHO) "Assembling $<..."
+	$(Q)$(AS) $(ASFLAGS) $< $@
+
+################################################################################
+# UTILITY TARGETS
+################################################################################
+
+# Clean build artifacts
+clean:
+	$(ECHO) "Cleaning object files..."
+	-$(Q)rm -f $(LIB_OBJ)/*.o
+	$(ECHO) "Cleaning libraries..."
+	-$(Q)rm -f $(DB_LIB)
+	-$(Q)rm -f $(STARTUP_LIB)
+	@echo "Clean complete"
+
+# Help text
+help:
+	@echo "ACE Runtime Library Makefile (Makefile-lib)"
+	@echo ""
+	@echo "Targets:"
+	@echo "  all      - Build db.lib and startup.lib (default)"
+	@echo "  db.lib   - Build only db.lib"
+	@echo "  startup  - Build only startup.lib"
+	@echo "  clean    - Remove all object files and libraries"
+	@echo "  help     - Show this help message"
+	@echo ""
+	@echo "Options:"
+	@echo "  V=1      - Verbose output (show all commands)"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make -f Makefile-lib           # Build both libraries"
+	@echo "  make -f Makefile-lib V=1       # Build with verbose output"
+	@echo "  make -f Makefile-lib clean all # Clean rebuild"

@@ -1,0 +1,167 @@
+================================================================================
+  Runtime Library Makefile Migration Plan
+================================================================================
+
+Version: 1.0
+Date: 2026-01-20
+
+================================================================================
+OVERVIEW
+================================================================================
+
+Create Makefile-lib to build the ACE runtime libraries (db.lib and startup.lib)
+using the same patterns established in Makefile-ace.
+
+Decisions:
+- Assembler: a68k (existing toolchain)
+- Library creation: join (concatenate objects)
+- Testing: Single test program verification
+- Structure: Separate Makefile (Makefile-lib)
+
+================================================================================
+MAKEFILE SPECIFICATION
+================================================================================
+
+Location: src/make/Makefile-lib
+
+Toolchain
+---------
+CC = gcc
+CFLAGS = -m68020 -c -s -O -noixemul
+AS = a68k
+ASFLAGS = (default a68k flags)
+
+Paths (relative from src/make/)
+-------------------------------
+LIB_C_SRC = ../lib/c
+LIB_ASM_SRC = ../lib/asm
+LIB_OBJ = ../lib/obj
+STARTUP_SRC = ../lib/startup
+LIB_OUT = ../../lib
+
+Source Files
+------------
+C_SOURCES (32 files):
+  aceports.c alloc.c arg.c base.c bevel.c c_string.c ffpstr.c fgets.c
+  filereq.c files.c gadget.c iff.c ILBMLib_bytes.c inpbox.c input.c
+  intuievent.c make_ILBMLib.c menu.c pow.c print.c rfiles.c say.c
+  scrfunc.c ser.c sleep.c sysreq.c system.c text.c val.c window.c
+
+ASM_SOURCES (23 files):
+  common_data.s csrpos.s ffp.s file.s file_data.s gfx.s lmath.s locate.s
+  logic.s misc.s scroll.s scrwin.s scrwin_data.s simple_str.s sound.s
+  sound_data.s string.s string_data.s time.s turtle.s turtle_data.s
+  ver.s windowfunc.s
+
+STARTUP_SOURCE:
+  startup.s
+
+Targets
+-------
+all:          Build db.lib and startup.lib (default)
+db.lib:       Build runtime library from C + assembly objects
+startup.lib:  Build startup library
+clean:        Remove object files and libraries
+help:         Show usage information
+
+Build Rules
+-----------
+1. C compilation:   gcc $(CFLAGS) -I$(LIB_C_SRC) <source>.c -o $(LIB_OBJ)/<source>.o
+2. Assembly:        a68k $(LIB_ASM_SRC)/<source>.s $(LIB_OBJ)/<source>.o
+3. db.lib:          join $(LIB_OBJ)/*.o as $(LIB_OUT)/db.lib
+4. startup.lib:     a68k $(STARTUP_SRC)/startup.s $(LIB_OUT)/startup.lib
+
+================================================================================
+TESTING PLAN
+================================================================================
+
+Three phases, simpler than compiler testing.
+
+Phase 1: Pre-flight Checks (macOS Host)
+---------------------------------------
+Script: verify/scripts/lib-phase1-verify.sh
+
+Tests:
+- 1.1: Makefile syntax check (make -n)
+- 1.2: C source files exist (32 files)
+- 1.3: Assembly source files exist (23 files)
+- 1.4: Startup source exists
+- 1.5: Object directory exists
+- 1.6: Output lib directory exists
+
+Output: verify/scripts/results/lib-phase1.log
+
+
+Phase 2: Build Verification (Amiga/fs-uae)
+------------------------------------------
+Script: verify/scripts/lib-phase2-verify.script
+
+Tests:
+- 2.1: Clean target works
+- 2.2: Full build succeeds
+- 2.3: db.lib created and non-empty
+- 2.4: startup.lib created and non-empty
+
+Output: verify/scripts/results/lib-phase2.log
+
+
+Phase 3: Functional Test (Amiga/fs-uae)
+---------------------------------------
+Script: verify/scripts/lib-phase3-verify.script
+
+Tests:
+- 3.1: Compile and link a simple BASIC program using new libraries
+- 3.2: Execute the compiled program
+- 3.3: Verify correct output
+
+Test program (verify/tests/cases/lib-test/hello.b):
+  PRINT "Hello from ACE!"
+
+Output: verify/scripts/results/lib-phase3.log
+
+================================================================================
+IMPLEMENTATION STEPS
+================================================================================
+
+Step 1: Create Makefile-lib
+---------------------------
+- Create src/make/Makefile-lib
+- Follow Makefile-ace patterns exactly
+- Verify syntax with make -n on host
+
+Step 2: Test Makefile on Amiga
+------------------------------
+- Run make -f Makefile-lib help
+- Run make -f Makefile-lib clean
+- Run make -f Makefile-lib (full build)
+- Verify libraries created
+
+Step 3: Create Test Scripts
+---------------------------
+- Create lib-phase1-verify.sh (host)
+- Create lib-phase2-verify.script (Amiga)
+- Create lib-phase3-verify.script (Amiga)
+
+Step 4: Run Full Verification
+-----------------------------
+- Run all phases
+- Document results
+
+================================================================================
+NOTES
+================================================================================
+
+Differences from Makefile-ace:
+- Two output targets (db.lib, startup.lib) instead of one executable
+- Mixed C and assembly sources
+- Uses 'join' for library creation instead of gcc linking
+- Assembly uses a68k instead of gcc
+
+Potential Issues:
+- a68k may need specific flags for 68020 code
+- join command syntax on AmigaOS vs ADE shell
+- Include paths for C files (may need -I for headers)
+
+================================================================================
+END OF PLAN
+================================================================================

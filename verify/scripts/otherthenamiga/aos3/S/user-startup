@@ -102,3 +102,16 @@ path ACE:bin add
 ;   echo ""
 ;   execute ACE:verify/scripts/phase5-verify.script
 ;endif
+
+; ============================================================================
+; LIBRARY MAKEFILE VERIFICATION
+; ============================================================================
+
+; --- Lib Phase 2: Build Verification ---
+; Tests help, clean, full build, libraries created
+if exists ACE:verify/scripts/lib-phase2-verify.script
+   echo ""
+   echo "Starting ACE Lib Phase 2 Build verification..."
+   echo ""
+   execute ACE:verify/scripts/lib-phase2-verify.script
+endif
