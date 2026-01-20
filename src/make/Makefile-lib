@@ -21,13 +21,16 @@
 #
 # Requirements:
 #   - GNU Make 3.80 or later (AmigaOS)
-#   - gcc 2.95.3 (for C modules)
-#   - a68k (for assembly modules)
+#   - vbcc (C compiler, produces Amiga hunk format)
+#   - vasm (assembler, Motorola syntax, hunk output)
+#   - vlink (linker for hunk format)
 #   - ACE: assign must be configured
+#   - vbcc: assign must point to vbcc installation
 #   - UnixDirsII package
 #
 # Author: Generated from Makefile-Lib-Plan.txt
 # Date: 2026-01-20
+# Updated: 2026-01-20 - Switched from gcc/a68k to vbcc/vasm for hunk format
 #
 ################################################################################
 
@@ -39,10 +42,12 @@
 SHELL = sh
 
 # Toolchain
-CC = gcc
-CFLAGS = -m68020 -c -s -O -noixemul
-AS = ../../bin/a68k
-ASFLAGS =
+# Using vbcc/vasm/vlink for hunk format (compatible with ACE programs)
+# Use Unix-style paths (make doesn't understand Amiga colons)
+CC = /vbcc/bin/vc
+CFLAGS = -c -O2 -cpu=68020
+AS = /vbcc/bin/vasmm68k_mot
+ASFLAGS = -Fhunk -quiet
 
 # Paths - Using relative paths from src/make/ directory
 LIB_C_SRC = ../lib/c
@@ -115,16 +120,16 @@ startup: dirs $(STARTUP_LIB)
 	@echo "Build complete: $(STARTUP_LIB)"
 
 # Build db.lib by concatenating all object files
-# Note: Use cat instead of join (AmigaDOS join != Unix join)
+# Note: Use AmigaDOS Join command (not Unix join or cat)
+# /c/join creates proper Amiga library format
 $(DB_LIB): $(ALL_OBJECTS) | $(LIB_OUT)
 	$(ECHO) "Creating db.lib..."
-	$(Q)cat $(ALL_OBJECTS) >$@
+	$(Q)/c/join $(ALL_OBJECTS) AS $@
 
 # Build startup.lib directly from assembly source
-# Note: a68k uses positional args (source, object), not -o flag
 $(STARTUP_LIB): $(STARTUP_SRC)/startup.s | $(LIB_OUT)
 	$(ECHO) "Assembling startup.lib..."
-	$(Q)$(AS) $(ASFLAGS) $(STARTUP_SRC)/startup.s $@
+	$(Q)$(AS) $(ASFLAGS) -o $@ $(STARTUP_SRC)/startup.s
 
 # Ensure directories exist before building
 .PHONY: dirs
@@ -148,13 +153,12 @@ $(LIB_OUT):
 # Compile C source files to object files
 $(LIB_OBJ)/%.o: $(LIB_C_SRC)/%.c
 	$(ECHO) "Compiling $<..."
-	$(Q)$(CC) $(CFLAGS) -I$(LIB_C_SRC) $< -o $@
+	$(Q)$(CC) $(CFLAGS) -I$(LIB_C_SRC) -o $@ $<
 
 # Assemble assembly source files to object files
-# Note: a68k uses positional args (source, object), not -o flag
 $(LIB_OBJ)/%.o: $(LIB_ASM_SRC)/%.s
 	$(ECHO) "Assembling $<..."
-	$(Q)$(AS) $(ASFLAGS) $< $@
+	$(Q)$(AS) $(ASFLAGS) -o $@ $<
 
 ################################################################################
 # UTILITY TARGETS

@@ -569,7 +569,7 @@ ULONG channel;
 			break;
 
 	/* address of serial device name */
-	case 11 :	return((char *)serial[channel].device_name);
+	case 11 :	return((ULONG)serial[channel].device_name);
 			break;
 
 	/* serial port line and register status */
