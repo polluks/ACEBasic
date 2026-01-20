@@ -75,12 +75,13 @@ long	cc;
 extern	long 	MathBase;
 extern	long 	MathTransBase;
 
-/* FFP math functions */
-float	SPFlt();
-float	SPAdd();
-float	SPDiv();
-float	SPMul();
-float	SPPow();
+/* FFP math functions - return FFP as raw 32-bit */
+long	SPFlt();
+long	SPAdd();
+long	SPDiv();
+long	SPMul();
+long	SPNeg();
+long	SPPow();
 
 /* functions */
 void nextch(str)
@@ -133,7 +134,7 @@ long value=0;
  return(value);
 }
 
-float val(str)
+long val(str)    /* returns FFP value as raw 32-bit */
 char *str;
 {
 long	radix;
@@ -147,8 +148,8 @@ long 	places;
 long	ex;
 long 	ex_sign;
 BOOL	period;
-float 	sign;
-float	singleval;
+long 	sign;       /* FFP value */
+long	singleval;  /* FFP value */
 
   /* start of string */
   cc=0;
@@ -169,7 +170,7 @@ float	singleval;
    {
     case 'H' : radix=HEX; base=16; break;
     case 'O' : radix=OCT; base=8;  break;
-    default  : return(0.0);	/* unknown symbol */
+    default  : return(SPFlt(0));	/* unknown symbol */
    }
    nextch(str);
   }
@@ -177,13 +178,13 @@ float	singleval;
   /* + | - */
   switch(ch)
   {
-   case '-' : 	sign = -1.0; nextch(str); 
-		break;
-  
-   case '+' :	sign = 1.0; nextch(str);
+   case '-' : 	sign = SPNeg(SPFlt(1)); nextch(str);   /* -1.0 in FFP */
 		break;
 
-   default  :	sign = 1.0; 
+   case '+' :	sign = SPFlt(1); nextch(str);
+		break;
+
+   default  :	sign = SPFlt(1);
   }
 
   if (digit(radix) || (ch == '.'))
@@ -241,7 +242,7 @@ float	singleval;
     if (ch == '+') { ex_sign=1; nextch(str); }
     else
        if (ch == '-') { ex_sign=-1; nextch(str); }
-    if (!digit(radix)) singleval = 0.0;  /* expected a digit so just return 0 */ 
+    if (!digit(radix)) singleval = SPFlt(0);  /* expected a digit so just return 0 */ 
     /* get digits */
     while (digit(radix)) { ex = base*ex+digit_value(radix); nextch(str); }
     ex *= ex_sign;
@@ -251,14 +252,14 @@ float	singleval;
     {
      /* if exponent is zero then singleval=singleval*1 since 10^0 = 1 */
      if (ex != 0) 
-         singleval=SPMul(SPPow(SPFlt(ex),10.0),singleval); /* n * 10^ex */
+         singleval=SPMul(SPPow(SPFlt(ex),SPFlt(10)),singleval); /* n * 10^ex */
     }
-    else 
-        singleval=0.0;	 /* exponent out of range, so just return 0 */ 
+    else
+        singleval=SPFlt(0);	 /* exponent out of range, so just return 0 */ 
    }
   }
-  else 
-      singleval=0.0;   /* illegal character for start of number */   
+  else
+      singleval=SPFlt(0);   /* illegal character for start of number */   
 
   singleval = SPMul(singleval,sign);	/* positive or negative */
 

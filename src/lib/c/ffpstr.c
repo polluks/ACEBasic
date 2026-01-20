@@ -34,11 +34,11 @@ extern	long	decimal_places;	/* number of places to round to -- default=8 */
 
 /* FFP math functions */
 long 	SPTst();
-float	afp();
+long	afp();    /* returns FFP as raw 32-bit */
 
 /* strsingle() */
 char 	*strsingle(fnum)
-float 	fnum;
+long 	fnum;    /* FFP value as raw 32-bit */
 {
 static 	char 	fpabuf[15];
 static	char	ex_buf[3];

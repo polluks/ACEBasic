@@ -59,6 +59,9 @@ assign ACEbmaps: ACE:bmaps
 assign ACEinclude: ACE:include
 path ACE:bin add
 
+; Set script flag on bas script (needed for fs-uae shared folder)
+protect ACE:bin/bas +s
+
 ;BEGIN ACE Verification
 ; Automated Makefile verification for ACE compiler
 ; This runs automatically on startup and saves results to ACE:verify/scripts/results/
@@ -114,6 +117,15 @@ path ACE:bin add
 ;   echo ""
 ;   execute ACE:verify/scripts/lib-phase2-verify.script
 ;endif
+
+; --- FFP Fix Test ---
+; Tests the FFP/vbcc compatibility fix by running SimpleHelloFloat.b
+if exists ACE:verify/scripts/ffp-test.script
+   echo ""
+   echo "Starting FFP Fix verification..."
+   echo ""
+   execute ACE:verify/scripts/ffp-test.script
+endif
 
 ; --- Lib Phase 3: Functional Test ---
 ; Tests compile/link/run a BASIC program with new libraries

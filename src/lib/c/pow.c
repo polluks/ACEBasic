@@ -23,16 +23,16 @@
 /* External variables */
 extern unsigned long MathIeeeSingTransBase;
 
-/* External function declarations */
-extern float SPFieee();	
-extern float SPTieee();	
-extern float SPPow();
-extern float IEEESPPow();	
+/* External function declarations - return FFP as raw 32-bit */
+extern long SPFieee();
+extern long SPTieee();
+extern long SPPow();
+extern long IEEESPPow();	
 
-/* Exponentiation function */
-float power(y,x)
-float y;
-float x;
+/* Exponentiation function - returns FFP as raw 32-bit */
+long power(y,x)
+long y;    /* FFP value */
+long x;    /* FFP value */
 {
 /*
 ** Returns x raised to the power of y.

@@ -217,7 +217,7 @@ static char buf[40];
 }
 
 void Usingleprint(num)
-float num;
+long num;    /* FFP value as raw 32-bit */
 {
 /* print single-precision float to DOS or Intuition window */
 
