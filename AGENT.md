@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENT.md
 
 AI agent guidance for this codebase. For project docs, build instructions, and architecture, see [README.md](README.md).
 
