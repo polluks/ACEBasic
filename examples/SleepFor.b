@@ -1,0 +1,3 @@
+SLEEP FOR 1
+PRINT "Hello"
+
