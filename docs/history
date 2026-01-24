@@ -1694,5 +1694,6 @@
             - Makefile for compiling the ACE compiler and the runtime libraries
             (you need ADE environment from Aminet plus vbcc compiler and OS includes)
             - test suite (incomplete)
-            - file cleanups (WIP)
+        	- file cleanups (WIP)
+			- AGA screen support 
 
