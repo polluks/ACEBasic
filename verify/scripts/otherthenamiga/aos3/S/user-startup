@@ -61,5 +61,3 @@ path ACE:bin add
 
 ; Set script flag on bas script (needed for fs-uae shared folder)
 protect ACE:bin/bas +s
-
-
