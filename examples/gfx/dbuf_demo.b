@@ -20,7 +20,7 @@ PALETTE 3,0,0,1
 DbufInit
 
 IF NOT DbufReady THEN
-  PRINT "Failed to allocate back buffer!"
+  PRINT "Failed TO allocate BACK buffer!"
   WINDOW CLOSE 1
   SCREEN CLOSE 1
   STOP
