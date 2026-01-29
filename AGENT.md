@@ -10,6 +10,7 @@ AI agent guidance for this codebase. For project docs, build instructions, and a
 2. Make ONE change at a time
 3. Verify it works (build, test, or run)
 4. Only then proceed to the next change
+5. Every plan/spec is to be implememted in a separate git branch
 
 Why: The Amiga environment is fragile - path handling, toolchain differences, and AmigaOS quirks mean changes interact unexpectedly. Small steps make debugging and rollback feasible.
 
@@ -29,6 +30,7 @@ Why: The Amiga environment is fragile - path handling, toolchain differences, an
 - Adapt `aos3/S/user-startup` to run/execute a script or manual commands on boot. Whatever it is, in order to be able to verify, what has been added should write log to ace: where it can be checked on the host system
 - run emulator using 'open' command.
 - Running the emulator should periodically (30 secs) check for a result (if some log file is generated)
+- changing user-startup requires restart of emulator.
 
 ## ACE Basic syntax
 
