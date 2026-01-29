@@ -190,7 +190,7 @@ BOOL module_opt=FALSE;		/*
 				** is a code module or a complete ACE program.
 				*/
 
-BOOL cpu020_opt=FALSE;		/* 68020+ code generation */
+BOOL cpu020_opt=TRUE;		/* 68020+ code generation (default) */
 
 /* misc. flags */
 BOOL have_lparen=FALSE;
