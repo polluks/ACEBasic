@@ -28,6 +28,7 @@
 1. INTRODUCTION
 ===============
 
+
 The MUI Submod provides a high-level BASIC-friendly interface to MUI (Magic
 User Interface), the powerful GUI toolkit for AmigaOS. Instead of manually
 managing tag arrays and method calls, you use simple function calls:
@@ -46,12 +47,15 @@ The submod handles:
 - Memory management (string pooling for MUI's requirements)
 - Error tracking (check MUILastError() for failures)
 
+
+
 @ENDNODE
 
 @NODE "2-quick-start" "2. QUICK START"
 
 2. QUICK START
 ==============
+
 
 Here's a complete MUI program:
 
@@ -93,12 +97,15 @@ Compile:
 
     ace:bin/bas myprogram ace:submods/mui/MUI.o
 
+
+
 @ENDNODE
 
 @NODE "3-installation" "3. INSTALLATION"
 
 3. INSTALLATION
 ===============
+
 
 The MUI Submod consists of:
 
@@ -121,12 +128,15 @@ Requirements:
     - MUI 3.8 or later (muimaster.library v19+)
     - ACE v2.7 or later (for CALLBACK SUB support in hook-based events)
 
+
+
 @ENDNODE
 
 @NODE "4-concepts" "4. CONCEPTS"
 
 4. CONCEPTS
 ===========
+
 
 --------------------------------------------------------------------------------
 4.1 The Object Tree
@@ -173,6 +183,7 @@ Quick helpers for simple cases:
     grp = MUIHGroup3(child1, child2, child3)
 
 See below for more API options.
+
 
 --------------------------------------------------------------------------------
 4.3 The Event Loop
@@ -226,11 +237,13 @@ B. Hook-Based (Advanced):
        END SUB
 
        DECLARE STRUCT MUIHook myHook
-       MUISetupHookA4(myHook, @@OnClick, 0&)
+       MUISetupHookA4(myHook, @OnClick, 0&)
        MUINotifyButtonHook(btn, myHook)
 
    Note: DECLARE STRUCT creates a pointer, so don't use VARPTR() on it.
    The hook is called automatically during MUIWaitEvent.
+
+
 
 @ENDNODE
 
@@ -238,6 +251,7 @@ B. Hook-Based (Advanced):
 
 5. API REFERENCE
 ================
+
 
 --------------------------------------------------------------------------------
 5.1 Initialization & Cleanup
@@ -867,7 +881,7 @@ Setup:
         OnClick = 0&
     END SUB
 
-    MUISetupHookA4(myHook, @@OnClick, 0&)
+    MUISetupHookA4(myHook, @OnClick, 0&)
     MUINotifyButtonHook(btn, myHook)
 
 IMPORTANT:
@@ -914,12 +928,15 @@ ADDRESS MUIDtpicAlpha(STRING filename, LONGINT alpha)
 MUIDtpicSetName(ADDRESS obj, STRING filename)
     Change displayed image.
 
+
+
 @ENDNODE
 
 @NODE "6-common-patterns" "6. COMMON PATTERNS"
 
 6. COMMON PATTERNS
 ==================
+
 
 --------------------------------------------------------------------------------
 Settings Form Pattern
@@ -983,12 +1000,15 @@ Modal "Please Wait" Pattern
     ' ... long operation ...
     MUIAppWake(app)          ' Re-enable UI
 
+
+
 @ENDNODE
 
 @NODE "7-troubleshooting" "7. TROUBLESHOOTING"
 
 7. TROUBLESHOOTING
 ==================
+
 
 --------------------------------------------------------------------------------
 7.1 ACE BASIC Syntax Notes
@@ -1035,10 +1055,10 @@ These are common mistakes when writing MUI programs in ACE BASIC:
 
     DECLARE STRUCT MUIHook myHook
 
-    WRONG:  MUISetupHookA4(VARPTR(myHook), @@Callback, 0&)
+    WRONG:  MUISetupHookA4(VARPTR(myHook), @Callback, 0&)
             MUINotifyButtonHook(btn, VARPTR(myHook))
 
-    RIGHT:  MUISetupHookA4(myHook, @@Callback, 0&)
+    RIGHT:  MUISetupHookA4(myHook, @Callback, 0&)
             MUINotifyButtonHook(btn, myHook)
 
 ** Avoid ACE BASIC reserved words as variable names **
@@ -1061,6 +1081,7 @@ These are common mistakes when writing MUI programs in ACE BASIC:
 
         LIBRARY CLOSE "utility.library"
         LIBRARY CLOSE "intuition.library"
+
 
 --------------------------------------------------------------------------------
 7.2 Common Problems
@@ -1098,12 +1119,15 @@ Problem: Menu doesn't appear
 Solution: Use MUIWindowWithMenu when creating the window, or call
          MUIWindowMenustrip BEFORE MUIWindowOpen.
 
+
+
 @ENDNODE
 
 @NODE "8-constants-reference" "8. CONSTANTS REFERENCE"
 
 8. CONSTANTS REFERENCE
 ======================
+
 
 Error Codes:
     MUIERR_NONE           = 0

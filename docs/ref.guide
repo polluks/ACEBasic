@@ -8,54 +8,55 @@
   @{" ARGCOUNT          " link "ARGCOUNT"}  @{" ASC               " link "ASC"}  @{" ASSEM             " link "ASSEM"}  @{" ASSERT            " link "ASSERT"}
   @{" ATN               " link "ATN"}  @{" BACK              " link "BACK"}  @{" BEEP              " link "BEEP"}  @{" BEVELBOX          " link "BEVELBOX"}
   @{" BIN$              " link "BIN$"}  @{" BIND              " link "BIND"}  @{" BLOCK             " link "BLOCK"}  @{" BREAK             " link "BREAK"}
-  @{" CALL              " link "CALL"}  @{" CASE              " link "CASE"}  @{" CHDIR             " link "CHDIR"}  @{" CHIPSET           " link "CHIPSET"}
-  @{" CHR$              " link "CHR$"}  @{" CINT              " link "CINT"}  @{" CIRCLE            " link "CIRCLE"}  @{" CLEAR ALLOC       " link "CLEAR ALLOC"}
-  @{" CLNG              " link "CLNG"}  @{" CLOSE             " link "CLOSE"}  @{" CLS               " link "CLS"}  @{" COLOR             " link "COLOR"}
-  @{" COMMON            " link "COMMON"}  @{" CONST             " link "CONST"}  @{" COS               " link "COS"}  @{" CSNG              " link "CSNG"}
-  @{" CSRLIN            " link "CSRLIN"}  @{" CSTR              " link "CSTR"}  @{" DATA              " link "DATA"}  @{" DATE$             " link "DATE$"}
-  @{" DAY               " link "DAY"}  @{" DECLARE           " link "DECLARE"}  @{" DEF FN            " link "DEF FN"}  @{" DEFxxx            " link "DEFxxx"}
-  @{" DIM               " link "DIM"}  @{" END               " link "END"}  @{" EOF               " link "EOF"}  @{" EQV               " link "EQV"}
-  @{" ERR               " link "ERR"}  @{" ERROR             " link "ERROR"}  @{" EXIT FOR          " link "EXIT FOR"}  @{" EXIT SUB          " link "EXIT SUB"}
-  @{" EXP               " link "EXP"}  @{" EXTERNAL          " link "EXTERNAL"}  @{" FILEBOX$          " link "FILEBOX$"}  @{" FILES             " link "FILES"}
-  @{" FIX               " link "FIX"}  @{" FONT              " link "FONT"}  @{" FOR..NEXT         " link "FOR..NEXT"}  @{" FORWARD           " link "FORWARD"}
-  @{" FRE               " link "FRE"}  @{" GADGET            " link "GADGET"}  @{" GADGET (GadTools) " link "GADGET (GadTools)"}  @{" GADGET CLOSE      " link "GADGET CLOSE"}
-  @{" GADGET FONT       " link "GADGET FONT"}  @{" GADGET GETATTR    " link "GADGET GETATTR"}  @{" GADGET MOD        " link "GADGET MOD"}  @{" GADGET ON         " link "GADGET ON"}
-  @{" GADGET OUTPUT     " link "GADGET OUTPUT"}  @{" GADGET SETATTR    " link "GADGET SETATTR"}  @{" GADGET WAIT       " link "GADGET WAIT"}  @{" GET               " link "GET"}
-  @{" GLOBAL            " link "GLOBAL"}  @{" GOSUB..RETURN     " link "GOSUB..RETURN"}  @{" GOTO              " link "GOTO"}  @{" HANDLE            " link "HANDLE"}
-  @{" HEADING           " link "HEADING"}  @{" HEX$              " link "HEX$"}  @{" HOME              " link "HOME"}  @{" IF                " link "IF"}
-  @{" IFF               " link "IFF"}  @{" IFF CLOSE         " link "IFF CLOSE"}  @{" IFF OPEN          " link "IFF OPEN"}  @{" IFF READ          " link "IFF READ"}
-  @{" IMP               " link "IMP"}  @{" INKEY$            " link "INKEY$"}  @{" INPUT             " link "INPUT"}  @{" INPUT #           " link "INPUT #"}
-  @{" INPUT$            " link "INPUT$"}  @{" INPUTBOX          " link "INPUTBOX"}  @{" INPUTBOX$         " link "INPUTBOX$"}  @{" INSTR             " link "INSTR"}
-  @{" INT               " link "INT"}  @{" INVOKE            " link "INVOKE"}  @{" KILL              " link "KILL"}  @{" LEFT$             " link "LEFT$"}
-  @{" LEN               " link "LEN"}  @{" LET               " link "LET"}  @{" LIBRARY           " link "LIBRARY"}  @{" LINE              " link "LINE"}
-  @{" LINE INPUT #      " link "LINE INPUT #"}  @{" LOC               " link "LOC"}  @{" LOCATE            " link "LOCATE"}  @{" LOF               " link "LOF"}
-  @{" LOG               " link "LOG"}  @{" LONGINT           " link "LONGINT"}  @{" MENU              " link "MENU"}  @{" MENU CLEAR        " link "MENU CLEAR"}
-  @{" MENU ON           " link "MENU ON"}  @{" MENU WAIT         " link "MENU WAIT"}  @{" MESSAGE CLEAR     " link "MESSAGE CLEAR"}  @{" MESSAGE CLOSE     " link "MESSAGE CLOSE"}
-  @{" MESSAGE OPEN      " link "MESSAGE OPEN"}  @{" MESSAGE READ      " link "MESSAGE READ"}  @{" MESSAGE WAIT      " link "MESSAGE WAIT"}  @{" MESSAGE WRITE     " link "MESSAGE WRITE"}
-  @{" MID$              " link "MID$"}  @{" MOD               " link "MOD"}  @{" MOUSE             " link "MOUSE"}  @{" MOUSE ON          " link "MOUSE ON"}
-  @{" MSGBOX            " link "MSGBOX"}  @{" NAME              " link "NAME"}  @{" NOT               " link "NOT"}  @{" OCT$              " link "OCT$"}
-  @{" OPEN              " link "OPEN"}  @{" OPTION            " link "OPTION"}  @{" OR                " link "OR"}  @{" PAINT             " link "PAINT"}
-  @{" PALETTE           " link "PALETTE"}  @{" PATTERN           " link "PATTERN"}  @{" PEEKx             " link "PEEKx"}  @{" PENDOWN           " link "PENDOWN"}
-  @{" PENUP             " link "PENUP"}  @{" POINT             " link "POINT"}  @{" POKEx             " link "POKEx"}  @{" POS               " link "POS"}
-  @{" POTX              " link "POTX"}  @{" POTY              " link "POTY"}  @{" PRINT             " link "PRINT"}  @{" PRINT #           " link "PRINT #"}
-  @{" PRINTS            " link "PRINTS"}  @{" PSET              " link "PSET"}  @{" PTAB              " link "PTAB"}  @{" PUT               " link "PUT"}
-  @{" RANDOMIZE         " link "RANDOMIZE"}  @{" READ              " link "READ"}  @{" REM               " link "REM"}  @{" REPEAT..UNTIL     " link "REPEAT..UNTIL"}
-  @{" RESTORE           " link "RESTORE"}  @{" RIGHT$            " link "RIGHT$"}  @{" RND               " link "RND"}  @{" SADD              " link "SADD"}
-  @{" SAY               " link "SAY"}  @{" SCREEN            " link "SCREEN"}  @{" SCREEN BACK       " link "SCREEN BACK"}  @{" SCREEN CLOSE      " link "SCREEN CLOSE"}
-  @{" SCREEN FORWARD    " link "SCREEN FORWARD"}  @{" SCROLL            " link "SCROLL"}  @{" SERIAL            " link "SERIAL"}  @{" SERIAL CLOSE      " link "SERIAL CLOSE"}
-  @{" SERIAL OPEN       " link "SERIAL OPEN"}  @{" SERIAL READ       " link "SERIAL READ"}  @{" SERIAL WRITE      " link "SERIAL WRITE"}  @{" SETHEADING        " link "SETHEADING"}
-  @{" SETXY             " link "SETXY"}  @{" SGN               " link "SGN"}  @{" SHARED            " link "SHARED"}  @{" SHL               " link "SHL"}
-  @{" SHORTINT          " link "SHORTINT"}  @{" SHR               " link "SHR"}  @{" SIN               " link "SIN"}  @{" SINGLE            " link "SINGLE"}
-  @{" SIZEOF            " link "SIZEOF"}  @{" SLEEP             " link "SLEEP"}  @{" SLEEP FOR         " link "SLEEP FOR"}  @{" SOUND             " link "SOUND"}
-  @{" SPACE$            " link "SPACE$"}  @{" SPC               " link "SPC"}  @{" SQR               " link "SQR"}  @{" STICK             " link "STICK"}
-  @{" STOP              " link "STOP"}  @{" STR$              " link "STR$"}  @{" STRIG             " link "STRIG"}  @{" STRING            " link "STRING"}
-  @{" STRING$           " link "STRING$"}  @{" STRUCT            " link "STRUCT"}  @{" STYLE             " link "STYLE"}  @{" SUB..END SUB      " link "SUB..END SUB"}
-  @{" SWAP              " link "SWAP"}  @{" SYSTEM            " link "SYSTEM"}  @{" TAB               " link "TAB"}  @{" TAN               " link "TAN"}
-  @{" TIME$             " link "TIME$"}  @{" TIMER             " link "TIMER"}  @{" TIMER ON          " link "TIMER ON"}  @{" TRANSLATE$        " link "TRANSLATE$"}
-  @{" TURN              " link "TURN"}  @{" TURNLEFT          " link "TURNLEFT"}  @{" TURNRIGHT         " link "TURNRIGHT"}  @{" UCASE$            " link "UCASE$"}
-  @{" VAL               " link "VAL"}  @{" VARPTR            " link "VARPTR"}  @{" WAVE              " link "WAVE"}  @{" WHILE..WEND       " link "WHILE..WEND"}
-  @{" WINDOW            " link "WINDOW"}  @{" WINDOW CLOSE      " link "WINDOW CLOSE"}  @{" WINDOW ON         " link "WINDOW ON"}  @{" WINDOW OUTPUT     " link "WINDOW OUTPUT"}
-  @{" WRITE #           " link "WRITE #"}  @{" XCOR              " link "XCOR"}  @{" XOR               " link "XOR"}  @{" YCOR              " link "YCOR"}
+  @{" CALL              " link "CALL"}  @{" CALLBACK          " link "CALLBACK"}  @{" CASE              " link "CASE"}  @{" CHDIR             " link "CHDIR"}
+  @{" CHIPSET           " link "CHIPSET"}  @{" CHR$              " link "CHR$"}  @{" CINT              " link "CINT"}  @{" CIRCLE            " link "CIRCLE"}
+  @{" CLEAR ALLOC       " link "CLEAR ALLOC"}  @{" CLNG              " link "CLNG"}  @{" CLOSE             " link "CLOSE"}  @{" CLS               " link "CLS"}
+  @{" COLOR             " link "COLOR"}  @{" COMMON            " link "COMMON"}  @{" CONST             " link "CONST"}  @{" COS               " link "COS"}
+  @{" CSNG              " link "CSNG"}  @{" CSRLIN            " link "CSRLIN"}  @{" CSTR              " link "CSTR"}  @{" DATA              " link "DATA"}
+  @{" DATE$             " link "DATE$"}  @{" DAY               " link "DAY"}  @{" DECLARE           " link "DECLARE"}  @{" DEF FN            " link "DEF FN"}
+  @{" DEFxxx            " link "DEFxxx"}  @{" DIM               " link "DIM"}  @{" END               " link "END"}  @{" EOF               " link "EOF"}
+  @{" EQV               " link "EQV"}  @{" ERR               " link "ERR"}  @{" ERROR             " link "ERROR"}  @{" EXIT FOR          " link "EXIT FOR"}
+  @{" EXIT SUB          " link "EXIT SUB"}  @{" EXP               " link "EXP"}  @{" EXTERNAL          " link "EXTERNAL"}  @{" FILEBOX$          " link "FILEBOX$"}
+  @{" FILES             " link "FILES"}  @{" FIX               " link "FIX"}  @{" FONT              " link "FONT"}  @{" FOR..NEXT         " link "FOR..NEXT"}
+  @{" FORWARD           " link "FORWARD"}  @{" FRE               " link "FRE"}  @{" GADGET            " link "GADGET"}  @{" GADGET (GadTools) " link "GADGET (GadTools)"}
+  @{" GADGET CLOSE      " link "GADGET CLOSE"}  @{" GADGET FONT       " link "GADGET FONT"}  @{" GADGET GETATTR    " link "GADGET GETATTR"}  @{" GADGET MOD        " link "GADGET MOD"}
+  @{" GADGET ON         " link "GADGET ON"}  @{" GADGET OUTPUT     " link "GADGET OUTPUT"}  @{" GADGET SETATTR    " link "GADGET SETATTR"}  @{" GADGET WAIT       " link "GADGET WAIT"}
+  @{" GET               " link "GET"}  @{" GLOBAL            " link "GLOBAL"}  @{" GOSUB..RETURN     " link "GOSUB..RETURN"}  @{" GOTO              " link "GOTO"}
+  @{" HANDLE            " link "HANDLE"}  @{" HEADING           " link "HEADING"}  @{" HEX$              " link "HEX$"}  @{" HOME              " link "HOME"}
+  @{" IF                " link "IF"}  @{" IFF               " link "IFF"}  @{" IFF CLOSE         " link "IFF CLOSE"}  @{" IFF OPEN          " link "IFF OPEN"}
+  @{" IFF READ          " link "IFF READ"}  @{" IMP               " link "IMP"}  @{" INKEY$            " link "INKEY$"}  @{" INPUT             " link "INPUT"}
+  @{" INPUT #           " link "INPUT #"}  @{" INPUT$            " link "INPUT$"}  @{" INPUTBOX          " link "INPUTBOX"}  @{" INPUTBOX$         " link "INPUTBOX$"}
+  @{" INSTR             " link "INSTR"}  @{" INT               " link "INT"}  @{" INVOKE            " link "INVOKE"}  @{" KILL              " link "KILL"}
+  @{" LEFT$             " link "LEFT$"}  @{" LEN               " link "LEN"}  @{" LET               " link "LET"}  @{" LIBRARY           " link "LIBRARY"}
+  @{" LINE              " link "LINE"}  @{" LINE INPUT #      " link "LINE INPUT #"}  @{" LOC               " link "LOC"}  @{" LOCATE            " link "LOCATE"}
+  @{" LOF               " link "LOF"}  @{" LOG               " link "LOG"}  @{" LONGINT           " link "LONGINT"}  @{" MENU              " link "MENU"}
+  @{" MENU CLEAR        " link "MENU CLEAR"}  @{" MENU ON           " link "MENU ON"}  @{" MENU WAIT         " link "MENU WAIT"}  @{" MESSAGE CLEAR     " link "MESSAGE CLEAR"}
+  @{" MESSAGE CLOSE     " link "MESSAGE CLOSE"}  @{" MESSAGE OPEN      " link "MESSAGE OPEN"}  @{" MESSAGE READ      " link "MESSAGE READ"}  @{" MESSAGE WAIT      " link "MESSAGE WAIT"}
+  @{" MESSAGE WRITE     " link "MESSAGE WRITE"}  @{" MID$              " link "MID$"}  @{" MOD               " link "MOD"}  @{" MOUSE             " link "MOUSE"}
+  @{" MOUSE ON          " link "MOUSE ON"}  @{" MSGBOX            " link "MSGBOX"}  @{" NAME              " link "NAME"}  @{" NOT               " link "NOT"}
+  @{" OCT$              " link "OCT$"}  @{" OPEN              " link "OPEN"}  @{" OPTION            " link "OPTION"}  @{" OR                " link "OR"}
+  @{" PAINT             " link "PAINT"}  @{" PALETTE           " link "PALETTE"}  @{" PATTERN           " link "PATTERN"}  @{" PEEKx             " link "PEEKx"}
+  @{" PENDOWN           " link "PENDOWN"}  @{" PENUP             " link "PENUP"}  @{" POINT             " link "POINT"}  @{" POKEx             " link "POKEx"}
+  @{" POS               " link "POS"}  @{" POTX              " link "POTX"}  @{" POTY              " link "POTY"}  @{" PRINT             " link "PRINT"}
+  @{" PRINT #           " link "PRINT #"}  @{" PRINTS            " link "PRINTS"}  @{" PSET              " link "PSET"}  @{" PTAB              " link "PTAB"}
+  @{" PUT               " link "PUT"}  @{" RANDOMIZE         " link "RANDOMIZE"}  @{" READ              " link "READ"}  @{" REM               " link "REM"}
+  @{" REPEAT..UNTIL     " link "REPEAT..UNTIL"}  @{" RESTORE           " link "RESTORE"}  @{" RIGHT$            " link "RIGHT$"}  @{" RND               " link "RND"}
+  @{" SADD              " link "SADD"}  @{" SAY               " link "SAY"}  @{" SCREEN            " link "SCREEN"}  @{" SCREEN BACK       " link "SCREEN BACK"}
+  @{" SCREEN CLOSE      " link "SCREEN CLOSE"}  @{" SCREEN FORWARD    " link "SCREEN FORWARD"}  @{" SCROLL            " link "SCROLL"}  @{" SERIAL            " link "SERIAL"}
+  @{" SERIAL CLOSE      " link "SERIAL CLOSE"}  @{" SERIAL OPEN       " link "SERIAL OPEN"}  @{" SERIAL READ       " link "SERIAL READ"}  @{" SERIAL WRITE      " link "SERIAL WRITE"}
+  @{" SETHEADING        " link "SETHEADING"}  @{" SETXY             " link "SETXY"}  @{" SGN               " link "SGN"}  @{" SHARED            " link "SHARED"}
+  @{" SHL               " link "SHL"}  @{" SHORTINT          " link "SHORTINT"}  @{" SHR               " link "SHR"}  @{" SIN               " link "SIN"}
+  @{" SINGLE            " link "SINGLE"}  @{" SIZEOF            " link "SIZEOF"}  @{" SLEEP             " link "SLEEP"}  @{" SLEEP FOR         " link "SLEEP FOR"}
+  @{" SOUND             " link "SOUND"}  @{" SPACE$            " link "SPACE$"}  @{" SPC               " link "SPC"}  @{" SQR               " link "SQR"}
+  @{" STICK             " link "STICK"}  @{" STOP              " link "STOP"}  @{" STR$              " link "STR$"}  @{" STRIG             " link "STRIG"}
+  @{" STRING            " link "STRING"}  @{" STRING$           " link "STRING$"}  @{" STRUCT            " link "STRUCT"}  @{" STYLE             " link "STYLE"}
+  @{" SUB..END SUB      " link "SUB..END SUB"}  @{" SWAP              " link "SWAP"}  @{" SYSTEM            " link "SYSTEM"}  @{" TAB               " link "TAB"}
+  @{" TAN               " link "TAN"}  @{" TIME$             " link "TIME$"}  @{" TIMER             " link "TIMER"}  @{" TIMER ON          " link "TIMER ON"}
+  @{" TRANSLATE$        " link "TRANSLATE$"}  @{" TURN              " link "TURN"}  @{" TURNLEFT          " link "TURNLEFT"}  @{" TURNRIGHT         " link "TURNRIGHT"}
+  @{" UCASE$            " link "UCASE$"}  @{" VAL               " link "VAL"}  @{" VARPTR            " link "VARPTR"}  @{" WAVE              " link "WAVE"}
+  @{" WHILE..WEND       " link "WHILE..WEND"}  @{" WINDOW            " link "WINDOW"}  @{" WINDOW CLOSE      " link "WINDOW CLOSE"}  @{" WINDOW ON         " link "WINDOW ON"}
+  @{" WINDOW OUTPUT     " link "WINDOW OUTPUT"}  @{" WRITE #           " link "WRITE #"}  @{" XCOR              " link "XCOR"}  @{" XOR               " link "XOR"}
+  @{" YCOR              " link "YCOR"}
 @ENDNODE
 @NODE "Introduction" "Introduction"
 +----------+
@@ -399,11 +400,20 @@ BREAK		- syntax: BREAK ON|OFF|STOP
  
 @ENDNODE
 @NODE "CALL" "CALL"
-CALL		- Passes control to a user-defined subprogram, 
-		  shared library function, external function, 
+CALL		- Passes control to a user-defined subprogram,
+		  shared library function, external function,
 		  or user-defined machine code routine.
-		- Subprogram CALLs can be recursive in ACE. 
+		- Subprogram CALLs can be recursive in ACE.
 		- See also sections on subprograms, shared library access, external functions, machine code calls in @{"ace.guide" alink ace:docs/ace.guide/main}.
+ 
+@ENDNODE
+@NODE "CALLBACK" "CALLBACK"
+CALLBACK	- Modifier for SUB that creates an Amiga Hook callback.
+		- syntax: SUB name(ADDRESS, ADDRESS, ADDRESS) CALLBACK
+		- Must have exactly 3 ADDRESS parameters (Hook convention).
+		- Parameters receive: A0 (hook), A2 (object), A1 (message).
+		- Cannot be called from ACE code; called via CallHookPkt().
+		- See SUB..END SUB entry and @{"ace.guide" alink ace:docs/ace.guide/main} for full details.
  
 @ENDNODE
 @NODE "CASE" "CASE"
@@ -1297,6 +1307,13 @@ GADGET (GadTools) *
 		- For GTCY_Labels and GTMX_Labels, the value must be a
 		  string array name followed by (): e.g. GTCY_Labels=opts$()
 
+		- Tag values in the GADGET statement must be constants.
+		  To use variables or expressions, first create the gadget
+		  with a constant value, then use GADGET SETATTR:
+
+		  GADGET 1, 1, "", (10,10)-(100,24), NUMBER_KIND, GTNM_Number=0
+		  GADGET SETATTR 1, GTNM_Number=myVariable
+
 		- GadTools gadgets cannot be mixed with old-style gadgets
 		  (BUTTON, STRING, LONGINT, POTX, POTY) in the same program.
 
@@ -1390,9 +1407,13 @@ GADGET SETATTR *
 		  GadTools gadget.
 		- TAG=value pairs specify which attributes to change.
 		  See GADGET (GadTools) for the list of supported tags.
+		- Unlike gadget creation, SETATTR accepts expressions and
+		  variables as tag values, not just constants. This allows
+		  dynamic updates at runtime.
 
-		- Example:
+		- Examples:
 		  GADGET SETATTR 1, GTSL_Level=75
+		  GADGET SETATTR 1, GTNM_Number=myVariable
  
 @ENDNODE
 @NODE "GADGET WAIT" "GADGET WAIT"
@@ -3022,28 +3043,49 @@ STYLE *		- syntax: STYLE n
  
 @ENDNODE
 @NODE "SUB..END SUB" "SUB..END SUB"
-SUB..END SUB	- syntax: 
+SUB..END SUB	- syntax:
 
 		  SUB [<type>] <ident> [([<type>] <param> [..])] [EXTERNAL]
 		  	<statement1>
 		    	<statement2>
 		    	.
 		    	.
-		    	<statementN>	
+		    	<statementN>
 		  END SUB
 
 		  where the optional <type> is one of: LONGINT,ADDRESS,
-		  SHORTINT,SINGLE or STRING.	
-		- In ACE, subprograms are non-static, allow recursion, may 
+		  SHORTINT,SINGLE or STRING.
+		- In ACE, subprograms are non-static, allow recursion, may
 		  have return values and have optional parameter lists.
 		- Parameters are call-by-value but ACE does provide mechanisms
 		  for call-by-reference parameters.
-		- SHARED variables are supported in ACE (see SHARED command). 
+		- SHARED variables are supported in ACE (see SHARED command).
 		- Note that since ACE SUBs are non-static, the STATIC keyword
 		  is not allowed.
-		- The optional EXTERNAL keyword makes the subprogram 
-		  visible to other ACE modules. 
+		- The optional EXTERNAL keyword makes the subprogram
+		  visible to other ACE modules.
 		- See "Subprograms" section in @{"ace.guide" alink ace:docs/ace.guide/main} for more details.
+
+	OR
+		- syntax (CALLBACK):
+
+		  SUB <ident>(ADDRESS p1, ADDRESS p2, ADDRESS p3) CALLBACK
+		    <statements>
+		    <ident> = returnValue
+		  END SUB
+
+		- Creates a subprogram using the Amiga Hook calling convention.
+		- Must have exactly 3 ADDRESS parameters which receive:
+		  - p1: Hook pointer (from register A0)
+		  - p2: Object pointer (from register A2)
+		  - p3: Message pointer (from register A1)
+		- CALLBACK SUBs cannot be called directly from ACE code.
+		  They are invoked by external code via CallHookPkt().
+		- Use @ to get the address for a Hook's h_Entry field:
+		    myHook.h_Entry = @MyCallback
+		- The return value is placed in register D0.
+		- All registers (D1-D7/A0-A6) are preserved.
+		- See "Callback SUBs for Amiga Hooks" in @{"ace.guide" alink ace:docs/ace.guide/main} for details.
  
 @ENDNODE
 @NODE "SWAP" "SWAP"
@@ -3377,6 +3419,7 @@ YCOR *		- Returns the turtle's current y-coordinate.
         C
 
         @{" CALL              " link "CALL"}
+        @{" CALLBACK          " link "CALLBACK"}
         @{" CASE              " link "CASE"}
         @{" CHDIR             " link "CHDIR"}
         @{" CHIPSET           " link "CHIPSET"}

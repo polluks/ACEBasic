@@ -4,6 +4,54 @@
 # Usage:
 #   ruby txt2guide.rb ref.txt > ref.guide
 #   ruby txt2guide.rb ace.txt > ACE.guide
+#   ruby txt2guide.rb MUI-Submod.txt > MUI-Submod.guide
+#
+# =============================================================================
+# TEXT FILE CONVENTIONS
+# =============================================================================
+#
+# Two document types are supported:
+#
+# 1. COMMAND REFERENCE (ref.txt)
+#    - 80-dash lines separate command entries
+#    - Each entry becomes a separate AmigaGuide node
+#    - First line of entry is the command name
+#
+#    Example:
+#      --------------------------------------------------------------------------------
+#      PRINT    - syntax: PRINT [expression]
+#               - Outputs text to the current window.
+#      --------------------------------------------------------------------------------
+#      INPUT    - syntax: INPUT [prompt;] variable
+#               - Reads user input.
+#
+# 2. MANUAL-STYLE (ace.txt, MUI-Submod.txt)
+#    Uses two types of markers:
+#
+#    a) SECTION HEADER (creates new AmigaGuide node):
+#       - Title line followed by dashes as underline
+#       - Underline length should be similar to title length (< 70 chars)
+#
+#       Example:
+#         4. Concepts
+#         -----------
+#
+#    b) SUBSECTION SEPARATOR (stays within current node):
+#       - 80-dash lines surround subsection title
+#       - Content remains part of parent section
+#
+#       Example:
+#         --------------------------------------------------------------------------------
+#         4.1 The Object Tree
+#         --------------------------------------------------------------------------------
+#
+#         Every MUI application is a tree of objects...
+#
+# The distinction between underline and separator:
+#   - Underline: < 70 dashes, length close to title (within 10 chars)
+#   - Separator: exactly 80 dashes, used for visual separation within sections
+#
+# =============================================================================
 
 require 'set'
 
@@ -224,7 +272,8 @@ class RefConverter
   end
 end
 
-class AceConverter
+# Base class for manual-style documents (underlined section headers)
+class ManualConverter
   def initialize(content)
     @content = content
     @sections = []
@@ -234,7 +283,9 @@ class AceConverter
     lines = @content.split("\n")
 
     # Find sections by looking for underlined headers
-    # Pattern: text line followed by line of dashes
+    # Pattern: text line followed by line of dashes (underline, not separator)
+    # An underline has similar length to the title (within margin)
+    # A separator is exactly 80 dashes
     current_section = nil
     section_content = []
 
@@ -243,20 +294,30 @@ class AceConverter
       line = lines[i]
       next_line = lines[i + 1]
 
-      # Check if this line is a header (next line is dashes)
+      # Check if this line is a header (next line is underline dashes)
+      # Underline: dashes with length close to title length (not 80-char separator)
       if next_line && next_line.match?(/^-{3,}$/) && line.strip.length > 0
-        # Save previous section
-        if current_section
-          @sections << {
-            name: current_section,
-            content: section_content.join("\n")
-          }
-        end
+        dash_len = next_line.length
+        title_len = line.strip.length
 
-        current_section = line.strip
-        section_content = []
-        i += 2  # Skip the underline
-        next
+        # It's an underline if dashes are roughly same length as title
+        # 80-dash lines are separators, not underlines
+        is_underline = dash_len < 70 && (dash_len - title_len).abs < 10
+
+        if is_underline
+          # Save previous section
+          if current_section
+            @sections << {
+              name: current_section,
+              content: section_content.join("\n")
+            }
+          end
+
+          current_section = line.strip
+          section_content = []
+          i += 2  # Skip the underline
+          next
+        end
       end
 
       # Skip page markers
@@ -276,6 +337,14 @@ class AceConverter
     end
   end
 
+  def escape_amigaguide(text)
+    # In AmigaGuide, only @{ and @" start commands
+    # Standalone @ (like BASIC's address operator) is fine
+    text
+  end
+end
+
+class AceConverter < ManualConverter
   def generate_guide
     output = []
 
@@ -293,10 +362,8 @@ class AceConverter
     output << ''
 
     # Calculate max width for alignment
-    max_width = @sections.map { |s| s[:name].length }.max
+    max_width = @sections.map { |s| s[:name].length }.max || 20
 
-    # Group sections into categories based on TOC structure
-    # This is a simplified version - the full one would parse the TOC
     @sections.each do |section|
       node_name = section[:name].downcase.gsub(/[^a-z0-9]+/, '-')
       output << "                      @{\" #{section[:name].ljust(max_width)} \" link #{node_name}}"
@@ -310,7 +377,7 @@ class AceConverter
       output << "@NODE #{node_name} \"#{section[:name]}\""
       output << section[:name]
       output << '-' * section[:name].length
-      output << section[:content]
+      output << escape_amigaguide(section[:content])
       output << '@ENDNODE'
     end
 
@@ -318,21 +385,105 @@ class AceConverter
   end
 end
 
+class MUIConverter < ManualConverter
+  def generate_guide
+    output = []
+
+    # Header
+    output << '@DATABASE "MUI-Submod.doc"'
+    output << '@MASTER "MUI-Submod"'
+    output << ''
+
+    # Main menu
+    output << '@NODE MAIN "MUI Submod - Main Menu"'
+    output << ''
+    output << '                        +----------------------+'
+    output << '                        | MUI Submod for ACE   |'
+    output << "                        | Programmer's Guide   |"
+    output << '                        +----------------------+'
+    output << ''
+    output << '                              Version 1.0'
+    output << ''
+    output << '            Copyright (c) 2026 Manfred Bergmann. All rights reserved.'
+    output << ''
+
+    # Only show main sections in menu (skip TOC and subsections)
+    # Main sections match: "1. Name" but not "1.1 Name"
+    main_sections = @sections.select { |s| s[:name].match?(/^\d+\.\s+[A-Z]/) }
+
+    max_width = [main_sections.map { |s| s[:name].length }.max || 20, 30].min
+
+    main_sections.each do |section|
+      display_name = section[:name].upcase[0, 30]
+      node_name = section[:name].downcase.gsub(/[^a-z0-9]+/, '-')
+      output << "  @{\" #{display_name.ljust(max_width)} \" link \"#{node_name}\"}"
+    end
+
+    output << ''
+    output << '@ENDNODE'
+
+    # Section nodes - all sections, not just main ones
+    # Skip TOC section
+    content_sections = @sections.reject { |s| s[:name] =~ /TABLE OF CONTENTS/i }
+
+    content_sections.each do |section|
+      node_name = section[:name].downcase.gsub(/[^a-z0-9]+/, '-')
+      output << ''
+      output << "@NODE \"#{node_name}\" \"#{section[:name].upcase}\""
+      output << ''
+      output << section[:name].upcase
+      output << '=' * section[:name].length
+      output << ''
+      output << escape_amigaguide(section[:content])
+      output << ''
+      output << '@ENDNODE'
+    end
+
+    output.join("\n")
+  end
+end
+
+# Detect file format based on filename and content
+def detect_format(filename, content)
+  # MUI documentation
+  if filename.downcase.include?('mui')
+    return :mui
+  end
+
+  lines = content.split("\n")
+
+  # ref.txt uses 80-dash separators frequently as entry separators
+  dash_separator_count = lines.count { |l| l == "-" * 80 }
+  if dash_separator_count > 5
+    return :ref
+  end
+
+  # Default to ace.txt format (underlined sections)
+  :ace
+end
+
 # Main
 if ARGV.empty?
   puts "Usage: #{$0} <input.txt>"
   puts ""
   puts "Converts ACE documentation text files to AmigaGuide format."
-  puts "  ref.txt -> ref.guide format"
-  puts "  ace.txt -> ACE.guide format"
+  puts "  ref.txt        - Command reference (80-dash separators)"
+  puts "  ace.txt        - ACE user manual (underlined headers)"
+  puts "  MUI-Submod.txt - MUI guide (underlined headers)"
   exit 1
 end
 
 input_file = ARGV[0]
 content = File.read(input_file)
+format = detect_format(input_file, content)
 
-if input_file.downcase.include?('ref')
+case format
+when :ref
   converter = RefConverter.new(content)
+  converter.parse
+  puts converter.generate_guide
+when :mui
+  converter = MUIConverter.new(content)
   converter.parse
   puts converter.generate_guide
 else

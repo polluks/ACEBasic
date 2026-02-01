@@ -1,6 +1,69 @@
                                   CHANGELOG
                                   =========
 
+v2.7 (2026-02-01)
+-----------------
+
+New Features:
+
+  - Closures and Function Pointers (#14): Support for first-class function
+    references. Use @ operator to get a SUB address (@SubName), BIND to
+    create closures with pre-bound arguments (BIND(@SubName, arg1, ...)),
+    and INVOKE to call through a function pointer or closure
+    (INVOKE ptr&(args)). Enables callback patterns and functional
+    programming techniques.
+
+  - Callback SUB (#28): New CALLBACK modifier for SUBs that can be invoked
+    via the AmigaOS CallHookPtr() function. Syntax:
+    SUB name(ADDRESS, ADDRESS, ADDRESS) CALLBACK
+    Use @ to get the address for a Hook's h_Entry field (@MyCallback).
+
+  - MUI Submodule (#23): MUI (Magic User Interface) support via the MUI.b
+    submodule. Provides high-level BASIC wrappers for creating modern
+    Amiga GUIs with windows, buttons, lists, menus, tabs, and more.
+    Documentation: docs/MUI-Submod.guide. Includes 7 example programs.
+    Note: This is a beta release - usable but more features will come.
+
+  - Filled Circle/Ellipse (#15): CIRCLE command now supports trailing F
+    flag for drawing filled circles and ellipses. Syntax:
+    CIRCLE [STEP] (x,y),radius[,color[,start,end[,aspect[,F]]]]
+    Fill uses AreaEllipse() and respects active PATTERN.
+
+  - GADGET SETATTR Expressions (#20): GADGET SETATTR now accepts variables
+    and expressions for tag values, not just constants. Enables dynamic
+    gadget updates based on runtime values.
+
+  - Graphics Double Buffering: New include file and example for
+    double-buffered graphics programming. See examples/gfx/dbuf_demo.b.
+
+Changes:
+
+  - 68020 Code Generation Default (#24): The compiler now generates 68020
+    native instructions by default. Use OPTION 2- in source to disable
+    68020 code generation for 68000 compatibility.
+
+  - Module Command Uses vasm: The module compilation command now uses vasm
+    assembler instead of the legacy assembler.
+
+Bug Fixes:
+
+  - Fix Library Closing (#25): Fixed issue with LIBRARY CLOSE not properly
+    closing opened Amiga shared libraries.
+
+  - Fix EXTERNAL Module Bugs (#29): Fixed bugs with uninitialized A4
+    register when using EXTERNAL modules, which caused crashes and
+    incorrect behavior with shared variables and arrays.
+
+  - Fixed Typos (#18, #26): Corrected various typos in source and
+    documentation.
+
+Testing:
+
+  - New test categories: closures, callback
+  - Added SUB tests with SHARED variable access
+
+------------------------------------------------------------------------------
+
 v2.6 (2026-01-26)
 -----------------
 

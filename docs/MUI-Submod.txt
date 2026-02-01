@@ -9,9 +9,8 @@
             Copyright (c) 2026 Manfred Bergmann. All rights reserved.
 
 
-================================================================================
-                              TABLE OF CONTENTS
-================================================================================
+TABLE OF CONTENTS
+-----------------
 
   1. Introduction
   2. Quick Start
@@ -47,9 +46,8 @@
   8. Constants Reference
 
 
-================================================================================
-1. INTRODUCTION
-================================================================================
+1. Introduction
+---------------
 
 The MUI Submod provides a high-level BASIC-friendly interface to MUI (Magic
 User Interface), the powerful GUI toolkit for AmigaOS. Instead of manually
@@ -70,9 +68,8 @@ The submod handles:
 - Error tracking (check MUILastError() for failures)
 
 
-================================================================================
-2. QUICK START
-================================================================================
+2. Quick Start
+--------------
 
 Here's a complete MUI program:
 
@@ -115,9 +112,8 @@ Compile:
     ace:bin/bas myprogram ace:submods/mui/MUI.o
 
 
-================================================================================
-3. INSTALLATION
-================================================================================
+3. Installation
+---------------
 
 The MUI Submod consists of:
 
@@ -141,9 +137,8 @@ Requirements:
     - ACE v2.7 or later (for CALLBACK SUB support in hook-based events)
 
 
-================================================================================
-4. CONCEPTS
-================================================================================
+4. Concepts
+-----------
 
 --------------------------------------------------------------------------------
 4.1 The Object Tree
@@ -190,6 +185,7 @@ Quick helpers for simple cases:
     grp = MUIHGroup3(child1, child2, child3)
 
 See below for more API options.
+
 
 --------------------------------------------------------------------------------
 4.3 The Event Loop
@@ -250,9 +246,8 @@ B. Hook-Based (Advanced):
    The hook is called automatically during MUIWaitEvent.
 
 
-================================================================================
-5. API REFERENCE
-================================================================================
+5. API Reference
+----------------
 
 --------------------------------------------------------------------------------
 5.1 Initialization & Cleanup
@@ -930,9 +925,8 @@ MUIDtpicSetName(ADDRESS obj, STRING filename)
     Change displayed image.
 
 
-================================================================================
-6. COMMON PATTERNS
-================================================================================
+6. Common Patterns
+------------------
 
 --------------------------------------------------------------------------------
 Settings Form Pattern
@@ -997,9 +991,8 @@ Modal "Please Wait" Pattern
     MUIAppWake(app)          ' Re-enable UI
 
 
-================================================================================
-7. TROUBLESHOOTING
-================================================================================
+7. Troubleshooting
+------------------
 
 --------------------------------------------------------------------------------
 7.1 ACE BASIC Syntax Notes
@@ -1073,6 +1066,7 @@ These are common mistakes when writing MUI programs in ACE BASIC:
         LIBRARY CLOSE "utility.library"
         LIBRARY CLOSE "intuition.library"
 
+
 --------------------------------------------------------------------------------
 7.2 Common Problems
 --------------------------------------------------------------------------------
@@ -1110,9 +1104,8 @@ Solution: Use MUIWindowWithMenu when creating the window, or call
          MUIWindowMenustrip BEFORE MUIWindowOpen.
 
 
-================================================================================
-8. CONSTANTS REFERENCE
-================================================================================
+8. Constants Reference
+----------------------
 
 Error Codes:
     MUIERR_NONE           = 0
@@ -1138,8 +1131,3 @@ Frame Types:
     MUIV_Frame_Virtual     = 11
 
 For a complete list of MUIA_* attribute constants, see include/submods/MUI.h.
-
-
-================================================================================
-                              END OF DOCUMENT
-================================================================================

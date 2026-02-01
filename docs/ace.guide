@@ -25,6 +25,7 @@
                       @{" Command line and Workbench arguments " link command-line-and-workbench-arguments}
                       @{" Subprograms                          " link subprograms}
                       @{" Function Pointers and Closures       " link function-pointers-and-closures}
+                      @{" Callback SUBs for Amiga Hooks        " link callback-subs-for-amiga-hooks}
                       @{" Structures                           " link structures}
                       @{" Shared library function calls        " link shared-library-function-calls}
                       @{" Machine code calls                   " link machine-code-calls}
@@ -358,7 +359,7 @@ aware that ACE sometimes includes extra code apart from that which you might
 expect purely on the basis of the source code.
  
 The "E" switch creates a file in the current directory called ace.err which
-contains all error messages generated during a compliation. Error messages
+contains all error messages generated during a compilation. Error messages
 are still displayed to the screen during compilation however.
  
 The "i" switch tells ACE to make an icon for the executable resulting from 
@@ -533,7 +534,7 @@ RAM:T directory.
  
 Use of #include has the effect of adding lines to the preprocessed ACE 
 source, which has an impact upon the physical location of lines from the
-main ACE file when transfered to the destination file.
+main ACE file when transferred to the destination file.
  
 ACE include files have two purposes. As in C they can be used to include
 constants and structure definitions. Second, as with files like WBarg.h,
@@ -1280,7 +1281,7 @@ Keep the following in mind with regard to shared variables in ACE:
 	  to the name of an existing (ie: already referenced/declared) 
           main program variable.
  
-Although variable parameters are not explictly provided by ACE there are 
+Although variable parameters are not explicitly provided by ACE there are 
 two ways to implement them: using indirection operators for simple variables 
 and the ADDRESS option of DIM and STRING (see also "Structures" section).
  
@@ -1471,6 +1472,107 @@ way to free an individual closure during execution.
 This means closures created in a tight loop will accumulate memory until
 the program ends. For long-running programs that create many closures,
 be mindful of memory usage.
+
+
+@ENDNODE
+@NODE callback-subs-for-amiga-hooks "Callback SUBs for Amiga Hooks"
+Callback SUBs for Amiga Hooks
+-----------------------------
+While INVOKE and BIND handle callbacks within ACE code, some Amiga libraries
+require callbacks using the standard Hook calling convention. MUI, BOOPSI,
+and other frameworks use utility.library's CallHookPkt() to invoke callback
+functions with parameters passed in CPU registers rather than on the stack.
+
+The CALLBACK keyword creates a SUB that follows this convention, making it
+callable from Amiga system code.
+
+
+CALLBACK SUB Syntax
+~~~~~~~~~~~~~~~~~~~
+A CALLBACK SUB must have exactly three ADDRESS parameters:
+
+	SUB SubName(ADDRESS hook, ADDRESS obj, ADDRESS msg) CALLBACK
+	  ' Function body
+	  SubName = returnValue   ' Return value via D0
+	END SUB
+
+The CALLBACK keyword comes after the parameter list, similar to EXTERNAL.
+
+
+Hook Calling Convention
+~~~~~~~~~~~~~~~~~~~~~~~
+The Amiga Hook mechanism passes parameters in registers:
+
+	Register    Contents
+	--------    --------
+	A0          Pointer to Hook structure
+	A2          Object pointer (context-specific)
+	A1          Message pointer (context-specific)
+
+Note the unusual order: A0, A2, A1 (not A0, A1, A2). This is defined by
+utility.library and used throughout AmigaOS.
+
+The CALLBACK SUB automatically:
+- Saves and restores all registers (D1-D7/A0-A6)
+- Copies register parameters to local variables
+- Returns the result in D0
+
+
+Getting the Callback Address
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Use the @ operator to get the address for a Hook structure:
+
+	hookAddr& = @MyCallback
+
+
+Restrictions
+~~~~~~~~~~~~
+CALLBACK SUBs have important restrictions:
+
+1. Cannot be called directly from ACE code - only via CallHookPkt()
+2. Must have exactly 3 ADDRESS parameters (Hook convention)
+3. Should not use SHARED variables - use Hook's h_Data for context
+4. Return value must be assigned to the SUB name (placed in D0)
+
+
+Example: MUI Button Hook
+~~~~~~~~~~~~~~~~~~~~~~~~
+	' Hook structure (from utility/hooks.h)
+	STRUCT Hook
+	  ADDRESS h_MinNode_mln_Succ
+	  ADDRESS h_MinNode_mln_Pred
+	  ADDRESS h_Entry
+	  ADDRESS h_SubEntry
+	  ADDRESS h_Data
+	END STRUCT
+
+	' Our callback function
+	SUB ButtonCallback(ADDRESS hook, ADDRESS obj, ADDRESS msg) CALLBACK
+	  PRINT "Button pressed!"
+	  ButtonCallback = 0&
+	END SUB
+
+	' Set up hook structure
+	DIM myHook AS Hook
+	myHook.h_Entry = @ButtonCallback
+	myHook.h_SubEntry = 0&
+	myHook.h_Data = 0&    ' Can store context data here
+
+	' Use myHook with MUI notifications...
+
+
+Accessing Hook Data
+~~~~~~~~~~~~~~~~~~~
+The hook pointer (first parameter) gives access to the Hook structure,
+including the h_Data field for passing context:
+
+	SUB MyCallback(ADDRESS hook, ADDRESS obj, ADDRESS msg) CALLBACK
+	  DECLARE STRUCT Hook *h
+	  h = hook
+	  contextValue& = h->h_Data
+	  ' Use contextValue&...
+	  MyCallback = 0&
+	END SUB
 
 
 
@@ -1980,7 +2082,7 @@ then the following sequence of shell commands will give you an executable
 called main:
  
 	ace -Om lines		{ The -m switch is the key here }
-	a68k lines.s
+	vasmm68k_mot -Fhunk -o lines.o lines.s
 	bas -O main lines.o
  
 The first two commands can be replaced by:
