@@ -48,6 +48,9 @@ Changes:
   - Module Command Uses vasm: The module compilation command now uses vasm
     assembler instead of the legacy assembler.
 
+  - Enhanced bas script. It now accepts a list of submods for linking.
+    And is overall a bit smarter.
+
 Bug Fixes:
 
   - Fix Library Closing (#25): Fixed issue with LIBRARY CLOSE not properly

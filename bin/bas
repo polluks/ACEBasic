@@ -11,13 +11,15 @@
 ;   bas sourcefile a.o,b.o,c.o          - Link with multiple extra objects
 ;   bas -option sourcefile              - Compile with ace options
 ;   bas -option sourcefile extra.o      - Both options and extra link
+;   bas -S sourcefile                   - Compile to assembly only (.s)
+;   bas -m modulefile                   - Compile module to object file (.o)
 
 ; Command paths
-SET cmd_ace "ace:bin/ace"
-SET cmd_acpp "ace:bin/acpp"
-SET cmd_removeline "ace:bin/removeline"
-SET cmd_vasm "ace:bin/vasmm68k_mot"
-SET cmd_vlink "ace:bin/vlink"
+ALIAS cmd_ace ace:bin/ace
+ALIAS cmd_acpp ace:bin/acpp
+ALIAS cmd_removeline ace:bin/removeline
+ALIAS cmd_vasm ace:bin/vasmm68k_mot
+ALIAS cmd_vlink ace:bin/vlink
 
 ; make sure stack is big enough.
 STACK 65000
@@ -71,33 +73,50 @@ IF EXISTS "$srcarg"
 ENDIF
 
 ; preprocess source file.
-$cmd_acpp $srcbase.b T:$srcbase.beta
+cmd_acpp $srcbase.b T:$srcbase.beta
 IF ERROR
   SKIP end
 ENDIF
 
 ; remove preprocessor-inserted information lines.
-$cmd_removeline T:$srcbase.beta T:$srcbase.b
+cmd_removeline T:$srcbase.beta T:$srcbase.b
 IF ERROR
   SKIP end
 ENDIF
 
 delete >NIL: T:$srcbase.beta
 
+; Check if assembly-only compilation (-S flag)
+rx "if pos('S', '$aceopts') > 0 then say 1; else say 0" >T:bas_isasm
+SET isasm `type T:bas_isasm`
+IF $isasm EQ 1
+    ; remove -S flag to not pass it to ace
+    SET aceopts ""
+ENDIF
+delete >NIL: T:bas_isasm
+
 ; compile preprocessed source file.
 IF "$aceopts" EQ ""
-  $cmd_ace T:$srcbase
+  cmd_ace T:$srcbase
 ELSE
-  $cmd_ace $aceopts T:$srcbase
+  cmd_ace $aceopts T:$srcbase
 ENDIF
 
 IF ERROR
   SKIP end
 ENDIF
 
+IF $isasm EQ 1
+  ; Assembly only: copy .s file and stop
+  delete >NIL: T:$srcbase.b
+  copy T:$srcbase.s ""
+  delete >NIL: T:$srcbase.s
+  SKIP end
+ENDIF
+
 ; assemble
 delete >NIL: T:$srcbase.b
-$cmd_vasm -Fhunk -o T:$srcbase.o T:$srcbase.s
+cmd_vasm -Fhunk -o T:$srcbase.o T:$srcbase.s
 delete >NIL: T:$srcbase.s
 
 ; Check if module compilation (-m flag anywhere in options)
@@ -111,7 +130,7 @@ IF $ismod EQ 1
   delete >NIL: T:$srcbase.o
 ELSE
   ; Normal: link to executable
-  $cmd_vlink -bamigahunk -x -Bstatic -nostdlib -mrel -s -o T:$srcbase T:$srcbase.o $extraobj ACElib:startup.lib ACElib:db.lib ACElib:ami.lib
+  cmd_vlink -bamigahunk -x -Bstatic -nostdlib -mrel -s -o T:$srcbase T:$srcbase.o $extraobj ACElib:startup.lib ACElib:db.lib ACElib:ami.lib
 
   ; leave us with the executable (and icon?).
   copy T:$srcbase ""
