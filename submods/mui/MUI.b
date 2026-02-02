@@ -210,6 +210,8 @@ CONST MUIA_Group_SameSize          = &H80420860
 CONST MUIA_Group_SameWidth         = &H8042b3ec
 CONST MUIA_Group_SameHeight        = &H8042037e
 CONST MUIA_Group_Spacing           = &H8042866d
+CONST MUIA_Group_HorizSpacing      = &H8042c651
+CONST MUIA_Group_VertSpacing       = &H8042e1bf
 CONST MUIA_FrameTitle              = &H8042d1c7
 
 { Radio constants }
@@ -323,6 +325,8 @@ DIM _groupSameWidth%(9)     { SameWidth flag per level (0=off, -1=on) }
 DIM _groupSameHeight%(9)    { SameHeight flag per level (0=off, -1=on) }
 DIM _groupFrameTitles&(9)   { Frame title address per level (0=none) }
 DIM _groupSpacing%(9)       { Spacing override per level (-1=default) }
+DIM _groupHorizSpacing%(9)  { HorizSpacing override per level (-1=default) }
+DIM _groupVertSpacing%(9)   { VertSpacing override per level (-1=default) }
 SHORTINT _groupLevel        { Current nesting level (1-based when active) }
 
 { Menu builder state }
@@ -369,6 +373,15 @@ SUB ADDRESS _CopyStr(STRING s)
     END IF
 
     _CopyStr = dest
+END SUB
+
+{ _CBool - Convert BASIC boolean (-1=TRUE) to C boolean (1=TRUE) }
+SUB LONGINT _CBool(LONGINT b)
+    IF b THEN
+        _CBool = 1&
+    ELSE
+        _CBool = 0&
+    END IF
 END SUB
 
 { ============== Tag Builder ============== }
@@ -418,7 +431,7 @@ END SUB
 SUB MUIBeginVGroup EXTERNAL
     SHARED _groupLevel, _childCounts%, _groupFlags%
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
     SHORTINT lvl
     _groupLevel = _groupLevel + 1
     lvl = _groupLevel - 1
@@ -430,12 +443,14 @@ SUB MUIBeginVGroup EXTERNAL
     _groupSameHeight%(lvl) = 0
     _groupFrameTitles&(lvl) = 0&
     _groupSpacing%(lvl) = -1
+    _groupHorizSpacing%(lvl) = -1
+    _groupVertSpacing%(lvl) = -1
 END SUB
 
 SUB MUIBeginHGroup EXTERNAL
     SHARED _groupLevel, _childCounts%, _groupFlags%
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
     SHORTINT lvl
     _groupLevel = _groupLevel + 1
     lvl = _groupLevel - 1
@@ -447,12 +462,14 @@ SUB MUIBeginHGroup EXTERNAL
     _groupSameHeight%(lvl) = 0
     _groupFrameTitles&(lvl) = 0&
     _groupSpacing%(lvl) = -1
+    _groupHorizSpacing%(lvl) = -1
+    _groupVertSpacing%(lvl) = -1
 END SUB
 
 SUB MUIBeginColGroup(SHORTINT cols) EXTERNAL
     SHARED _groupLevel, _childCounts%, _groupFlags%
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
     SHORTINT lvl
     _groupLevel = _groupLevel + 1
     lvl = _groupLevel - 1
@@ -464,12 +481,14 @@ SUB MUIBeginColGroup(SHORTINT cols) EXTERNAL
     _groupSameHeight%(lvl) = 0
     _groupFrameTitles&(lvl) = 0&
     _groupSpacing%(lvl) = -1
+    _groupHorizSpacing%(lvl) = -1
+    _groupVertSpacing%(lvl) = -1
 END SUB
 
 SUB MUIBeginRowGroup(SHORTINT rows) EXTERNAL
     SHARED _groupLevel, _childCounts%, _groupFlags%
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
     SHORTINT lvl
     _groupLevel = _groupLevel + 1
     lvl = _groupLevel - 1
@@ -482,6 +501,8 @@ SUB MUIBeginRowGroup(SHORTINT rows) EXTERNAL
     _groupSameHeight%(lvl) = 0
     _groupFrameTitles&(lvl) = 0&
     _groupSpacing%(lvl) = -1
+    _groupHorizSpacing%(lvl) = -1
+    _groupVertSpacing%(lvl) = -1
 END SUB
 
 { MUIGroupFrameT - Add titled frame to current group }
@@ -533,6 +554,22 @@ SUB MUIGroupSpacing(SHORTINT space) EXTERNAL
     END IF
 END SUB
 
+{ MUIGroupHorizSpacing - Set horizontal spacing between children }
+SUB MUIGroupHorizSpacing(SHORTINT space) EXTERNAL
+    SHARED _groupLevel, _groupHorizSpacing%
+    IF _groupLevel > 0 THEN
+        _groupHorizSpacing%(_groupLevel - 1) = space
+    END IF
+END SUB
+
+{ MUIGroupVertSpacing - Set vertical spacing between children }
+SUB MUIGroupVertSpacing(SHORTINT space) EXTERNAL
+    SHARED _groupLevel, _groupVertSpacing%
+    IF _groupLevel > 0 THEN
+        _groupVertSpacing%(_groupLevel - 1) = space
+    END IF
+END SUB
+
 SUB MUIChild(ADDRESS child) EXTERNAL
     SHARED _children&, _childCounts%, _groupLevel
     SHORTINT lvl, idx, offs
@@ -569,8 +606,9 @@ SUB ADDRESS MUIEndGroup EXTERNAL
     SHARED _tags&, _tagIndex, _children&
     SHARED _childCounts%, _groupFlags%, _groupLevel
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
-    SHORTINT i, cnt, offs, lvl, isHoriz, cols, sameSize, sameWidth, sameHeight, spacing
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
+    SHORTINT i, cnt, offs, lvl, isHoriz, cols, sameSize, sameWidth, sameHeight
+    SHORTINT spacing, hSpacing, vSpacing
     ADDRESS frameTitle
 
     lvl = _groupLevel - 1
@@ -583,14 +621,16 @@ SUB ADDRESS MUIEndGroup EXTERNAL
     sameHeight = _groupSameHeight%(lvl)
     frameTitle = _groupFrameTitles&(lvl)
     spacing = _groupSpacing%(lvl)
+    hSpacing = _groupHorizSpacing%(lvl)
+    vSpacing = _groupVertSpacing%(lvl)
 
     _tagIndex = 0
 
-    { Horizontal flag - use Columns=childcount as workaround for Horiz not working }
+    { Horizontal layout }
     IF isHoriz THEN
-        _tags&(_tagIndex) = MUIA_Group_Columns
+        _tags&(_tagIndex) = MUIA_Group_Horiz
         _tagIndex = _tagIndex + 1
-        _tags&(_tagIndex) = cnt
+        _tags&(_tagIndex) = 1&    ' C-style TRUE
         _tagIndex = _tagIndex + 1
     END IF
 
@@ -655,6 +695,22 @@ SUB ADDRESS MUIEndGroup EXTERNAL
         _tagIndex = _tagIndex + 1
     END IF
 
+    { Horizontal spacing }
+    IF hSpacing >= 0 THEN
+        _tags&(_tagIndex) = MUIA_Group_HorizSpacing
+        _tagIndex = _tagIndex + 1
+        _tags&(_tagIndex) = hSpacing
+        _tagIndex = _tagIndex + 1
+    END IF
+
+    { Vertical spacing }
+    IF vSpacing >= 0 THEN
+        _tags&(_tagIndex) = MUIA_Group_VertSpacing
+        _tagIndex = _tagIndex + 1
+        _tags&(_tagIndex) = vSpacing
+        _tagIndex = _tagIndex + 1
+    END IF
+
     { Children }
     FOR i = 0 TO cnt - 1
         _tags&(_tagIndex) = MUIA_Group_Child
@@ -676,7 +732,7 @@ END SUB
 SUB MUIInit EXTERNAL
     SHARED _tagIndex, _evtMsg&, _evtSigs, _groupLevel
     SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
     SHARED _menuLevel, _menuCount, _menuItemCounts%, _menuTitles&
     SHARED _lastError, _muiVersion
     SHORTINT i
@@ -699,6 +755,8 @@ SUB MUIInit EXTERNAL
         _groupSameHeight%(i) = 0
         _groupFrameTitles&(i) = 0&
         _groupSpacing%(i) = -1
+        _groupHorizSpacing%(i) = -1
+        _groupVertSpacing%(i) = -1
         _menuItemCounts%(i) = 0
         _menuTitles&(i) = 0&
     NEXT i
@@ -1680,13 +1738,13 @@ SUB ADDRESS _MUICheckmarkCreate(LONGINT checked, LONGINT keyCode)
     { Allow vertical resizing only (not horizontal) }
     _tags&(_tagIndex) = MUIA_Image_FreeVert
     _tagIndex = _tagIndex + 1
-    _tags&(_tagIndex) = -1&
+    _tags&(_tagIndex) = 1&    ' C-style TRUE
     _tagIndex = _tagIndex + 1
 
     { Initial state }
     _tags&(_tagIndex) = MUIA_Selected
     _tagIndex = _tagIndex + 1
-    _tags&(_tagIndex) = checked
+    _tags&(_tagIndex) = _CBool(checked)
     _tagIndex = _tagIndex + 1
 
     { Don't show selection state overlay }
@@ -2230,7 +2288,7 @@ SUB MUISetChecked(ADDRESS obj, LONGINT state) EXTERNAL
     _tagIndex = 0
     _tags&(_tagIndex) = MUIA_Selected
     _tagIndex = _tagIndex + 1
-    _tags&(_tagIndex) = state
+    _tags&(_tagIndex) = _CBool(state)
     _tagIndex = _tagIndex + 1
     _tags&(_tagIndex) = TAG_DONE
 
@@ -2759,7 +2817,7 @@ SUB MUIMenuEnable(ADDRESS menuitem, LONGINT enabled) EXTERNAL
     _tagIndex = 0
     _tags&(_tagIndex) = MUIA_Menuitem_Enabled
     _tagIndex = _tagIndex + 1
-    _tags&(_tagIndex) = enabled
+    _tags&(_tagIndex) = _CBool(enabled)
     _tagIndex = _tagIndex + 1
     _tags&(_tagIndex) = TAG_DONE
 
@@ -2773,7 +2831,7 @@ SUB MUIMenuSetChecked(ADDRESS menuitem, LONGINT checked) EXTERNAL
     _tagIndex = 0
     _tags&(_tagIndex) = MUIA_Menuitem_Checked
     _tagIndex = _tagIndex + 1
-    _tags&(_tagIndex) = checked
+    _tags&(_tagIndex) = _CBool(checked)
     _tagIndex = _tagIndex + 1
     _tags&(_tagIndex) = TAG_DONE
 
@@ -3573,7 +3631,7 @@ SUB ADDRESS _MUIScrollgroupCreate(ADDRESS virtgroup, SHORTINT freeH, SHORTINT fr
     _tags&(_tagIndex) = MUIA_Scrollgroup_FreeHoriz
     _tagIndex = _tagIndex + 1
     IF freeH THEN
-        _tags&(_tagIndex) = -1&
+        _tags&(_tagIndex) = 1&    ' C-style TRUE
     ELSE
         _tags&(_tagIndex) = 0&
     END IF
@@ -3582,7 +3640,7 @@ SUB ADDRESS _MUIScrollgroupCreate(ADDRESS virtgroup, SHORTINT freeH, SHORTINT fr
     _tags&(_tagIndex) = MUIA_Scrollgroup_FreeVert
     _tagIndex = _tagIndex + 1
     IF freeV THEN
-        _tags&(_tagIndex) = -1&
+        _tags&(_tagIndex) = 1&    ' C-style TRUE
     ELSE
         _tags&(_tagIndex) = 0&
     END IF

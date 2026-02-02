@@ -217,6 +217,8 @@ CONST MUIA_Group_SameSize          = &H80420860
 CONST MUIA_Group_SameWidth         = &H8042b3ec
 CONST MUIA_Group_SameHeight        = &H8042037e
 CONST MUIA_Group_Spacing           = &H8042866d
+CONST MUIA_Group_HorizSpacing      = &H8042c651
+CONST MUIA_Group_VertSpacing       = &H8042e1bf
 CONST MUIA_FrameTitle              = &H8042d1c7
 
 { Radio constants }
@@ -347,6 +349,8 @@ DECLARE SUB MUIGroupSameSize EXTERNAL
 DECLARE SUB MUIGroupSameWidth EXTERNAL
 DECLARE SUB MUIGroupSameHeight EXTERNAL
 DECLARE SUB MUIGroupSpacing(SHORTINT space) EXTERNAL
+DECLARE SUB MUIGroupHorizSpacing(SHORTINT space) EXTERNAL
+DECLARE SUB MUIGroupVertSpacing(SHORTINT space) EXTERNAL
 DECLARE SUB MUIChild(ADDRESS child) EXTERNAL
 DECLARE SUB MUIChildWeight(ADDRESS child, SHORTINT weight) EXTERNAL
 DECLARE SUB ADDRESS MUIEndGroup EXTERNAL
