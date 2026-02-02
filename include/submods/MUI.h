@@ -203,8 +203,10 @@ CONST MUIA_Gauge_Max               = &H8042bcdb
 CONST MUIA_Gauge_InfoText          = &H8042bf15
 CONST MUIA_Gauge_Horiz             = &H804232dd
 
-{ Label/Weight constants }
+{ Layout weight constants }
 CONST MUIA_Weight                  = &H80421d1f
+CONST MUIA_HorizWeight             = &H80423f5e
+CONST MUIA_VertWeight              = &H804326db
 CONST MUIA_FixWidth                = &H8042a3f1
 CONST MUIA_FixHeight               = &H8042a985
 

@@ -1,0 +1,30 @@
+FileViewer - MUI Custom Class Example
+=====================================
+
+This is an example program demonstrating how to use custom MUI classes
+(MCCs) with the ACE BASIC MUI submodule.
+
+Features:
+- Volume and directory browsing using standard MUI Volumelist/Dirlist
+- Text file viewing using TextEditor.mcc custom class
+- Two-pane resizable layout
+
+Requirements:
+- MUI 3.8 or later
+- TextEditor.mcc custom class installed in MUI:Libs/MUI/
+  (Available from Aminet: dev/mui/MCC_TextEditor.lha)
+
+Compiling:
+  bas FileViewer ace:submods/mui/MUI.o
+
+Usage:
+- Click a volume in the Volumes list to browse it
+- Navigate directories using Open/Parent/Root buttons
+- Select a text file and click Load to view its contents
+- Double-click files to load them directly
+
+Copyright (c) 2026 Manfred Bergmann. All rights reserved.
+
+DISCLAIMER:
+This software is provided "as is" without warranty of any kind.
+The author is not liable for any damages arising from its use.

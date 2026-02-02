@@ -198,8 +198,10 @@ CONST MUIA_Gauge_Max               = &H8042bcdb
 CONST MUIA_Gauge_InfoText          = &H8042bf15
 CONST MUIA_Gauge_Horiz             = &H804232dd
 
-{ Label constants }
+{ Layout weight constants }
 CONST MUIA_Weight                  = &H80421d1f
+CONST MUIA_HorizWeight             = &H80423f5e
+CONST MUIA_VertWeight              = &H804326db
 
 { Group builder constants }
 CONST MUIA_Group_Columns           = &H8042f416
