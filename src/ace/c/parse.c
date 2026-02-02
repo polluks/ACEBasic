@@ -669,7 +669,7 @@ void show_title()
  printf("ACE Amiga BASIC Compiler version %s, copyright ",version());
  putchar(169);  /* copyright symbol */
  puts(" 1991-1996 David Benn.");
- puts("Contributions copyright 2025 Manfred Bergmann.");
+ puts("Copyright 2025,2026 Manfred Bergmann.");
 }
 
 void usage()
