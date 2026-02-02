@@ -783,7 +783,7 @@ Examples of valid identifiers are:
 		_putchar
 		play.sound
  
-An identifer with no qualifier has a default type of single-precision. The 
+An identifier with no qualifier has a default type of single-precision. The 
 DEFxxx compiler directives (see command and function reference) have the
 same effect as the qualifier characters except they affect all identifiers
 starting with a certain letter. Qualifier characters have higher priority
