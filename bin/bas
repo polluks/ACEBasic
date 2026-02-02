@@ -96,11 +96,13 @@ ENDIF
 delete >NIL: T:bas_isasm
 
 ; compile preprocessed source file.
+echo "Compiling with ace $aceopts T:$srcbase ..."
 IF "$aceopts" EQ ""
   cmd_ace T:$srcbase
 ELSE
   cmd_ace $aceopts T:$srcbase
 ENDIF
+echo "done"
 
 IF ERROR
   SKIP end
