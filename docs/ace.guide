@@ -4,7 +4,7 @@
 @NODE MAIN "Main Menu"
 
 			       +----------+
-			       | ACE v2.6 |
+			       | ACE v2.7 |
 			       +----------+
 
                       @{" Printing this document               " link printing-this-document}

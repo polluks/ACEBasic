@@ -118,19 +118,19 @@ standard MUI List class.
     IF nlist = 0& THEN
         PRINT "NList.mcc not found!"
         MUICleanup
-        END
+        STOP
     END IF
 
     ' Wrap in NListview for scrollbars
     MUITagStart
-    MUITag MUIA_Listview_List, nlist
+    MUITag(MUIA_Listview_List, nlist)
     MUITagEnd
     nlistview = MUINewObj(SADD("NListview.mcc"))
 
     ' Build UI
     MUIBeginVGroup
-        MUIChild nlistview
-        MUIChild MUIButton("Close")
+        MUIChild(nlistview)
+        MUIChild(MUIButton("Close"))
     grp = MUIEndGroup
 
     win = MUIWindow("NList Example", grp)
@@ -180,13 +180,13 @@ Getting/Setting Custom Attributes
 Use MUISet/MUIGet/MUISetStr for any attribute:
 
     ' Set a custom attribute
-    MUISet customObj, CUSTOM_ATTR, newValue
+    MUISet(customObj, CUSTOM_ATTR, newValue)
 
     ' Get a custom attribute
     value = MUIGet(customObj, CUSTOM_ATTR)
 
     ' Set a string attribute
-    MUISetStr customObj, CUSTOM_STRING_ATTR, "new text"
+    MUISetStr(customObj, CUSTOM_STRING_ATTR, "new text")
 
 
 Example: Using TextEditor.mcc
@@ -207,17 +207,17 @@ TextEditor.mcc provides a full-featured text editing widget.
 
     ' Create text editor
     MUITagStart
-    MUITag MUIA_TextEditor_FixedFont, 1&     ' Use fixed-width font
-    MUITag MUIA_TextEditor_ReadOnly, 0&      ' Allow editing
+    MUITag(MUIA_TextEditor_FixedFont, 1&)     ' Use fixed-width font
+    MUITag(MUIA_TextEditor_ReadOnly, 0&)      ' Allow editing
     MUITagEnd
     editor = MUINewObj(SADD("TextEditor.mcc"))
 
     IF editor <> 0& THEN
         ' Set initial contents
-        MUISetStr editor, MUIA_TextEditor_Contents, "Hello, World!"
+        MUISetStr(editor, MUIA_TextEditor_Contents, "Hello, World!")
 
         ' Add to UI
-        MUIChild editor
+        MUIChild(editor)
     END IF
 
 
@@ -227,21 +227,21 @@ Combining Standard and Custom Objects
 Custom objects integrate seamlessly with standard MUI objects:
 
     MUIBeginVGroup
-        MUIGroupFrameT "Standard MUI"
-        MUIChild MUIText("Standard text object")
-        MUIChild MUIButton("Standard button")
-    MUIChild MUIEndGroup
+        MUIGroupFrameT("Standard MUI")
+        MUIChild(MUIText("Standard text object"))
+        MUIChild(MUIButton("Standard button"))
+    MUIChild(MUIEndGroup)
 
     MUIBeginVGroup
-        MUIGroupFrameT "Custom Classes"
-        MUIChild nlistview          ' NListview.mcc
-        MUIChild editor             ' TextEditor.mcc
-    MUIChild MUIEndGroup
+        MUIGroupFrameT("Custom Classes")
+        MUIChild(nlistview)          ' NListview.mcc
+        MUIChild(editor)             ' TextEditor.mcc
+    MUIChild(MUIEndGroup)
 
     MUIBeginHGroup
         MUIGroupSameSize
-        MUIChild MUIButton("OK")
-        MUIChild MUIButton("Cancel")
+        MUIChild(MUIButton("OK"))
+        MUIChild(MUIButton("Cancel"))
     grp = MUIEndGroup
 
 

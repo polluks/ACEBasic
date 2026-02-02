@@ -10,8 +10,9 @@ New Features:
     references. Use @ operator to get a SUB address (@SubName), BIND to
     create closures with pre-bound arguments (BIND(@SubName, arg1, ...)),
     and INVOKE to call through a function pointer or closure
-    (INVOKE ptr&(args)). Enables callback patterns and functional
-    programming techniques.
+    (INVOKE ptr&(args)). BIND behaves a little bit like the Curry pattern
+    in functional programming.
+    See docs/ref.guide for more details.
 
   - Callback SUB (#28): New CALLBACK modifier for SUBs that can be invoked
     via the AmigaOS CallHookPtr() function. Syntax:
@@ -21,8 +22,10 @@ New Features:
   - MUI Submodule (#23): MUI (Magic User Interface) support via the MUI.b
     submodule. Provides high-level BASIC wrappers for creating modern
     Amiga GUIs with windows, buttons, lists, menus, tabs, and more.
-    Documentation: docs/MUI-Submod.guide. Includes 7 example programs.
+    Documentation: docs/MUI-Submod.guide. Includes 7 example programs,
+    including a FileViewer example that uses a custom class.
     Note: This is a beta release - usable but more features will come.
+    Report bugs or feature requests on GitHub.
 
   - Filled Circle/Ellipse (#15): CIRCLE command now supports trailing F
     flag for drawing filled circles and ellipses. Syntax:
