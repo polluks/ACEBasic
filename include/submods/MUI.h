@@ -77,9 +77,9 @@ CONST MUIA_Window_CloseRequest     = &H8042e86e
 CONST MUIA_Window_ScreenTitle      = &H804234b0
 CONST MUIA_Application_Sleep       = &H80425711
 CONST MUIA_Group_Child             = &H804226e6
-CONST MUIA_Group_Horiz             = &H8042ae4c
+CONST MUIA_Group_Horiz             = &H8042536b
 CONST MUIA_Text_Contents           = &H8042f8dc
-CONST MUIA_Text_PreParse           = &H8042566a
+CONST MUIA_Text_PreParse           = &H8042566d
 CONST MUIA_Frame                   = &H8042ac64
 CONST MUIV_Frame_Group             = 9
 
@@ -104,7 +104,7 @@ END STRUCT
 CONST MUIA_InputMode                  = &H8042fb04
 CONST MUIV_InputMode_RelVerify        = 1
 CONST MUIA_Background                 = &H8042545b
-CONST MUII_ButtonBack                 = 131
+CONST MUII_ButtonBack                 = 2
 CONST MUIV_Frame_Button               = 1
 CONST MUIA_Pressed                    = &H80423535
 CONST MUIA_ControlChar                = &H8042120b
@@ -205,10 +205,10 @@ CONST MUIA_Gauge_Horiz             = &H804232dd
 
 { Layout weight constants }
 CONST MUIA_Weight                  = &H80421d1f
-CONST MUIA_HorizWeight             = &H80423f5e
-CONST MUIA_VertWeight              = &H804326db
+CONST MUIA_HorizWeight             = &H80426db9
+CONST MUIA_VertWeight              = &H804298d0
 CONST MUIA_FixWidth                = &H8042a3f1
-CONST MUIA_FixHeight               = &H8042a985
+CONST MUIA_FixHeight               = &H8042a92b
 
 { Group builder constants }
 CONST MUIA_Group_Columns           = &H8042f416
@@ -288,15 +288,12 @@ CONST MUIA_Scrollgroup_Contents    = &H80421261
 CONST MUIA_Scrollgroup_FreeHoriz   = &H804292f3
 CONST MUIA_Scrollgroup_FreeVert    = &H804224f2
 CONST MUIA_Scrollgroup_HorizBar    = &H8042b63d
-CONST MUIA_Scrollgroup_VertBar     = &H8042cb41
+CONST MUIA_Scrollgroup_VertBar     = &H8042cdc0
 
 { Virtgroup constants }
 CONST MUIA_Virtgroup_Input         = &H80427f7e
 CONST MUIA_Virtgroup_Left          = &H80429371
 CONST MUIA_Virtgroup_Top           = &H80425200
-
-{ Balance constants }
-CONST MUIA_Balance_Quiet           = &H80427486
 
 { Frame type for virtual groups }
 CONST MUIV_Frame_Virtual           = 11
@@ -810,7 +807,6 @@ DECLARE SUB ADDRESS MUIScrollgroupVert(ADDRESS virtgroup) EXTERNAL
 **   grp = MUIEndGroup
 *}
 DECLARE SUB ADDRESS MUIBalance EXTERNAL
-DECLARE SUB ADDRESS MUIBalanceQuiet EXTERNAL
 
 { ============== Numericbutton ============== }
 {*
