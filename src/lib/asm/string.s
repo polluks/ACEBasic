@@ -61,6 +61,7 @@ cli_CommandName	equ 16
    	xdef  	_rightstr
    	xdef  	_midstr
 	xdef	_ucase
+	xdef	_lcase
 	xdef	_inputstring
 	xdef	_hexstrlong
 	xdef	_hexstrshort
@@ -90,6 +91,7 @@ cli_CommandName	equ 16
 	xref	_deststraddr
 	xref	_count
 	xref	_ucasestring
+	xref	_lcasestring
 	xref	_spacestraddress
 	xref	_stringstraddress
 	xref	_octdigit
@@ -285,6 +287,34 @@ _nextchar:
 	bra.s	_ucaseloop
 _ucaseexit:
 	movea.l	_ucasestring,a0
+	rts
+
+;
+; LCASE$ - Convert upper case characters in string (a1) to lower case.
+;        - Destination string in a0.
+;
+_lcase:
+	; store destination address
+	move.l	a0,_lcasestring
+
+	; make a copy
+	jsr	_strcpy
+
+	; main loop
+	movea.l	_lcasestring,a1
+_lcaseloop:
+	cmpi.b	#0,(a1)
+	beq.s	_lcaseexit	; EOS?
+	cmpi.b	#65,(a1)
+	blt.s	_lnextchar	; (a1) < 'A'?
+	cmpi.b	#90,(a1)
+	bgt.s	_lnextchar	; (a1) > 'Z'?
+	add.b	#32,(a1)	; 'A'..'Z' -> make 'a'..'z'
+_lnextchar:
+	addq	#1,a1
+	bra.s	_lcaseloop
+_lcaseexit:
+	movea.l	_lcasestring,a0
 	rts
 
 ;

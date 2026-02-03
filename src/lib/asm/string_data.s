@@ -34,6 +34,7 @@ MAXSTRINGSIZE equ 1024
 	xdef	_negate
 	xdef	_argstring
 	xdef	_ucasestring
+	xdef	_lcasestring
 	xdef	_spacestraddress
 	xdef	_stringstraddress
 	xdef	_octdigit
@@ -72,6 +73,9 @@ _argstring:		ds.l 1	; see _argbuf in startup.s
 
 ; * ucase *
 _ucasestring:		ds.l 1
+
+; * lcase *
+_lcasestring:		ds.l 1
 
 ; * spacestring *	
 _spacestraddress:	ds.l 1

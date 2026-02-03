@@ -74,7 +74,7 @@ char *rword[] =
     "EOF","EQV","ERASE","ERL","ERR","ERROR","EXIT","EXP",
     "FIELD","FILES","FIX","FN","FOR","FRE","FUNCTION",
     "GET","GOSUB","GOTO","HEX$","IF","IMP","INKEY$",
-    "INPUT","INPUT$","INSTR","INT","KILL","LBOUND","LEFT$",
+    "INPUT","INPUT$","INSTR","INT","KILL","LBOUND","LCASE$","LEFT$",
     "LEN","LET","LIBRARY","LINE","LIST","LLIST","LOAD","LOC",
     "LOCATE","LOF","LOG","LPOS","LPRINT","LSET","MENU","MERGE",
     "MID$","MKD$","MKI$","MKL$","MKS$","MOD","MOUSE","NAME",

@@ -117,6 +117,7 @@ BOOL strfunc()
   case inputboxstrsym	: return(TRUE);
   case inputstrsym 	: return(TRUE);
   case instrsym		: return(TRUE);
+  case lcasestrsym  	: return(TRUE);
   case leftstrsym  	: return(TRUE);
   case lensym	   	: return(TRUE);
   case midstrsym   	: return(TRUE);
@@ -700,17 +701,31 @@ BOOL offset_on_stack;
 			  break;
 	
     /* UCASE$ */
-    case ucasestrsym  :	if (sftype == stringtype) 
+    case ucasestrsym  :	if (sftype == stringtype)
 			{
 			 gen("move.l","(sp)+","a1");
 		   	 make_temp_string();
 			 gen("lea",tempstrname,"a0"); /* result buffer */
 			 gen("jsr","_ucase","  ");
 			 gen("move.l","a0","-(sp)");
-			 enter_XREF("_ucase");	
+			 enter_XREF("_ucase");
 			 sftype=stringtype;
 			}
-			else { _error(4); sftype=undefined; }	 
+			else { _error(4); sftype=undefined; }
+   			break;
+
+    /* LCASE$ */
+    case lcasestrsym  :	if (sftype == stringtype)
+			{
+			 gen("move.l","(sp)+","a1");
+		   	 make_temp_string();
+			 gen("lea",tempstrname,"a0"); /* result buffer */
+			 gen("jsr","_lcase","  ");
+			 gen("move.l","a0","-(sp)");
+			 enter_XREF("_lcase");
+			 sftype=stringtype;
+			}
+			else { _error(4); sftype=undefined; }
    			break;
 
     /* VAL */
