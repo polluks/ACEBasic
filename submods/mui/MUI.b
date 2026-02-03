@@ -664,8 +664,8 @@ END SUB
 ** Stack-based group builder for nested MUI groups.
 ** Usage:
 **   MUIBeginVGroup
-**     MUIChild MUIText("Hello")
-**     MUIChild MUIButton("OK")
+**     MUIChild(MUIText("Hello"))
+**     MUIChild(MUIButton("OK"))
 **   grp = MUIEndGroup
 *}
 
