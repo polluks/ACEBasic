@@ -3,9 +3,9 @@
 
 @NODE MAIN "Main Menu"
 
-			       +----------+
-			       | ACE v2.7 |
-			       +----------+
+			       +------------+
+			       | ACE v2.7.1 |
+			       +------------+
 
                       @{" Printing this document               " link printing-this-document}
                       @{" What is ACE?                         " link what-is-ace-}
@@ -783,7 +783,7 @@ Examples of valid identifiers are:
 		_putchar
 		play.sound
  
-An identifier with no qualifier has a default type of single-precision. The 
+An identifer with no qualifier has a default type of single-precision. The 
 DEFxxx compiler directives (see command and function reference) have the
 same effect as the qualifier characters except they affect all identifiers
 starting with a certain letter. Qualifier characters have higher priority

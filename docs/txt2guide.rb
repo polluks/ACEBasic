@@ -356,9 +356,9 @@ class AceConverter < ManualConverter
     # Main menu
     output << '@NODE MAIN "Main Menu"'
     output << ''
-    output << '			       +----------+'
-    output << '			       | ACE v2.7 |'
-    output << '			       +----------+'
+    output << '			       +------------+'
+    output << '			       | ACE v2.7.1 |'
+    output << '			       +------------+'
     output << ''
 
     # Calculate max width for alignment
