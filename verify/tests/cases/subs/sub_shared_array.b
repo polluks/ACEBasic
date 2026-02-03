@@ -7,12 +7,15 @@ nums%(1) = 2
 nums%(2) = 3
 nums%(3) = 4
 nums%(4) = 5
+sum% = 0
 
-SUB PrintArray
-  SHARED nums%
+SUB SumArray
+  SHARED nums%, sum%
   FOR i% = 0 TO 4
-    PRINT nums%(i%)
+    sum% = sum% + nums%(i%)
   NEXT i%
 END SUB
 
-CALL PrintArray
+CALL SumArray()
+ASSERT sum% = 15, "Sum of array 1-5 should be 15"
+ASSERT nums%(2) = 3, "Array element 2 should be 3"

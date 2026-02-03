@@ -1,2 +1,2 @@
 REM Test: Parentheses override precedence
-PRINT (2 + 3) * 4
+ASSERT (2 + 3) * 4 = 20, "(2 + 3) * 4 should equal 20"

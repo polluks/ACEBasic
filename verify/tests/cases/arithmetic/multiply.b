@@ -1,2 +1,2 @@
 REM Test: Integer multiplication
-PRINT 6 * 7
+ASSERT 6 * 7 = 42, "6 * 7 should equal 42"

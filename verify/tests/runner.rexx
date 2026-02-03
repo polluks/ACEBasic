@@ -85,8 +85,14 @@ runCategory: PROCEDURE EXPOSE totalPass totalFail totalSkip basCmd aceCmd casesD
         /* Error tests should fail compilation */
         expectFail = (cat = 'errors')
 
+        /* Some categories are compile-only unless test ends with _run */
+        compileOnly = 0
+        IF cat = 'screens' | cat = 'gtgadgets' | cat = 'legacygadgets' THEN DO
+            IF RIGHT(testName, 4) ~= '_run' THEN compileOnly = 1
+        END
+
         /* Run test */
-        result = runTest(testFile, testName, cat, expectFail)
+        result = runTest(testFile, testName, cat, expectFail, compileOnly)
 
         SELECT
             WHEN result = 'PASS' THEN totalPass = totalPass + 1
@@ -104,7 +110,7 @@ runCategory: PROCEDURE EXPOSE totalPass totalFail totalSkip basCmd aceCmd casesD
 /* Run a single test                                          */
 /*------------------------------------------------------------*/
 runTest: PROCEDURE EXPOSE basCmd aceCmd expectedDir resultsDir
-    PARSE ARG testFile, testName, category, expectFail
+    PARSE ARG testFile, testName, category, expectFail, compileOnly
 
     /* Clean up any previous output */
     baseName = testFile
@@ -222,11 +228,66 @@ runTest: PROCEDURE EXPOSE basCmd aceCmd expectedDir resultsDir
             RETURN 'FAIL'
         END
     END
-    ELSE DO
-        /* Compile-only test */
+    ELSE IF compileOnly THEN DO
+        /* Compile-only test (GUI tests need visual verification) */
         SAY '[PASS]' category || '/' || testName '(compiled)'
         CALL cleanupFiles(asmFile, objFile, exeFile)
         RETURN 'PASS'
+    END
+    ELSE DO
+        /* ASSERT-based test: build, run, check for ASSERT FAILED */
+        lastSlash = LASTPOS('/', testFile)
+        IF lastSlash > 0 THEN DO
+            srcDir = LEFT(testFile, lastSlash)
+        END
+        ELSE DO
+            srcDir = ''
+        END
+
+        /* Change to source directory and build */
+        curDir = PRAGMA('D')
+        CALL PRAGMA('D', srcDir)
+        ADDRESS COMMAND basCmd testName '>NIL:'
+        buildRC = RC
+
+        IF buildRC ~= 0 THEN DO
+            CALL PRAGMA('D', curDir)
+            SAY '[FAIL]' category || '/' || testName '(build error:' buildRC || ')'
+            CALL cleanupFiles(asmFile, objFile, exeFile)
+            RETURN 'FAIL'
+        END
+
+        /* Check if executable was created */
+        IF ~EXISTS(testName) THEN DO
+            CALL PRAGMA('D', curDir)
+            SAY '[FAIL]' category || '/' || testName '(no executable created)'
+            CALL cleanupFiles(asmFile, objFile, exeFile)
+            RETURN 'FAIL'
+        END
+
+        /* Run and capture output */
+        outputFile = resultsDir || testName || '.output'
+        ADDRESS COMMAND testName '>' outputFile
+        runRC = RC
+
+        /* Return to original directory */
+        CALL PRAGMA('D', curDir)
+
+        /* Check if output contains ASSERT FAILED */
+        assertFailed = checkAssertFailed(outputFile)
+
+        IF assertFailed THEN DO
+            SAY '[FAIL]' category || '/' || testName '(assertion failed)'
+            SAY '  Output:'
+            CALL showFile(outputFile)
+            CALL cleanupFiles(asmFile, objFile, exeFile)
+            RETURN 'FAIL'
+        END
+        ELSE DO
+            SAY '[PASS]' category || '/' || testName
+            CALL cleanupFiles(asmFile, objFile, exeFile)
+            RETURN 'PASS'
+        END
     END
 
     CALL cleanupFiles(asmFile, objFile, exeFile)
@@ -337,3 +398,23 @@ showFile: PROCEDURE
 
     CALL CLOSE('showf')
     RETURN
+
+/*------------------------------------------------------------*/
+/* Check if output file contains ASSERT FAILED                */
+/*------------------------------------------------------------*/
+checkAssertFailed: PROCEDURE
+    PARSE ARG filename
+
+    IF ~OPEN('chkf', filename, 'R') THEN RETURN 0
+
+    found = 0
+    DO WHILE ~EOF('chkf')
+        line = READLN('chkf')
+        IF POS('ASSERT FAILED', line) > 0 THEN DO
+            found = 1
+            LEAVE
+        END
+    END
+
+    CALL CLOSE('chkf')
+    RETURN found

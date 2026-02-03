@@ -1,2 +1,2 @@
 REM Test: Integer subtraction
-PRINT 50 - 30
+ASSERT 50 - 30 = 20, "50 - 30 should equal 20"

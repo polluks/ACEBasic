@@ -1,2 +1,2 @@
 REM Test: Integer division
-PRINT 100 / 4
+ASSERT 100 / 4 = 25, "100 / 4 should equal 25"

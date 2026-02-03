@@ -1,2 +1,3 @@
-REM Test: Print a numeric literal
-PRINT 42
+REM Test: Numeric literal
+x% = 42
+ASSERT x% = 42, "Numeric literal should equal 42"

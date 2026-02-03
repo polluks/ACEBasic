@@ -1,7 +1,9 @@
 REM Test: IF/THEN/ELSE
 x% = 3
+result% = 0
 IF x% > 5 THEN
-  PRINT "greater"
+  result% = 1
 ELSE
-  PRINT "not greater"
+  result% = 2
 END IF
+ASSERT result% = 2, "x%=3 is not > 5, should take ELSE branch"

@@ -1,3 +1,4 @@
 REM Simple test program to verify runtime library works
-PRINT "Hello from ACE!"
+x% = 42
+ASSERT x% = 42, "Basic runtime should work"
 END

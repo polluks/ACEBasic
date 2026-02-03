@@ -1,3 +1,3 @@
-REM Test: String variable assignment and print
+REM Test: String variable assignment
 a$ = "test string"
-PRINT a$
+ASSERT a$ = "test string", "String variable should equal test string"

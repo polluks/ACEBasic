@@ -1,8 +1,10 @@
 REM Test: GOSUB/RETURN
+result% = 0
 GOSUB mysub
-PRINT "after gosub"
+result% = result% + 10
+ASSERT result% = 11, "After GOSUB and RETURN, result should be 11"
 END
 
 mysub:
-PRINT "in subroutine"
+result% = 1
 RETURN

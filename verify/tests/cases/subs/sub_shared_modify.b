@@ -8,8 +8,8 @@ SUB IncrementCounter
   counter% = counter% + 1
 END SUB
 
-PRINT counter%
-CALL IncrementCounter
-PRINT counter%
-CALL IncrementCounter
-PRINT counter%
+ASSERT counter% = 5, "Initial counter should be 5"
+CALL IncrementCounter()
+ASSERT counter% = 6, "After first increment should be 6"
+CALL IncrementCounter()
+ASSERT counter% = 7, "After second increment should be 7"

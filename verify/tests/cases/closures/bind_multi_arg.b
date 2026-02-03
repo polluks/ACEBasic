@@ -10,4 +10,4 @@ END SUB
 ' Bind two args, leave one free
 adder& = BIND(@AddThree, 10, 20)
 result& = INVOKE adder&(3)
-PRINT result&
+ASSERT result& = 33, "10 + 20 + 3 via BIND should be 33"

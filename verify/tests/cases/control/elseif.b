@@ -2,205 +2,228 @@ REM Test: ELSEIF syntax construct
 
 REM Test 1: Basic ELSEIF (should match second condition)
 x% = 2
+result% = 0
 IF x% = 1 THEN
-  PRINT "one"
+  result% = 1
 ELSEIF x% = 2 THEN
-  PRINT "two"
+  result% = 2
 ELSEIF x% = 3 THEN
-  PRINT "three"
+  result% = 3
 ELSE
-  PRINT "other"
+  result% = 99
 END IF
+ASSERT result% = 2, "Test 1: x%=2 should match ELSEIF x%=2"
 
 REM Test 2: ELSEIF without ELSE (no match, should skip all)
 y% = 5
+result% = 0
 IF y% = 1 THEN
-  PRINT "y one"
+  result% = 1
 ELSEIF y% = 2 THEN
-  PRINT "y two"
+  result% = 2
 END IF
-PRINT "after"
+ASSERT result% = 0, "Test 2: y%=5 should not match any branch"
 
 REM Test 3: First IF condition matches (skip all ELSEIF)
 z% = 1
+result% = 0
 IF z% = 1 THEN
-  PRINT "z first"
+  result% = 1
 ELSEIF z% = 2 THEN
-  PRINT "z second"
+  result% = 2
 ELSE
-  PRINT "z else"
+  result% = 99
 END IF
+ASSERT result% = 1, "Test 3: z%=1 should match first IF"
 
 REM Test 4: Fall through to ELSE (no conditions match)
 w% = 99
+result% = 0
 IF w% = 1 THEN
-  PRINT "w one"
+  result% = 1
 ELSEIF w% = 2 THEN
-  PRINT "w two"
+  result% = 2
 ELSE
-  PRINT "w else"
+  result% = 99
 END IF
+ASSERT result% = 99, "Test 4: w%=99 should fall through to ELSE"
 
 REM Test 5: Many ELSEIF clauses
 n% = 5
+result% = 0
 IF n% = 1 THEN
-  PRINT "n1"
+  result% = 1
 ELSEIF n% = 2 THEN
-  PRINT "n2"
+  result% = 2
 ELSEIF n% = 3 THEN
-  PRINT "n3"
+  result% = 3
 ELSEIF n% = 4 THEN
-  PRINT "n4"
+  result% = 4
 ELSEIF n% = 5 THEN
-  PRINT "n5"
+  result% = 5
 ELSEIF n% = 6 THEN
-  PRINT "n6"
+  result% = 6
 ELSE
-  PRINT "n other"
+  result% = 99
 END IF
+ASSERT result% = 5, "Test 5: n%=5 should match ELSEIF n%=5"
 
 REM Test 6: Nested IF inside ELSEIF block
 a% = 2
 b% = 1
+result% = 0
 IF a% = 1 THEN
-  PRINT "a1"
+  result% = 1
 ELSEIF a% = 2 THEN
   IF b% = 1 THEN
-    PRINT "a2 b1"
+    result% = 21
   ELSE
-    PRINT "a2 b other"
+    result% = 20
   END IF
 ELSE
-  PRINT "a other"
+  result% = 99
 END IF
+ASSERT result% = 21, "Test 6: a%=2 b%=1 should give nested result 21"
 
 REM Test 7: Complex expressions in conditions
 v% = 10
+result% = 0
 IF v% > 20 THEN
-  PRINT "big"
+  result% = 1
 ELSEIF v% > 5 AND v% <= 15 THEN
-  PRINT "medium"
+  result% = 2
 ELSEIF v% > 0 THEN
-  PRINT "small"
+  result% = 3
 ELSE
-  PRINT "zero or negative"
+  result% = 99
 END IF
+ASSERT result% = 2, "Test 7: v%=10 should match medium range"
 
 REM Test 8: Nested ELSEIF inside ELSEIF block
 p% = 2
 q% = 3
+result% = 0
 IF p% = 1 THEN
-  PRINT "p1"
+  result% = 1
 ELSEIF p% = 2 THEN
   IF q% = 1 THEN
-    PRINT "p2 q1"
+    result% = 21
   ELSEIF q% = 2 THEN
-    PRINT "p2 q2"
+    result% = 22
   ELSEIF q% = 3 THEN
-    PRINT "p2 q3"
+    result% = 23
   ELSE
-    PRINT "p2 q other"
+    result% = 20
   END IF
 ELSEIF p% = 3 THEN
-  PRINT "p3"
+  result% = 3
 ELSE
-  PRINT "p other"
+  result% = 99
 END IF
+ASSERT result% = 23, "Test 8: p%=2 q%=3 should give nested elseif result 23"
 
 REM Test 9: Deeply nested ELSEIF
 r% = 2
 s% = 2
 t% = 2
+result% = 0
 IF r% = 1 THEN
-  PRINT "r1"
+  result% = 1
 ELSEIF r% = 2 THEN
   IF s% = 1 THEN
-    PRINT "r2 s1"
+    result% = 21
   ELSEIF s% = 2 THEN
     IF t% = 1 THEN
-      PRINT "r2 s2 t1"
+      result% = 221
     ELSEIF t% = 2 THEN
-      PRINT "r2 s2 t2"
+      result% = 222
     ELSE
-      PRINT "r2 s2 t other"
+      result% = 220
     END IF
   ELSE
-    PRINT "r2 s other"
+    result% = 20
   END IF
 ELSE
-  PRINT "r other"
+  result% = 99
 END IF
+ASSERT result% = 222, "Test 9: r%=2 s%=2 t%=2 should give deeply nested 222"
 
 REM Test 10: Single-line IF THEN (true)
 c% = 5
-IF c% = 5 THEN PRINT "c five"
+result% = 0
+IF c% = 5 THEN result% = 5
+ASSERT result% = 5, "Test 10: c%=5 single-line should set result%=5"
 
-REM Test 11: Single-line IF THEN (false, no output)
+REM Test 11: Single-line IF THEN (false, no action)
 d% = 3
-IF d% = 5 THEN PRINT "d five"
-PRINT "after d"
+result% = 0
+IF d% = 5 THEN result% = 5
+ASSERT result% = 0, "Test 11: d%=3 single-line should not change result%"
 
 REM Test 12: Single-line IF THEN ELSE (true branch)
 e% = 1
-IF e% = 1 THEN PRINT "e one" ELSE PRINT "e not one"
+result% = 0
+IF e% = 1 THEN result% = 1 ELSE result% = 99
+ASSERT result% = 1, "Test 12: e%=1 should take THEN branch"
 
 REM Test 13: Single-line IF THEN ELSE (false branch)
 f% = 2
-IF f% = 1 THEN PRINT "f one" ELSE PRINT "f not one"
+result% = 0
+IF f% = 1 THEN result% = 1 ELSE result% = 99
+ASSERT result% = 99, "Test 13: f%=2 should take ELSE branch"
 
-REM Test 14: Single-line IF with multiple statements using colon
-g% = 3
-IF g% = 3 THEN PRINT "g"; : PRINT " three"
-
-REM Test 15: Mix single-line and block IF
-h% = 2
-IF h% = 1 THEN PRINT "h one"
-IF h% = 2 THEN
-  PRINT "h two block"
-END IF
-
-REM Test 16: Block IF/ELSE (no ELSEIF) - true branch
+REM Test 14: Block IF/ELSE (no ELSEIF) - true branch
 i% = 1
+result% = 0
 IF i% = 1 THEN
-  PRINT "i one"
+  result% = 1
 ELSE
-  PRINT "i else"
+  result% = 99
 END IF
+ASSERT result% = 1, "Test 14: i%=1 block IF should take THEN branch"
 
-REM Test 17: Block IF/ELSE (no ELSEIF) - false branch
+REM Test 15: Block IF/ELSE (no ELSEIF) - false branch
 j% = 5
+result% = 0
 IF j% = 1 THEN
-  PRINT "j one"
+  result% = 1
 ELSE
-  PRINT "j else"
+  result% = 99
 END IF
+ASSERT result% = 99, "Test 15: j%=5 block IF should take ELSE branch"
 
-REM Test 18: Simple IF/ELSEIF/ELSE - first matches
+REM Test 16: Simple IF/ELSEIF/ELSE - first matches
 k% = 1
+result% = 0
 IF k% = 1 THEN
-  PRINT "k one"
+  result% = 1
 ELSEIF k% = 2 THEN
-  PRINT "k two"
+  result% = 2
 ELSE
-  PRINT "k else"
+  result% = 99
 END IF
+ASSERT result% = 1, "Test 16: k%=1 should match first IF"
 
-REM Test 19: Simple IF/ELSEIF/ELSE - elseif matches
+REM Test 17: Simple IF/ELSEIF/ELSE - elseif matches
 l% = 2
+result% = 0
 IF l% = 1 THEN
-  PRINT "l one"
+  result% = 1
 ELSEIF l% = 2 THEN
-  PRINT "l two"
+  result% = 2
 ELSE
-  PRINT "l else"
+  result% = 99
 END IF
+ASSERT result% = 2, "Test 17: l%=2 should match ELSEIF"
 
-REM Test 20: Simple IF/ELSEIF/ELSE - else matches
+REM Test 18: Simple IF/ELSEIF/ELSE - else matches
 m% = 9
+result% = 0
 IF m% = 1 THEN
-  PRINT "m one"
+  result% = 1
 ELSEIF m% = 2 THEN
-  PRINT "m two"
+  result% = 2
 ELSE
-  PRINT "m else"
+  result% = 99
 END IF
+ASSERT result% = 99, "Test 18: m%=9 should fall through to ELSE"

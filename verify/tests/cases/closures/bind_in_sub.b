@@ -14,4 +14,4 @@ END SUB
 
 add5& = MakeAdder(5)
 result& = INVOKE add5&(10)
-PRINT result&
+ASSERT result& = 15, "5 + 10 via closure from SUB should be 15"

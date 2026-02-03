@@ -1,5 +1,6 @@
 REM Test: GOTO statement
+skipped% = 0
 GOTO skip
-PRINT "should not print"
+skipped% = 1
 skip:
-PRINT "after goto"
+ASSERT skipped% = 0, "GOTO should skip assignment"

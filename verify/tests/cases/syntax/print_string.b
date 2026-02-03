@@ -1,2 +1,3 @@
-REM Test: Print a string literal
-PRINT "Hello World"
+REM Test: String literal
+a$ = "Hello World"
+ASSERT a$ = "Hello World", "String should equal Hello World"

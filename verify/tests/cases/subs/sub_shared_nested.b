@@ -13,11 +13,7 @@ SUB AddTwenty
   total& = total& + 20
 END SUB
 
-SUB PrintTotal
-  SHARED total&
-  PRINT total&
-END SUB
-
-CALL AddTen
-CALL AddTwenty
-CALL PrintTotal
+CALL AddTen()
+ASSERT total& = 10, "After AddTen, total should be 10"
+CALL AddTwenty()
+ASSERT total& = 30, "After AddTwenty, total should be 30"

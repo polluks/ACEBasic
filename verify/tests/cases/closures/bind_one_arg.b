@@ -9,4 +9,4 @@ END SUB
 
 adder& = BIND(@AddN, 5)
 result& = INVOKE adder&(10)
-PRINT result&
+ASSERT result& = 15, "5 + 10 via BIND should be 15"

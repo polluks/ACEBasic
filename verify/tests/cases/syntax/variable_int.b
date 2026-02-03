@@ -1,3 +1,3 @@
-REM Test: Integer variable assignment and print
+REM Test: Integer variable assignment
 x% = 10
-PRINT x%
+ASSERT x% = 10, "Integer variable should equal 10"

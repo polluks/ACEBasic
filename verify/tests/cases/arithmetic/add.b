@@ -1,2 +1,2 @@
 REM Test: Integer addition
-PRINT 10 + 20
+ASSERT 10 + 20 = 30, "10 + 20 should equal 30"
