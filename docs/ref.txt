@@ -1610,7 +1610,12 @@ INT		- syntax: INT(n)
 --------------------------------------------------------------------------------
 KILL		- syntax: KILL <filespec>
 		- Deletes a file or directory.
- 
+
+--------------------------------------------------------------------------------
+LCASE$		- syntax: LCASE$(<string-expression>)
+		- Returns <string-expression> with all alphabetic characters
+		  in lower case.
+
 --------------------------------------------------------------------------------
 LEFT$		- syntax: LEFT$(X$,I)
 		- Returns a string which contains the leftmost I characters
