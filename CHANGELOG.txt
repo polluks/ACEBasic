@@ -1,6 +1,47 @@
                                   CHANGELOG
                                   =========
 
+v2.7.1 (2026-02-03)
+-------------------
+
+New Features:
+
+  - ELSEIF Keyword: Block IF statements now support ELSEIF for cleaner
+    multi-branch conditionals. Syntax:
+    IF condition THEN
+      ...
+    ELSEIF condition THEN
+      ...
+    ELSE
+      ...
+    END IF
+
+  - LCASE$ Function (#33): New string function that returns the lowercase
+    version of a string. Syntax: result$ = LCASE$(string$)
+
+Changes:
+
+  - MUI Module Improvements: Added HorizSpacing/VertSpacing attributes and
+    fixed boolean handling in MUI submodule.
+
+  - MUI Constants Fix: Corrected MUI constants to match official mui.h
+    header values.
+
+Bug Fixes:
+
+  - Fix DATA Statement FFP Conversion (#40): Fixed regression where DATA
+    statements with floating-point values were not correctly converted to
+    FFP format.
+
+  - Fix doublebuffer.h (#39): Corrected issues in the double buffering
+    include file.
+
+Testing:
+
+  - Refactored test-suite to use ASSERT (#38) for cleaner test verification.
+
+------------------------------------------------------------------------------
+
 v2.7 (2026-02-01)
 -----------------
 
