@@ -4,7 +4,7 @@
    Requires AmigaOS 3.0+ (V39 graphics.library).
 
    Usage:
-     #include <ace/DoubleBuffer.h>
+     <sharp>include <ace/DoubleBuffer.h>
      SCREEN 1,320,200,5,1
      WINDOW 1,,(0,0)-(320,200),32,1
      DbufInit
