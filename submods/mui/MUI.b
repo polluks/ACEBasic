@@ -384,6 +384,247 @@ SUB LONGINT _CBool(LONGINT b)
     END IF
 END SUB
 
+{ ============== Library Management ============== }
+
+SUB MUIInit EXTERNAL
+    SHARED _tagIndex, _evtMsg&, _evtSigs, _groupLevel
+    SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
+    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
+    SHARED _menuLevel, _menuCount, _menuItemCounts%, _menuTitles&
+    SHARED _lastError, _muiVersion
+    SHORTINT i
+    ADDRESS muiBase
+
+    { Initialize module state }
+    _tagIndex = 0
+    _evtSigs = 0&
+    _groupLevel = 0
+    _menuLevel = 0
+    _menuCount = 0
+    _lastError = MUIERR_NONE
+    _muiVersion = 0&
+
+    { Initialize group builder arrays }
+    FOR i = 0 TO 9
+        _groupCols%(i) = 0
+        _groupSameSize%(i) = 0
+        _groupSameWidth%(i) = 0
+        _groupSameHeight%(i) = 0
+        _groupFrameTitles&(i) = 0&
+        _groupSpacing%(i) = -1
+        _groupHorizSpacing%(i) = -1
+        _groupVertSpacing%(i) = -1
+        _menuItemCounts%(i) = 0
+        _menuTitles&(i) = 0&
+    NEXT i
+
+    {*
+    ** Open required libraries.
+    ** exec.library - need to open explicitly for module to have _ExecBase
+    ** intuition.library - needed for SetAttrsA, GetAttr
+    ** muimaster.library - MUI object creation/disposal
+    ** utility.library - needed for CallHookPkt (DoMethodA)
+    *}
+    LIBRARY "exec.library"
+    LIBRARY "intuition.library"
+    LIBRARY "utility.library"
+
+    { Open muimaster and capture version }
+    muiBase = OpenLibrary(SADD("muimaster.library"), 19&)
+    IF muiBase = 0& THEN
+        _lastError = MUIERR_NOLIBRARY
+    ELSE
+        { Read lib_Version at offset 20 (WORD) }
+        _muiVersion = PEEKW(muiBase + 20)
+        { Close it - LIBRARY statement will reopen }
+        CloseLibrary(muiBase)
+    END IF
+
+    LIBRARY "muimaster.library"
+END SUB
+
+SUB MUICleanup EXTERNAL
+    { Close all libraries opened by MUIInit }
+    LIBRARY CLOSE "utility.library"
+    LIBRARY CLOSE "muimaster.library"
+    LIBRARY CLOSE "intuition.library"
+    LIBRARY CLOSE "exec.library"
+END SUB
+
+{ ============== Error Handling ============== }
+
+SUB LONGINT MUIVersion EXTERNAL
+    SHARED _muiVersion
+    MUIVersion = _muiVersion
+END SUB
+
+SUB LONGINT MUILastError EXTERNAL
+    SHARED _lastError
+    MUILastError = _lastError
+END SUB
+
+SUB ADDRESS MUIErrorStr EXTERNAL
+    SHARED _lastError, _errStr&
+    ADDRESS dest
+
+    dest = VARPTR(_errStr&(0))
+
+    IF _lastError = MUIERR_NONE THEN
+        { "No error" }
+        POKE dest, 78
+        POKE dest+1, 111
+        POKE dest+2, 32
+        POKE dest+3, 101
+        POKE dest+4, 114
+        POKE dest+5, 114
+        POKE dest+6, 111
+        POKE dest+7, 114
+        POKE dest+8, 0
+    END IF
+    IF _lastError = MUIERR_NOLIBRARY THEN
+        { "Could not open muimaster.library" }
+        POKE dest, 67
+        POKE dest+1, 111
+        POKE dest+2, 117
+        POKE dest+3, 108
+        POKE dest+4, 100
+        POKE dest+5, 32
+        POKE dest+6, 110
+        POKE dest+7, 111
+        POKE dest+8, 116
+        POKE dest+9, 32
+        POKE dest+10, 111
+        POKE dest+11, 112
+        POKE dest+12, 101
+        POKE dest+13, 110
+        POKE dest+14, 32
+        POKE dest+15, 109
+        POKE dest+16, 117
+        POKE dest+17, 105
+        POKE dest+18, 109
+        POKE dest+19, 97
+        POKE dest+20, 115
+        POKE dest+21, 116
+        POKE dest+22, 101
+        POKE dest+23, 114
+        POKE dest+24, 46
+        POKE dest+25, 108
+        POKE dest+26, 105
+        POKE dest+27, 98
+        POKE dest+28, 114
+        POKE dest+29, 97
+        POKE dest+30, 114
+        POKE dest+31, 121
+        POKE dest+32, 0
+    END IF
+    IF _lastError = MUIERR_CREATEFAILED THEN
+        { "Object creation failed" }
+        POKE dest, 79
+        POKE dest+1, 98
+        POKE dest+2, 106
+        POKE dest+3, 101
+        POKE dest+4, 99
+        POKE dest+5, 116
+        POKE dest+6, 32
+        POKE dest+7, 99
+        POKE dest+8, 114
+        POKE dest+9, 101
+        POKE dest+10, 97
+        POKE dest+11, 116
+        POKE dest+12, 105
+        POKE dest+13, 111
+        POKE dest+14, 110
+        POKE dest+15, 32
+        POKE dest+16, 102
+        POKE dest+17, 97
+        POKE dest+18, 105
+        POKE dest+19, 108
+        POKE dest+20, 101
+        POKE dest+21, 100
+        POKE dest+22, 0
+    END IF
+    IF _lastError = MUIERR_GROUPOVERFLOW THEN
+        { "Group nesting overflow" }
+        POKE dest, 71
+        POKE dest+1, 114
+        POKE dest+2, 111
+        POKE dest+3, 117
+        POKE dest+4, 112
+        POKE dest+5, 32
+        POKE dest+6, 110
+        POKE dest+7, 101
+        POKE dest+8, 115
+        POKE dest+9, 116
+        POKE dest+10, 105
+        POKE dest+11, 110
+        POKE dest+12, 103
+        POKE dest+13, 32
+        POKE dest+14, 111
+        POKE dest+15, 118
+        POKE dest+16, 101
+        POKE dest+17, 114
+        POKE dest+18, 102
+        POKE dest+19, 108
+        POKE dest+20, 111
+        POKE dest+21, 119
+        POKE dest+22, 0
+    END IF
+    IF _lastError = MUIERR_INVALIDPARAM THEN
+        { "Invalid parameter" }
+        POKE dest, 73
+        POKE dest+1, 110
+        POKE dest+2, 118
+        POKE dest+3, 97
+        POKE dest+4, 108
+        POKE dest+5, 105
+        POKE dest+6, 100
+        POKE dest+7, 32
+        POKE dest+8, 112
+        POKE dest+9, 97
+        POKE dest+10, 114
+        POKE dest+11, 97
+        POKE dest+12, 109
+        POKE dest+13, 101
+        POKE dest+14, 116
+        POKE dest+15, 101
+        POKE dest+16, 114
+        POKE dest+17, 0
+    END IF
+    IF _lastError < 0 OR _lastError > 4 THEN
+        { "Unknown error" }
+        POKE dest, 85
+        POKE dest+1, 110
+        POKE dest+2, 107
+        POKE dest+3, 110
+        POKE dest+4, 111
+        POKE dest+5, 119
+        POKE dest+6, 110
+        POKE dest+7, 32
+        POKE dest+8, 101
+        POKE dest+9, 114
+        POKE dest+10, 114
+        POKE dest+11, 111
+        POKE dest+12, 114
+        POKE dest+13, 0
+    END IF
+
+    MUIErrorStr = dest
+END SUB
+
+{ ============== Object Disposal ============== }
+
+SUB MUIDispose(ADDRESS obj) EXTERNAL
+    IF obj <> 0& THEN
+        MUI_DisposeObject(obj)
+    END IF
+END SUB
+
+{ ============== Low-level Object Creation ============== }
+
+SUB ADDRESS _MUINewObj(ADDRESS className, ADDRESS tagList) EXTERNAL
+    _MUINewObj = MUI_NewObjectA(className, tagList)
+END SUB
+
 { ============== Tag Builder ============== }
 {*
 ** Tag builder functions for constructing MUI tag arrays.
@@ -725,247 +966,6 @@ SUB ADDRESS MUIEndGroup EXTERNAL
     _groupLevel = _groupLevel - 1
 
     MUIEndGroup = MUI_NewObjectA(SADD("Group.mui"), VARPTR(_tags&(0)))
-END SUB
-
-{ ============== Library Management ============== }
-
-SUB MUIInit EXTERNAL
-    SHARED _tagIndex, _evtMsg&, _evtSigs, _groupLevel
-    SHARED _groupCols%, _groupSameSize%, _groupSameWidth%, _groupSameHeight%
-    SHARED _groupFrameTitles&, _groupSpacing%, _groupHorizSpacing%, _groupVertSpacing%
-    SHARED _menuLevel, _menuCount, _menuItemCounts%, _menuTitles&
-    SHARED _lastError, _muiVersion
-    SHORTINT i
-    ADDRESS muiBase
-
-    { Initialize module state }
-    _tagIndex = 0
-    _evtSigs = 0&
-    _groupLevel = 0
-    _menuLevel = 0
-    _menuCount = 0
-    _lastError = MUIERR_NONE
-    _muiVersion = 0&
-
-    { Initialize group builder arrays }
-    FOR i = 0 TO 9
-        _groupCols%(i) = 0
-        _groupSameSize%(i) = 0
-        _groupSameWidth%(i) = 0
-        _groupSameHeight%(i) = 0
-        _groupFrameTitles&(i) = 0&
-        _groupSpacing%(i) = -1
-        _groupHorizSpacing%(i) = -1
-        _groupVertSpacing%(i) = -1
-        _menuItemCounts%(i) = 0
-        _menuTitles&(i) = 0&
-    NEXT i
-
-    {*
-    ** Open required libraries.
-    ** exec.library - need to open explicitly for module to have _ExecBase
-    ** intuition.library - needed for SetAttrsA, GetAttr
-    ** muimaster.library - MUI object creation/disposal
-    ** utility.library - needed for CallHookPkt (DoMethodA)
-    *}
-    LIBRARY "exec.library"
-    LIBRARY "intuition.library"
-    LIBRARY "utility.library"
-
-    { Open muimaster and capture version }
-    muiBase = OpenLibrary(SADD("muimaster.library"), 19&)
-    IF muiBase = 0& THEN
-        _lastError = MUIERR_NOLIBRARY
-    ELSE
-        { Read lib_Version at offset 20 (WORD) }
-        _muiVersion = PEEKW(muiBase + 20)
-        { Close it - LIBRARY statement will reopen }
-        CloseLibrary(muiBase)
-    END IF
-
-    LIBRARY "muimaster.library"
-END SUB
-
-SUB MUICleanup EXTERNAL
-    { Close all libraries opened by MUIInit }
-    LIBRARY CLOSE "utility.library"
-    LIBRARY CLOSE "muimaster.library"
-    LIBRARY CLOSE "intuition.library"
-    LIBRARY CLOSE "exec.library"
-END SUB
-
-{ ============== Error Handling ============== }
-
-SUB LONGINT MUIVersion EXTERNAL
-    SHARED _muiVersion
-    MUIVersion = _muiVersion
-END SUB
-
-SUB LONGINT MUILastError EXTERNAL
-    SHARED _lastError
-    MUILastError = _lastError
-END SUB
-
-SUB ADDRESS MUIErrorStr EXTERNAL
-    SHARED _lastError, _errStr&
-    ADDRESS dest
-
-    dest = VARPTR(_errStr&(0))
-
-    IF _lastError = MUIERR_NONE THEN
-        { "No error" }
-        POKE dest, 78
-        POKE dest+1, 111
-        POKE dest+2, 32
-        POKE dest+3, 101
-        POKE dest+4, 114
-        POKE dest+5, 114
-        POKE dest+6, 111
-        POKE dest+7, 114
-        POKE dest+8, 0
-    END IF
-    IF _lastError = MUIERR_NOLIBRARY THEN
-        { "Could not open muimaster.library" }
-        POKE dest, 67
-        POKE dest+1, 111
-        POKE dest+2, 117
-        POKE dest+3, 108
-        POKE dest+4, 100
-        POKE dest+5, 32
-        POKE dest+6, 110
-        POKE dest+7, 111
-        POKE dest+8, 116
-        POKE dest+9, 32
-        POKE dest+10, 111
-        POKE dest+11, 112
-        POKE dest+12, 101
-        POKE dest+13, 110
-        POKE dest+14, 32
-        POKE dest+15, 109
-        POKE dest+16, 117
-        POKE dest+17, 105
-        POKE dest+18, 109
-        POKE dest+19, 97
-        POKE dest+20, 115
-        POKE dest+21, 116
-        POKE dest+22, 101
-        POKE dest+23, 114
-        POKE dest+24, 46
-        POKE dest+25, 108
-        POKE dest+26, 105
-        POKE dest+27, 98
-        POKE dest+28, 114
-        POKE dest+29, 97
-        POKE dest+30, 114
-        POKE dest+31, 121
-        POKE dest+32, 0
-    END IF
-    IF _lastError = MUIERR_CREATEFAILED THEN
-        { "Object creation failed" }
-        POKE dest, 79
-        POKE dest+1, 98
-        POKE dest+2, 106
-        POKE dest+3, 101
-        POKE dest+4, 99
-        POKE dest+5, 116
-        POKE dest+6, 32
-        POKE dest+7, 99
-        POKE dest+8, 114
-        POKE dest+9, 101
-        POKE dest+10, 97
-        POKE dest+11, 116
-        POKE dest+12, 105
-        POKE dest+13, 111
-        POKE dest+14, 110
-        POKE dest+15, 32
-        POKE dest+16, 102
-        POKE dest+17, 97
-        POKE dest+18, 105
-        POKE dest+19, 108
-        POKE dest+20, 101
-        POKE dest+21, 100
-        POKE dest+22, 0
-    END IF
-    IF _lastError = MUIERR_GROUPOVERFLOW THEN
-        { "Group nesting overflow" }
-        POKE dest, 71
-        POKE dest+1, 114
-        POKE dest+2, 111
-        POKE dest+3, 117
-        POKE dest+4, 112
-        POKE dest+5, 32
-        POKE dest+6, 110
-        POKE dest+7, 101
-        POKE dest+8, 115
-        POKE dest+9, 116
-        POKE dest+10, 105
-        POKE dest+11, 110
-        POKE dest+12, 103
-        POKE dest+13, 32
-        POKE dest+14, 111
-        POKE dest+15, 118
-        POKE dest+16, 101
-        POKE dest+17, 114
-        POKE dest+18, 102
-        POKE dest+19, 108
-        POKE dest+20, 111
-        POKE dest+21, 119
-        POKE dest+22, 0
-    END IF
-    IF _lastError = MUIERR_INVALIDPARAM THEN
-        { "Invalid parameter" }
-        POKE dest, 73
-        POKE dest+1, 110
-        POKE dest+2, 118
-        POKE dest+3, 97
-        POKE dest+4, 108
-        POKE dest+5, 105
-        POKE dest+6, 100
-        POKE dest+7, 32
-        POKE dest+8, 112
-        POKE dest+9, 97
-        POKE dest+10, 114
-        POKE dest+11, 97
-        POKE dest+12, 109
-        POKE dest+13, 101
-        POKE dest+14, 116
-        POKE dest+15, 101
-        POKE dest+16, 114
-        POKE dest+17, 0
-    END IF
-    IF _lastError < 0 OR _lastError > 4 THEN
-        { "Unknown error" }
-        POKE dest, 85
-        POKE dest+1, 110
-        POKE dest+2, 107
-        POKE dest+3, 110
-        POKE dest+4, 111
-        POKE dest+5, 119
-        POKE dest+6, 110
-        POKE dest+7, 32
-        POKE dest+8, 101
-        POKE dest+9, 114
-        POKE dest+10, 114
-        POKE dest+11, 111
-        POKE dest+12, 114
-        POKE dest+13, 0
-    END IF
-
-    MUIErrorStr = dest
-END SUB
-
-{ ============== Object Disposal ============== }
-
-SUB MUIDispose(ADDRESS obj) EXTERNAL
-    IF obj <> 0& THEN
-        MUI_DisposeObject(obj)
-    END IF
-END SUB
-
-{ ============== Low-level Object Creation ============== }
-
-SUB ADDRESS _MUINewObj(ADDRESS className, ADDRESS tagList) EXTERNAL
-    _MUINewObj = MUI_NewObjectA(className, tagList)
 END SUB
 
 { ============== Text Object Helpers ============== }
