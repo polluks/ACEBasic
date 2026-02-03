@@ -1097,14 +1097,14 @@ LONG fnum,sign;
 
  do
  {
-  sign=1.0;
+  sign=SPFlt(1);  /* FFP representation of 1.0 */
 
   insymbol();
 
   /* arithmetic sign? */
-  if ((sym == minus) || (sym == plus)) 
-  { 
-   if (sym == minus) sign=-1.0; 
+  if ((sym == minus) || (sym == plus))
+  {
+   if (sym == minus) sign=SPFlt(-1);  /* FFP representation of -1.0 */
    insymbol();
    if ((sym == ident) || (sym == stringconst)) _error(27);
   }
