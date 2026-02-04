@@ -19,6 +19,15 @@ Key characteristics:
 - Both non-destructive and destructive operations provided
 
 
+Initialization
+--------------
+
+LInit                       ' Initialize library (opens exec.library)
+LCleanup                    ' Cleanup library (closes exec.library)
+
+Call LInit at program start, LCleanup at program end.
+
+
 Constants
 ---------
 
@@ -124,7 +133,7 @@ Builder Pattern
 Efficient way to build lists in forward order.
 Maintains internal tail pointer for O(1) appends.
 
-LOf                              ' Start building (resets state)
+LNew                             ' Start building (resets state)
 
 LAdd%(val%)                      ' Add INTEGER
 LAdd&(val&)                      ' Add LONG
@@ -135,7 +144,7 @@ LAddList(ptr&)                   ' Add nested list
 list& = LEnd                     ' Finalize, return list
 
 Example:
-    LOf
+    LNew
       LAdd%(1)
       LAdd%(2)
       LAdd%(3)
@@ -143,7 +152,7 @@ Example:
     ' Result: (1 2 3)
 
 Example with loop:
-    LOf
+    LNew
       FOR i% = 0 TO 10
         LAdd%(i%)
       NEXT
@@ -151,7 +160,7 @@ Example with loop:
     ' Result: (0 1 2 3 4 5 6 7 8 9 10)
 
 Example with mixed types:
-    LOf
+    LNew
       LAdd&(42)
       LAdd$("hello")
       LAdd!(3.14)
@@ -203,18 +212,65 @@ LFree(list&)                     ' Free all cells recursively
 Debugging
 ---------
 
-LPrint(list&)                    ' Print list to console
+LDump(list&)                     ' Print list to console (no newline)
                                   ' Format: (val1 val2 val3 ...)
                                   ' Nested lists shown with parens
+
+LDumpLn(list&)                   ' Print list to console with newline
 
 
 Memory Management
 -----------------
 
+Ownership Model: Strict ownership with no reference counting.
+
+Rules:
+
+1. When you create a list with LCons or the builder, you OWN that list.
+
+2. LCdr returns a pointer INTO the existing list, not a copy.
+   You do NOT own what LCdr returns - it's part of the original list.
+
+3. Call LFree only on lists you fully own.
+   LFree recursively frees all cells from that point.
+
+4. NEVER call LFree on a sublist obtained via LCdr:
+
+   WRONG:
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCdr(list&)
+       LFree(rest&)        ' BAD: rest& is part of list&
+       LFree(list&)        ' CRASH: double free!
+
+   RIGHT:
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCdr(list&)
+       ' use rest& ...
+       LFree(list&)        ' Frees everything including rest&
+
+5. If you need an independent sublist, use LCopy:
+
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCopy(LCdr(list&))   ' rest& is a separate copy
+       LFree(rest&)                  ' OK: independent list
+       LFree(list&)                  ' OK: original list
+
+6. LAppend(a, b) copies cells from a but SHARES b.
+   After LAppend, freeing b would corrupt the result.
+
+       result& = LAppend(listA&, listB&)
+       LFree(listA&)       ' OK: was copied
+       ' Do NOT free listB& while result& is in use
+       LFree(result&)      ' Frees the copy of a AND all of b
+
+7. LNconc(a, b) modifies a's tail to point to b.
+   Both a and b now share structure. Free only once.
+
+Value Copying:
+
 - All values are copied at insertion time
 - Strings are copied (new allocation) - caller's string can change
-- LFree must be called to release memory
-- LFree also frees copied string storage
+- LFree frees copied string storage
 - No garbage collection - user responsible for calling LFree
 
 
@@ -273,24 +329,27 @@ Operation Complexity
 | LNrev        | O(n)  | O(1)  | Relinks in place         |
 | LCopy        | O(n)  | O(n)  | Deep copy                |
 | LFree        | O(n)  | O(1)  |                          |
+| Builder LNew | O(1)  | O(1)  | Resets builder state     |
 | Builder LAdd | O(1)  | O(1)  | Uses tail pointer        |
+| Builder LEnd | O(1)  | O(1)  | Returns built list       |
+| LDump        | O(n)  | O(1)  | Print without newline    |
+| LDumpLn      | O(n)  | O(1)  | Print with newline       |
 
 
 Internal Structure
 ------------------
 
-Cons cell (9 bytes, may pad to 10 or 12):
+Cons cell:
 
     STRUCT LCell
-      tag AS BYTE        ' LTypeInt, LTypeLng, etc.
-      car AS LONG        ' Value or pointer
-      cdr AS ADDRESS     ' Next cell or LNil
+      LONGINT car        ' Value or pointer
+      ADDRESS cdr        ' Next cell or LNil
+      BYTE tag           ' LTypeInt, LTypeLng, etc.
     END STRUCT
 
 Builder state (module-level):
 
-    DIM SHARED _LBuildHead AS ADDRESS    ' First cell
-    DIM SHARED _LBuildTail AS ADDRESS    ' Last cell (for O(1) append)
+    ADDRESS _LBuildHead, _LBuildTail    ' Head and tail for O(1) append
 
 
 Implementation Notes
@@ -323,12 +382,17 @@ Usage
 
 EXTERNAL list
 
-LOf
+LInit
+
+LNew
   LAdd%(1)
   LAdd%(2)
   LAdd%(3)
 mylist& = LEnd
 
 PRINT "Length:"; LLen(mylist&)
+LDumpLn(mylist&)
 
 LFree(mylist&)
+
+LCleanup

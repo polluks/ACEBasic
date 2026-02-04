@@ -63,10 +63,56 @@ Use LType() to check the type of a cell at runtime.
 Memory Management
 -----------------
 
-- LFree() must be called to release list memory
-- LFree() recursively frees nested lists and string copies
-- WARNING: Do not free nested lists separately if they are part of
-  another list - LFree handles this automatically
+Ownership Model: Strict ownership with no reference counting.
+
+Rules:
+
+1. When you create a list with LCons or the builder, you OWN that list.
+
+2. LCdr/LRest returns a pointer INTO the existing list, not a copy.
+   You do NOT own what LCdr returns - it's part of the original list.
+
+3. Call LFree only on lists you fully own.
+   LFree recursively frees all cells from that point.
+
+4. NEVER call LFree on a sublist obtained via LCdr:
+
+   WRONG:
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCdr(list&)
+       LFree(rest&)        ' BAD: rest& is part of list&
+       LFree(list&)        ' CRASH: double free!
+
+   RIGHT:
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCdr(list&)
+       ' use rest& ...
+       LFree(list&)        ' Frees everything including rest&
+
+5. If you need an independent sublist, use LCopy:
+
+       list& = LCons%(1, LCons%(2, LNil))
+       rest& = LCopy(LCdr(list&))   ' rest& is a separate copy
+       LFree(rest&)                  ' OK: independent list
+       LFree(list&)                  ' OK: original list
+
+6. LAppend(a, b) copies cells from a but SHARES b.
+   After LAppend, freeing b would corrupt the result.
+
+       result& = LAppend(listA&, listB&)
+       LFree(listA&)       ' OK: was copied
+       ' Do NOT free listB& while result& is in use
+       LFree(result&)      ' Frees the copy of a AND all of b
+
+7. LNconc(a, b) modifies a's tail to point to b.
+   Both a and b now share structure. Free only once.
+
+Value Copying:
+
+- All values are copied at insertion time
+- Strings are copied (new allocation) - caller's string can change
+- LFree frees copied string storage
+- No garbage collection - user responsible for calling LFree
 
 
 Building the Module
