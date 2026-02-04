@@ -86,7 +86,7 @@ Building the Test Program
 On Amiga (or emulator):
 
     cd ACE:submods/list
-    bas test_list
+    bas test_list list.o
 
 This compiles and links test_list.b with the list module.
 
@@ -109,10 +109,7 @@ Using in Your Programs
 
 3. Compile your program:
 
-    bas myprogram
-
-   The linker will find list.o if it's in the same directory or
-   in ACElib:
+    bas myprogram ace:submods/list/list.o
 
 
 Files
