@@ -806,26 +806,42 @@ BOOL ans;
     id[cc++]=ch;
     nextch();
    }
-   while ((letter() || digit() || (ch == '.') || (ch == '_')) && 
-	  (cc < MAXIDSIZE-2));  
+   while ((letter() || digit() || (ch == '.') || (ch == '_')) &&
+	  (cc < MAXIDSIZE-4));  /* reserve 4 chars for suffix (_XX) + null */  
  
    id[cc]='\0';
    ut_id[cc]='\0';
-  
+
    /* is there a qualifier? %&$!# */
-   if (qualifier()) 
+   if (qualifier())
    {
-    if (ch == '&') ch='@';   
-    if (ch == '!') ch='[';   /* this is ONLY because a jsr SUB_name& or
-				SUB_name! gives an error in A68K, whereas
-			  	SUB_name@ and SUB_name[ don't!! */
-    id[cc++]=ch;
+    /* first check if it's a reserved word with original suffix */
+    char saved_ch = ch;
+    id[cc] = ch;
+    id[cc+1] = '\0';
+    if (rsvd_wd(id) != undefined)
+    {
+     /* it's a reserved word - keep original suffix */
+     cc++;
+    }
+    else
+    {
+     /* not a reserved word - translate to 3-char assembler-safe suffix */
+     switch(saved_ch)
+     {
+      case '%': id[cc++]='_'; id[cc++]='I'; id[cc++]='S'; break; /* Integer Short */
+      case '&': id[cc++]='_'; id[cc++]='I'; id[cc++]='L'; break; /* Integer Long */
+      case '!': id[cc++]='_'; id[cc++]='F'; id[cc++]='S'; break; /* Float Single */
+      case '#': id[cc++]='_'; id[cc++]='F'; id[cc++]='D'; break; /* Float Double */
+      case '$': id[cc++]='_'; id[cc++]='S'; id[cc++]='T'; break; /* String */
+     }
+    }
     nextch();
    }
 
    id[cc] = '\0';
    ut_id[cc] = '\0';
-   
+
    /* reserved word? */
    if ((sym = rsvd_wd(id)) == undefined)
    { 

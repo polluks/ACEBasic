@@ -1,0 +1,96 @@
+ACE Compiler: Portable Assembly Label Generation
+================================================
+
+Status: IMPLEMENTED (commit 92323e9)
+
+
+Problem
+-------
+
+ACE BASIC allows type suffixes on SUB/FUNCTION names to indicate the type
+of value being processed or returned:
+
+    %  - SHORTINT (16-bit integer)
+    &  - LONGINT (32-bit integer)
+    !  - SINGLE (32-bit float)
+    $  - STRING
+    #  - (reserved, typically double precision)
+
+Example BASIC code:
+
+    SUB ADDRESS LCons%(SHORTINT v, ADDRESS tl) EXTERNAL
+    SUB ADDRESS LCons&(LONGINT v, ADDRESS tl) EXTERNAL
+    SUB ADDRESS LCons!(SINGLE v, ADDRESS tl) EXTERNAL
+    SUB ADDRESS LCons$(src$, ADDRESS tl) EXTERNAL
+
+The old ACE compiler generated assembly labels by directly translating
+these suffixes:
+
+    _SUB_LCONS%:
+    _SUB_LCONS&:    (becomes _SUB_LCONS@: due to & -> @ conversion)
+    _SUB_LCONS!:    (becomes _SUB_LCONS[: due to ! -> [ conversion)
+    _SUB_LCONS$:
+
+These labels worked with the old a68k assembler but failed with vasm
+(vasmm68k_mot) because:
+
+1. vasm uses % as binary number prefix
+2. vasm uses @ as octal number prefix
+3. Characters like [, !, @ are not valid in vasm labels
+4. Only alphanumeric characters and underscore are allowed in vasm labels
+
+
+Solution
+--------
+
+The ACE compiler's lexer (src/ace/c/lex.c) now translates type suffixes
+to assembler-safe label suffixes at tokenization time:
+
+    BASIC suffix    Old ASM         New ASM
+    ------------    -----------     ------------
+    %               %               _IS  (Integer Short)
+    &               @ (broken)      _IL  (Integer Long)
+    !               [ (broken)      _FS  (Float Single)
+    #               (broken)        _FD  (Float Double)
+    $               $               _ST  (String)
+
+Example output:
+
+    _SUB_LCONS_IS:
+    _SUB_LCONS_IL:
+    _SUB_LCONS_FS:
+    _SUB_LCONS_ST:
+
+This produces valid assembly labels for both a68k and vasm.
+
+
+Files Modified
+--------------
+
+- src/ace/c/lex.c       - Lexer: suffix translation at tokenization (lines 830-837)
+- src/ace/c/sym.c       - Symbol table: suffix stripping for lookups
+- src/ace/c/sub.c       - SUB handling: suffix stripping
+- src/ace/c/factor.c    - Expression handling: suffix stripping
+- src/ace/c/assign.c    - Assignment handling: suffix stripping
+- src/ace/c/libfunc.c   - Library function handling: suffix stripping
+
+
+Implementation Details
+----------------------
+
+1. The translation happens at lexer time (lex.c) when identifiers are
+   tokenized. When a type suffix character is encountered after an
+   identifier, it is converted to the 3-character assembler-safe suffix.
+
+2. Reserved words retain their original suffix characters (e.g., IF%
+   would keep the % if it were valid syntax).
+
+3. Various parts of the compiler strip the type suffix when looking up
+   base identifiers (sym.c, sub.c, factor.c, assign.c, libfunc.c) to
+   ensure consistent symbol resolution.
+
+4. The translation is consistent across:
+   - SUB/FUNCTION label generation
+   - EXIT SUB/FUNCTION labels
+   - EXTERNAL symbol exports
+   - Variable references
