@@ -2,7 +2,7 @@
 Rich.
 
 I have taken your complex math SUBs (complex.b) and created a SUBmod (complex.o)
-via ACE's -m switch (actually, I used ACE:bin/module, by typing 'module complex').
+via ACE's -m switch (by typing 'bas -m complex').
 
 This object module must be linked with any program wishing to use your complex
 math functions. The provided make script file does this. The only extra thing
