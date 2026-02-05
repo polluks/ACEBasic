@@ -22,7 +22,6 @@ filename = STRIP(filename)
 
 IF ~OPEN('f', filename, 'R') THEN DO
     /* File doesn't exist or can't be opened - silent exit */
-    SAY ''
     EXIT 0
 END
 
@@ -43,5 +42,8 @@ END
 
 CALL CLOSE('f')
 
-SAY STRIP(out)
+/* Only output if we found something */
+out = STRIP(out)
+IF out ~= '' THEN
+    SAY out
 EXIT 0
