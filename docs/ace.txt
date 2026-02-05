@@ -427,18 +427,26 @@ Trapping" section below).
 See also the OPTION command in ref.txt.
  
 The syntax for the bas script is:
- 
-	bas [-2bcEilmOw] <sourcefile> [<objectfile>]
- 
-where <sourcefile> is the program to be compiled (without the .b[as] 
-extension) and <objectfile> is a C, assembly or ACE module which has been 
+
+	bas [-2bcEilmOSwx] <sourcefile> [<objectfile>]
+
+where <sourcefile> is the program to be compiled (without the .b[as]
+extension) and <objectfile> is a C, assembly or ACE module which has been
 (compiled and) assembled to produce an object file.
- 
-The <objectfile> is linked with the output of ACE+A68K along with db.lib, 
-startup.lib and ami.lib. This is necessary when an external function or 
-variable in <objectfile> is referenced by an ACE program. For more about 
-external functions, see the sections "External references" and "Creating & 
+
+The <objectfile> is linked with the output of ACE+A68K along with db.lib,
+startup.lib and ami.lib. This is necessary when an external function or
+variable in <objectfile> is referenced by an ACE program. For more about
+external functions, see the sections "External references" and "Creating &
 using ACE subprogram modules" below.
+
+Additionally, the bas script scans the first 20 lines of the source file for
+REM #using directives which specify additional object files to link:
+
+	REM #using ace:submods/list/list.o
+
+This is equivalent to passing the object file as a command-line argument.
+Multiple REM #using directives can be used to link several object files.
  
  
 Running ACE programs

@@ -102,6 +102,13 @@ bas <sourcefile>                    # Compile, assemble, link
 bas <options> <sourcefile> <libs>   # With compiler options and extra libraries
 ```
 
+The script also parses `REM #using` directives in the first 20 lines of your source to automatically link additional object files:
+
+```basic
+REM #using ace:submods/list/list.o
+REM #using ace:submods/mui/mui.o
+```
+
 The script uses vasm (assembler) and vlink (linker). For Workbench 1.3
 compatibility, see `bin/1.3/ReadMe`.
 

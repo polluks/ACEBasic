@@ -13,6 +13,9 @@
 ;   bas -option sourcefile extra.o      - Both options and extra link
 ;   bas -S sourcefile                   - Compile to assembly only (.s)
 ;   bas -m modulefile                   - Compile module to object file (.o)
+;
+; The script also parses REM #using directives in the first 20 lines:
+;   REM #using ace:submods/list/list.o  - Adds list.o to the link stage
 
 ; Command paths
 ALIAS cmd_ace ace:bin/ace
@@ -70,6 +73,17 @@ IF EXISTS "$srcarg"
     SET srcbase `type T:bas_base`
     delete >NIL: T:bas_base
   ENDIF
+ENDIF
+
+; Scan for REM #using directives in first 20 lines
+rx ace:bin/parseUsing.rexx $srcbase.b >T:bas_using
+SET usingobj `type T:bas_using`
+delete >NIL: T:bas_using
+
+; Append #using objects to extraobj
+IF NOT "$usingobj" EQ ""
+  echo "Found #using: $usingobj"
+  SET extraobj "$extraobj $usingobj"
 ENDIF
 
 ; preprocess source file.
