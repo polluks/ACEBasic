@@ -210,6 +210,12 @@ Use descriptive names without spaces: `float_add.b`, not `float add.b`
 - `CLAUDE.md` - Development workflow guide (for Claude Code)
 - `docs/SuperOptimizer.guide` - Optimization techniques
 
+### IDE Integration
+
+- **CubicIDE ACE Plugin** - Syntax highlighting and IDE integration for CubicIDE
+  - [Aminet](https://aminet.net/package/dev/basic/CubicIDE-ACE)
+  - [GitHub](https://github.com/mdbergmann/amigastuff/tree/main/CubicIDE-ACE)
+
 ### Architecture Overview
 
 ACE is a multi-pass compiler that translates BASIC to 68000 assembly:
