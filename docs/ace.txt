@@ -3125,9 +3125,18 @@ passing parameters to SUBs. This allowed me to treat parameters in the same way
 as variables which is all very nice, but it led to other problems, chief among
 them being the need to use a Forbid()/Permit() pair when sending parameters to 
 a SUB. This works fine however, so I'm taking the view that if it 'aint broke,
-I probably shouldn't fix it. 
- 
- 
+I probably shouldn't fix it.
+
+
+Internal Calling Conventions
+----------------------------
+For detailed documentation of ACE's internal calling conventions (CSLR and C),
+SUB modifier keywords (EXTERNAL, INVOKABLE, CALLBACK), and code generation
+details, see the separate document:
+
+        @{"Internal Calling Conventions" alink ace:docs/intern_funcall_conventions.guide/main}
+
+
 Limitations
 -----------
 1. Undeclared variables do NOT get a default zero or NULL value, so don't
