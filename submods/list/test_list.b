@@ -1,3 +1,5 @@
+REM #using ace:submods/list/list.o
+
 {*
 ** Comprehensive Test Suite for the Lisp-style List Library
 ** Tests all type variants and all functions
