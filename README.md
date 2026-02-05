@@ -1,20 +1,34 @@
 # ACE - Amiga BASIC Compiler
 
-ACE is a complete BASIC compiler for the Amiga computer platform. It compiles BASIC source code into native Amiga executables by generating Motorola 68000 assembly code, bridging BASIC's ease of use with compiled performance.
+ACE is a complete BASIC compiler for the Amiga computer platform. It compiles BASIC source code into native Amiga executables by generating Motorola 68000/68020 assembly code, bridging BASIC's ease of use with compiled performance.
 
-Released under the GNU General Public License (GPL v2) in 1998.
+Originally released under the GNU General Public License (GPL v2) in 1998. Current version: **2.7.1**
 
 ## Features
 
+### Core Language
 - **Full type system** - Integers, single/double precision floats, strings, arrays, pointers, and structures
-- **Amiga Intuition GUI integration** - Windows, menus, gadgets, and requesters
-- **Graphics primitives** - Lines, circles, areas, and turtle graphics
+- **Closures and function pointers** - First-class function references with `@`, `BIND` for partial application, `INVOKE` for indirect calls, and `INVOKABLE` keyword for callback SUBs
+- **CALLBACK SUBs** - SUBs that can be invoked via AmigaOS CallHookPtr() for system callbacks
+- **68020 native code generation** - Native 68020 instructions by default (use `OPTION 2-` for 68000 compatibility)
 - **File I/O** - Sequential and random access file operations
 - **Event-driven programming** - Event traps and handlers
 - **External library calls** - Access AmigaDOS and shared library functions
+
+### GUI and Graphics
+- **MUI (Magic User Interface)** - High-level BASIC wrappers for modern Amiga GUIs via the MUI submodule
+- **GadTools integration** - Full support for GadTools-based gadgets with modern look and feel
+- **Amiga Intuition GUI** - Windows, menus, gadgets, and requesters
+- **AGA screen support** - Modes 7-12 with up to 256 colors (8-bit depth)
+- **Graphics primitives** - Lines, circles (including filled), areas, and turtle graphics
+- **Graphics double buffering** - Include file and examples for smooth animation
+- **IFF picture support** - Load and display Amiga IFF images
+
+### Utilities and Libraries
+- **Lisp-style list library** - Singly-linked lists with higher-order functions (map, filter, reduce, etc.) - requires OS 3.0+
+- **ASSERT statement** - Runtime assertion checking for defensive programming
 - **Sound support** - Audio playback and speech synthesis
 - **Serial communication** - Serial port access
-- **IFF picture support** - Load and display Amiga IFF images
 
 ## Installation
 
@@ -24,9 +38,7 @@ This modern version of ACE can be compiled with GCC (included in ADE, available 
 - **vasmm68k_mot** instead of a68k assembler
 - **vlink** instead of blink linker
 
-Key fixes in this version:
-- Single precision floating point now works correctly (fixed variable type for `singleval` from float to LONG to work with mathffp library)
-- Updated build scripts use modern toolchain (vasm/vlink)
+See `CHANGELOG.txt` for detailed version history.
 
 ### Traditional Amiga Installation
 
@@ -177,12 +189,12 @@ Use descriptive names without spaces: `float_add.b`, not `float add.b`
 
 ## Technologies
 
-- **Languages**: C (K&R style) and Motorola 68000 assembly
-- **Target Platform**: Amiga 1.3, 2.x, 3.x
+- **Languages**: C (K&R style) and Motorola 68000/68020 assembly
+- **Target Platform**: Amiga 1.3, 2.x, 3.x (68000); AGA systems (68020+)
 - **Build System**: GNU Make 3.80+ with ADE shell
-- **Assembler**: vasm (vasmm68k_mot) - modern, or a68k - legacy
-- **Linker**: vlink - modern, or blink - legacy
-- **Amiga APIs**: Exec, Dos, Graphics, Intuition, Diskfont, DataTypes, Rexx
+- **Assembler**: vasm (vasmm68k_mot)
+- **Linker**: vlink
+- **Amiga APIs**: Exec, Dos, Graphics, Intuition, GadTools, MUI, Diskfont, DataTypes, Rexx
 
 ## Documentation
 
@@ -228,6 +240,36 @@ The `examples/` directory contains extensive examples organized by category:
 - **Sound** - Audio and speech synthesis
 - **IFF** - Image loading and display
 
+## Submodules
+
+Reusable BASIC libraries in `submods/`. Include the header with `#include <submods/module.h>` and link the compiled module via the bas script: `bas myprogram ace:submods/module/module.o`
+
+### MUI Submodule (`submods/mui/`)
+
+High-level MUI (Magic User Interface) support for creating modern Amiga GUIs. Provides BASIC wrappers for windows, buttons, lists, menus, tabs, and more.
+
+Documentation: `docs/MUI-Submod.guide`
+
+### List Submodule (`submods/list/`)
+
+Lisp-style singly-linked list implementation with:
+- Multiple data types (SHORTINT, LONGINT, SINGLE, STRING, nested lists)
+- Builder pattern for easy list construction
+- Higher-order functions: `LMap`, `LFilter`, `LReduce`, `LForEach`
+- Both non-destructive and in-place (destructive) variants
+
+Requires AmigaOS 3.0+ (uses AllocVec). Closures with `INVOKABLE` keyword needed for callbacks.
+
+### Other Submodules
+
+- **complex** - Complex number arithmetic
+- **easyrequest** - Simplified requester dialogs
+- **fontreq** - Font selection requester
+- **listbox** - ListBox gadget wrapper
+- **menu** - Menu building utilities
+- **runprog** - Program execution helper
+- **wbarg** - Workbench argument handling
+
 ## Development Notes
 
 ### Code Style
@@ -262,6 +304,13 @@ ACE was originally developed by David Benn between November 1991 and September 1
 
 ACE provides functionality comparable to Microsoft QuickBASIC or Turbo BASIC, specifically designed for Amiga development with full integration into the Amiga's native windowing and graphics systems.
 
-The modern fork includes fixes for GCC compatibility, floating-point handling, and support for modern assemblers and linkers (vasm/vlink).
+### Modern Fork (2024-present)
 
-For the complete 1998 release notes from David Benn, see `docs/HISTORY-1998-Release.txt`.
+The modern fork adds significant new features while maintaining compatibility:
+
+- **v2.5** - AGA screen support, vasm/vlink toolchain, GNU Makefile build system
+- **v2.6** - GadTools gadgets, ASSERT statement, 68020 native code generation
+- **v2.7** - Closures and function pointers, MUI submodule, filled circles/ellipses, callback SUBs
+- **v2.7.1** - ELSEIF keyword, LCASE$ function, list submodule with higher-order functions
+
+See `CHANGELOG.txt` for full details. For the original 1998 release notes, see `docs/HISTORY-1998-Release.txt`.
