@@ -82,8 +82,7 @@ void open_a_file()
      gen("move.l","(sp)+","d0");  /* filenumber */
      gen("move.l","(sp)+","a0");  /* address of mode string */
 
-     gen("jsr","_openfile","  ");
-     enter_XREF("_openfile");
+     gen_rt_call("_openfile");
      enter_XREF("_DOSBase");
     }
    }
@@ -105,11 +104,10 @@ void close_a_file()
      make_long(); /* filenumber = 1..255 */
  
   gen("move.l","(sp)+","d0");
-  gen("jsr","_closefile","  ");
+  gen_rt_call("_closefile");
  }
  while (sym == comma);
 
- enter_XREF("_closefile");
  enter_XREF("_DOSBase");
 }
 
@@ -176,8 +174,7 @@ SYM  *storage;
      gen("move.l","(sp)+","d0");	/* filenumber */
 
      /* call _line_input */
-     gen("jsr","_line_input","  ");
-     enter_XREF("_line_input"); 
+     gen_rt_call("_line_input");
 
      insymbol();
      if (sym == lparen && storage->object != array) 
@@ -225,32 +222,27 @@ int wtype;
 
      case shorttype : 	gen("move.w","(sp)+","d1");
  		      	gen("move.l","_seq_filenumber","d0");
-		      	gen("jsr","_writeshort","  ");
-		      	enter_XREF("_writeshort");
+		      	gen_rt_call("_writeshort");
 		      	break;
 
      case longtype : 	gen("move.l","(sp)+","d1");
 		     	gen("move.l","_seq_filenumber","d0");
-		     	gen("jsr","_writelong","  ");
-		     	enter_XREF("_writelong");
+		     	gen_rt_call("_writelong");
 		     	break;
 
      case singletype : 	gen("move.l","(sp)+","d1");
 		       	gen("move.l","_seq_filenumber","d0");
-		       	gen("jsr","_writesingle","  ");
-		       	enter_XREF("_writesingle");
+		       	gen_rt_call("_writesingle");
 			enter_XREF("_MathBase");
 		       	break;
 
      case stringtype : 	gen("move.l","_seq_filenumber","d0");
-			gen("jsr","_writequote","  ");	
+			gen_rt_call("_writequote");
 		       	gen("move.l","(sp)+","a0");
 		       	gen("move.l","_seq_filenumber","d0");
-		       	gen("jsr","_writestring","  ");
+		       	gen_rt_call("_writestring");
 		       	gen("move.l","_seq_filenumber","d0");
-		       	gen("jsr","_writequote","  ");
-		       	enter_XREF("_writequote");	
-		       	enter_XREF("_writestring");		
+		       	gen_rt_call("_writequote");
 		       	break;
     }
     
@@ -258,8 +250,7 @@ int wtype;
     if (sym == comma) 
     { 
      gen("move.l","_seq_filenumber","d0");
-     gen("jsr","_writecomma","  "); 
-     enter_XREF("_writecomma"); 
+     gen_rt_call("_writecomma");
     }
 
    }
@@ -267,8 +258,7 @@ int wtype;
 
    /* write LF to mark EOLN */
    gen("move.l","_seq_filenumber","d0");
-   gen("jsr","_write_eoln","  ");
-   enter_XREF("_write_eoln");
+   gen_rt_call("_write_eoln");
    
    enter_XREF("_DOSBase");
    enter_BSS("_seq_filenumber:","ds.l 1");
@@ -288,16 +278,13 @@ int code;
  switch(code)
  {
   /* LF */
-  case LF_CODE : 	gen("jsr","_write_eoln","  ");
- 		 	enter_XREF("_write_eoln");
+  case LF_CODE : 	gen_rt_call("_write_eoln");
 		 	break;
   /* TAB */
-  case TAB_CODE :  	gen("jsr","_writeTAB","  ");
- 			enter_XREF("_writeTAB");
+  case TAB_CODE :  	gen_rt_call("_writeTAB");
 			break;
   /* SPACE */
-  case SPACE_CODE :	gen("jsr","_writeSPC","  ");
- 			enter_XREF("_writeSPC");
+  case SPACE_CODE :	gen_rt_call("_writeSPC");
 			break;
  }
 }
@@ -359,24 +346,20 @@ int exprtype,arguments=0;
       switch(exprtype)
       {
        	case shorttype : 	gen("move.w","(sp)+","d0");
-		     		gen("jsr","_fprintshort","  ");
-		      		enter_XREF("_fprintshort");
+		     		gen_rt_call("_fprintshort");
 		     		break;
 
-    	case longtype :		gen("move.l","(sp)+","d0");  
-		     		gen("jsr","_fprintlong","  ");
-		     		enter_XREF("_fprintlong");
+    	case longtype :		gen("move.l","(sp)+","d0");
+		     		gen_rt_call("_fprintlong");
 		     		break;
 
   	case singletype : 	gen("move.l","(sp)+","d0");
-		     		gen("jsr","_fprintsingle","  ");
-		     		enter_XREF("_fprintsingle");
+		     		gen_rt_call("_fprintsingle");
 		     		enter_XREF("_MathBase");
 		     		break;
 
    	case stringtype : 	gen("movea.l","(sp)+","a0");
-		     		gen("jsr","_writestring","  ");
-		     		enter_XREF("_writestring");
+		     		gen_rt_call("_writestring");
 		     		break;
       }
 
@@ -447,7 +430,7 @@ SYM  *storage;
      
     switch(storage->type)
     {
-    case shorttype  : gen("jsr","_finputshort","  ");
+    case shorttype  : gen_rt_call("_finputshort");
 
 		      if (storage->object == variable)
 		      {
@@ -460,7 +443,7 @@ SYM  *storage;
 			   /* ordinary variable */
  		           gen("move.w","d0",addrbuf);
 		      }
-		      else 
+		      else
 	 		 if (storage->object == array)
 			 {
 			  gen("move.w","d0","_short_input_temp");
@@ -469,10 +452,9 @@ SYM  *storage;
 			  enter_BSS("_short_input_temp:","ds.w 1");
 			 }
 
- 		      enter_XREF("_finputshort");
 		      break;
 
-    case longtype   : gen("jsr","_finputlong","  ");
+    case longtype   : gen_rt_call("_finputlong");
 
 		      if (storage->object == variable)
 		      {
@@ -485,7 +467,7 @@ SYM  *storage;
 			   /* ordinary variable */
 	         	   gen("move.l","d0",addrbuf);
 		      }
-		      else 
+		      else
 	 		 if (storage->object == array)
 			 {
 			  gen("move.l","d0","_long_input_temp");
@@ -494,10 +476,9 @@ SYM  *storage;
 			  enter_BSS("_long_input_temp:","ds.l 1");
 			 }
 
-		      enter_XREF("_finputlong");
 		      break;
 
-    case singletype : gen("jsr","_finputsingle","  ");
+    case singletype : gen_rt_call("_finputsingle");
 
 		      if (storage->object == variable)
 		      {
@@ -510,7 +491,7 @@ SYM  *storage;
 			   /* ordinary variable */
 	         	   gen("move.l","d0",addrbuf);
 		      }
-		      else 
+		      else
 	 		 if (storage->object == array)
 			 {
 			  gen("move.l","d0","_long_input_temp");
@@ -519,25 +500,23 @@ SYM  *storage;
 			  enter_BSS("_long_input_temp:","ds.l 1");
 			 }
 
-		      enter_XREF("_finputsingle");
 		      enter_XREF("_MathBase"); /* need math libs */
 		      enter_XREF("_MathTransBase");
 		      break;
 
-    case stringtype : gen("jsr","_finputstring","  ");
+    case stringtype : gen_rt_call("_finputstring");
 
-		      gen("move.l","a0","-(sp)"); 
+		      gen("move.l","a0","-(sp)");
 
 		      if (storage->object == variable)
   	   		 assign_to_string_variable(storage,MAXSTRLEN);
-		      else 
+		      else
 	 		 if (storage->object == array)
 			 {
 			  point_to_array(storage,addrbuf);
 			  assign_to_string_array(addrbuf);
 			 }
 
-		      enter_XREF("_finputstring");
 		      break;
     }
    } else _error(19);
@@ -561,8 +540,7 @@ void kill()
  else
  {
   gen("move.l","(sp)+","d1");
-  gen("jsr","_kill","  ");
-  enter_XREF("_kill");
+  gen_rt_call("_kill");
  }
 }
 
@@ -585,8 +563,7 @@ void osrename()
    {
     gen("move.l","(sp)+","d2");  /* <filespec2> */
     gen("move.l","(sp)+","d1");  /* <filespec1> */
-    gen("jsr","_rename","  ");
-    enter_XREF("_rename");
+    gen_rt_call("_rename");
    }
   }
  }
@@ -605,8 +582,7 @@ void chdir()
  {
   /* call code to change directory */
   gen("move.l","(sp)+","d1");  /* dirname */
-  gen("jsr","_chdir","  ");
-  enter_XREF("_chdir");
+  gen_rt_call("_chdir");
  }
 }
 
@@ -637,9 +613,8 @@ void files()
      gen("move.l","#0","-(sp)");  /* NULL for target name */
 
  /* call _files routine */
- gen("jsr","_files","  ");
+ gen_rt_call("_files");
  gen("addq","#4","sp");
- enter_XREF("_files");
 }
 
 char *push_struct_var_info(structVar)
@@ -730,9 +705,8 @@ SYM *structVar;
 			/*
 			** Call function.
 			*/
-			gen("jsr","_GetRecord","  ");
+			gen_rt_call("_GetRecord");
  			gen("add.l","#16","sp");
-			enter_XREF("_GetRecord");
 		}
 	}	
 }
@@ -794,9 +768,8 @@ SYM *structVar;
 			/*
 			** Call function.
 			*/
-			gen("jsr","_PutRecord","  ");
+			gen_rt_call("_PutRecord");
  			gen("add.l","#16","sp");
-			enter_XREF("_PutRecord");
 		}
 	}	
 }

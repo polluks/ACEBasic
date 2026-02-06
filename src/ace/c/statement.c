@@ -132,8 +132,7 @@ BOOL volume=FALSE;
  gen("move.l","(sp)+","d1");  /* pop duration */
  gen("move.w","(sp)+","d0");  /* pop period */
 
- gen("jsr","_sound","  ");
- enter_XREF("_sound");
+ gen_rt_call("_sound");
  enter_XREF("_DOSBase");
  enter_XREF("_MathBase");
 }   
@@ -340,8 +339,7 @@ SHORT popcount;
   insymbol();
   gen_Flt(expr());
   gen("move.l","(sp)+","d0");
-  gen("jsr","_back","  ");
-  enter_XREF("_back");
+  gen_rt_call("_back");
   enter_XREF("_MathBase");
   enter_XREF("_MathTransBase");
   enter_XREF("_GfxBase"); 
@@ -350,8 +348,7 @@ SHORT popcount;
  /* beep */
  if (sym == beepsym) 
  { 
-  gen("jsr","_beep","  ");
-  enter_XREF("_beep");
+  gen_rt_call("_beep");
   enter_XREF("_MathBase");  /* _sound needs mathffp.library */
   insymbol();
  }  
@@ -373,8 +370,7 @@ SHORT popcount;
     gen("move.l","#0","a0");
   }
 
-  gen("jsr","_assert","  ");
-  enter_XREF("_assert");
+  gen_rt_call("_assert");
  }
  else
  /* bevelbox */
@@ -503,7 +499,7 @@ SHORT popcount;
  { 
 	insymbol(); 
 	if (sym == allocsym) 
-	   { gen("jsr","_clear_alloc","  "); enter_XREF("_clear_alloc"); }
+	   { gen_rt_call("_clear_alloc"); }
 	insymbol();
  }
  else
@@ -513,8 +509,7 @@ SHORT popcount;
  /* cls */
  if (sym == clssym) 
  { 
-  gen("jsr","_cls","  "); 
-  enter_XREF("_cls");
+  gen_rt_call("_cls");
   enter_XREF("_DOSBase"); /* need dos library */
   insymbol(); 
  }
@@ -597,8 +592,7 @@ SHORT popcount;
   insymbol();
   if (make_integer(expr()) != longtype) make_long();
   gen("move.l","(sp)+","d0");
-  gen("jsr","_fix","  ");
-  enter_XREF("_fix");
+  gen_rt_call("_fix");
  }
  else
  /* font */
@@ -613,8 +607,7 @@ SHORT popcount;
   insymbol();
   gen_Flt(expr());
   gen("move.l","(sp)+","d0");
-  gen("jsr","_forward","  ");
-  enter_XREF("_forward");
+  gen_rt_call("_forward");
   enter_XREF("_MathBase");
   enter_XREF("_MathTransBase");
   enter_XREF("_GfxBase"); 
@@ -673,8 +666,7 @@ SHORT popcount;
  /* home */
  if (sym == homesym)
  {
-  gen("jsr","_home","  ");
-  enter_XREF("_home");
+  gen_rt_call("_home");
   enter_XREF("_GfxBase");
   insymbol();
  }
@@ -1032,8 +1024,7 @@ SHORT popcount;
   gen("move.w","(sp)+","d1");  /* pop COLUMN */
   gen("move.w","(sp)+","d0");  /* pop ROW */  
 
-  gen("jsr","_locate","  ");
-  enter_XREF("_locate");
+  gen_rt_call("_locate");
   enter_XREF("_DOSBase");
  }
  else
@@ -1108,8 +1099,7 @@ SHORT popcount;
        gen("move.w","(sp)+","d0"); /* color-id  (0-31) */
 
        /* open the screen */
-       gen("jsr","_palette","  ");
-       enter_XREF("_palette");
+       gen_rt_call("_palette");
        enter_XREF("_GfxBase");
        enter_XREF("_MathBase"); /* must convert 0-1 values to bytes: 0-15 */
      }
@@ -1123,16 +1113,14 @@ SHORT popcount;
  /* pendown */
  if (sym == pendownsym)
  {
-  gen("jsr","_pendown","  ");
-  enter_XREF("_pendown");
+  gen_rt_call("_pendown");
   insymbol();
  }
  else
  /* penup */
  if (sym == penupsym)
  {
-  gen("jsr","_penup","  ");
-  enter_XREF("_penup");
+  gen_rt_call("_penup");
   insymbol();
  }
  else
@@ -1194,8 +1182,7 @@ SHORT popcount;
   if ((statetype = make_integer(statetype)) == notype) _error(4);
   if (statetype == shorttype) make_long();
   gen("move.l","(sp)+","d0");
-  gen("jsr","_randomise","  ");
-  enter_XREF("_randomise");
+  gen_rt_call("_randomise");
   enter_XREF("_MathBase");
  }
  else
@@ -1241,9 +1228,8 @@ SHORT popcount;
   }
   else gen("move.l","#0","-(sp)");  /* no mode-array -> push NULL */
 
-  gen("jsr","_say","  ");
+  gen_rt_call("_say");
   gen("addq","#8","sp");  /* pop two parameters */
-  enter_XREF("_say");
   enter_XREF("_cleanup_async_speech");
   narratorused=TRUE;
  }
@@ -1262,8 +1248,7 @@ SHORT popcount;
   insymbol();
   make_sure_short(expr());
   gen("move.w","(sp)+","d0");
-  gen("jsr","_setheading","  ");
-  enter_XREF("_setheading");
+  gen_rt_call("_setheading");
  }
  else
  /* setxy */
@@ -1279,8 +1264,7 @@ SHORT popcount;
    /* pop operands */
    gen("move.w","(sp)+","d1"); /* y */
    gen("move.w","(sp)+","d0"); /* x */
-   gen("jsr","_setxy","  ");
-   enter_XREF("_setxy");
+   gen_rt_call("_setxy");
    enter_XREF("_GfxBase");
   }
  }
@@ -1302,7 +1286,7 @@ SHORT popcount;
     if (sym != forsym)
     { 
 	  /* SLEEP */
-	  gen("jsr","_sleep","  "); enter_XREF("_sleep");
+	  gen_rt_call("_sleep");
     }
     else
     { 
@@ -1313,8 +1297,8 @@ SHORT popcount;
 	  else
 	  {
 		gen_Flt(stype); 
-	  	gen("jsr","_sleep_for_secs","  "); gen("addq","#4","sp");
-	  	enter_XREF("_sleep_for_secs"); enter_XREF("_MathBase");
+	  	gen_rt_call("_sleep_for_secs"); gen("addq","#4","sp");
+	  	enter_XREF("_MathBase");
 	  }
     }
  }
@@ -1350,9 +1334,8 @@ SHORT popcount;
   else
   {
      /* SYSTEM command-string */
-     gen("jsr","_system_call","  ");
+     gen_rt_call("_system_call");
      gen("addq","#4","sp");
-     enter_XREF("_system_call");
   }
  }
  else
@@ -1362,8 +1345,7 @@ SHORT popcount;
   insymbol();
   make_sure_short(expr());
   gen("move.w","(sp)+","d0");
-  gen("jsr","_turn","  ");
-  enter_XREF("_turn");
+  gen_rt_call("_turn");
  }	
  else
  /* turnleft */
@@ -1372,8 +1354,7 @@ SHORT popcount;
   insymbol();
   make_sure_short(expr());
   gen("move.w","(sp)+","d0");
-  gen("jsr","_turnleft","  ");
-  enter_XREF("_turnleft");
+  gen_rt_call("_turnleft");
  }	
  else
  /* turnright */
@@ -1382,8 +1363,7 @@ SHORT popcount;
   insymbol();
   make_sure_short(expr());
   gen("move.w","(sp)+","d0");
-  gen("jsr","_turnright","  ");
-  enter_XREF("_turnright");
+  gen_rt_call("_turnright");
  }	
  else
  /* until */
@@ -1430,8 +1410,7 @@ SHORT popcount;
    }
   }
   gen("move.w","(sp)+","d0");  /* pop voice */
-  gen("jsr","_wave","  "); 
-  enter_XREF("_wave");
+  gen_rt_call("_wave");
  }
  else
  /* while.. */

@@ -187,15 +187,13 @@ void close_gadget()
 
 	if (gadtoolsused)
 	{
-		gen("jsr","_CloseGTGadget","  ");
+		gen_rt_call("_CloseGTGadget");
 		gen("addq","#4","sp");
-		enter_XREF("_CloseGTGadget");
 	}
 	else
 	{
-		gen("jsr","_CloseGadget","  ");
+		gen_rt_call("_CloseGadget");
 		gen("addq","#4","sp");
-		enter_XREF("_CloseGadget");
 	}
 }
 
@@ -214,9 +212,8 @@ void gadget_output()
 	insymbol();
      	make_sure_long(expr());	/* gadget-id */
 
-	gen("jsr","_SetCurrentGadget","  ");
+	gen_rt_call("_SetCurrentGadget");
 	gen("addq","#4","sp");
-	enter_XREF("_SetCurrentGadget");
 }
 
 void wait_gadget()
@@ -228,15 +225,13 @@ void wait_gadget()
 
 	if (gadtoolsused)
 	{
-		gen("jsr","_WaitGTGadget","  ");
+		gen_rt_call("_WaitGTGadget");
 		gen("addq","#4","sp");
-		enter_XREF("_WaitGTGadget");
 	}
 	else
 	{
-		gen("jsr","_WaitGadget","  ");
+		gen_rt_call("_WaitGadget");
 		gen("addq","#4","sp");
-		enter_XREF("_WaitGadget");
 	}
 }
 
@@ -260,9 +255,8 @@ void gadget_font()
 	insymbol();
 	make_sure_long(expr());  /* size */
 
-	gen("jsr","_SetGTGadgetFont","  ");
+	gen_rt_call("_SetGTGadgetFont");
 	gen("addq","#8","sp");
-	enter_XREF("_SetGTGadgetFont");
 	gadtoolsused = TRUE;
 }
 
@@ -336,9 +330,8 @@ static int gtstrcount = 0;
 	    }
 
 	    /* Call _SetGTGadgetAttrSingle(value, tag, id) */
-	    gen("jsr", "_SetGTGadgetAttrSingle", "  ");
+	    gen_rt_call("_SetGTGadgetAttrSingle");
 	    gen("add.l", "#12,sp", "  ");
-	    enter_XREF("_SetGTGadgetAttrSingle");
 
 	} while (sym == comma);
 
@@ -372,10 +365,8 @@ void modify_gadget()
 		}
 
 		/* call function */
-		gen("jsr","_modify_gad","  ");
+		gen_rt_call("_modify_gad");
 		gen("add.l","#12","sp");
-		
-		enter_XREF("_modify_gad");
 		enter_XREF("_GfxBase");
 	}
 }
@@ -441,10 +432,8 @@ int  gtype;
 
 			if (sym != comma)
 			{
-				gen("jsr","_ChangeGadgetStatus","  ");
+				gen_rt_call("_ChangeGadgetStatus");
 				gen("addq","#8","sp");
-
-				enter_XREF("_ChangeGadgetStatus");
 				enter_XREF("_GfxBase");	
 				return;	
 			}
@@ -667,16 +656,13 @@ int  gtype;
 						    elemsz);
 					    gen("move.l", numbuf,
 						"-(sp)");
-					    gen("jsr",
-						"_BuildGTLabels", "  ");
+					    gen_rt_call("_BuildGTLabels");
 					    gen("add.l", "#12", "sp");
 					    /* Patch tag value in DATA */
 					    sprintf(patchdst, "%s+%d",
 						    dataname, voff);
 					    gen("move.l", "d0",
 						patchdst);
-					    enter_XREF(
-						"_BuildGTLabels");
 					  }
 
 					  /* Push tag array address */
@@ -692,10 +678,9 @@ int  gtype;
 					  _error(81);
 					  return;
 					}
-					gen("jsr","_CreateGTGadget","  ");
+					gen_rt_call("_CreateGTGadget");
 					gen("add.l","#36","sp");
 					gadtoolsused = TRUE;
-					enter_XREF("_CreateGTGadget");
 					return;
 				}
 				}
@@ -794,10 +779,8 @@ int  gtype;
 	 }
 
 	 /* call function */
-	 gen("jsr","_CreateGadget","  ");
+	 gen_rt_call("_CreateGadget");
 	 gen("add.l","#48","sp");
-
-	 enter_XREF("_CreateGadget");
 	 enter_XREF("_GfxBase");
 	}
 }
@@ -817,10 +800,8 @@ void	bevel_box()
 		make_sure_long(expr());	/* type */
 
 	 	/* call function */
-		gen("jsr","_BevelBox","  ");
+		gen_rt_call("_BevelBox");
 		gen("add.l","#20","sp");
-
-		enter_XREF("_BevelBox");
 		enter_XREF("_GfxBase");
 	}
 }

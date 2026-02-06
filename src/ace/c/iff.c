@@ -59,9 +59,8 @@ int	itype;
 			else
 			{
 				/* call function */
-				gen("jsr","_IFFPicOpen","  ");
+				gen_rt_call("_IFFPicOpen");
 				gen("addq","#8","sp");
-				enter_XREF("_IFFPicOpen");
 			}				
 		} 
 			
@@ -110,9 +109,8 @@ int	itype;
 		}
 
 		/* call function */
-		gen("jsr","_IFFPicRead","  ");
+		gen_rt_call("_IFFPicRead");
 		gen("addq","#8","sp");
-		enter_XREF("_IFFPicRead");
 	}
 }
 
@@ -137,9 +135,8 @@ int	itype;
 		if (make_integer(itype) == shorttype) make_long();
 
 		/* call function */
-		gen("jsr","_IFFPicClose","  ");
+		gen_rt_call("_IFFPicClose");
 		gen("addq","#4","sp");
-		enter_XREF("_IFFPicClose");
 	}
 }
 

@@ -804,8 +804,7 @@ char bss_size[20];
 			 			enter_DATA("_nullstring:","dc.b 0");
 			 			gen("lea",extvarid,"a0");
 			 			gen("lea","_nullstring","a1");
-			 			gen("jsr","_strcpy","  ");
-						enter_XREF("_strcpy");
+			 			gen_rt_call("_strcpy");
 				 	}
 			
 					break;       

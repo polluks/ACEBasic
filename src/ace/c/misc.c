@@ -243,7 +243,7 @@ char mulbuf[40],srcbuf[40];
   gen("ext.l","d1","  "); 
   gen("move.l","d1","-(sp)");   /* push next index after coercing to long */
   gen("move.l",mulbuf,"-(sp)"); /* push cumulative index */
-  gen("jsr","lmulu","  ");
+  gen_rt_call("lmulu");
   gen("add.l","#8","sp");
   
   gen("add.l","d0","d7");  
@@ -261,7 +261,7 @@ char mulbuf[40],srcbuf[40];
   /* calculate absolute offset */  
   gen("move.l","d7","-(sp)");
   gen("move.l",srcbuf,"-(sp)");
-  gen("jsr","lmulu","  ");	/* d7*MAXSTRLEN */
+  gen_rt_call("lmulu");	/* d7*MAXSTRLEN */
   gen("add.l","#8","sp");
   gen("move.l","d0","d7");
  }
@@ -272,8 +272,6 @@ char mulbuf[40],srcbuf[40];
     /* long or single */
     gen("lsl.l","#2","d7");  /* d7*4 */
 
- /* unsigned multiplication XREF */
- enter_XREF("lmulu");
 }
 
 void push_num_constant(typ,item)
@@ -578,9 +576,8 @@ void MsgBox()
 	     			gen("move.l","#0","-(sp)");
 		     
 	    			/* call the function */
-	    			gen("jsr","_sysrequest","  ");
+	    			gen_rt_call("_sysrequest");
 	    			gen("add.l","#12","sp");
-	    			enter_XREF("_sysrequest");
 	    			enter_XREF("_IntuitionBase");
 	   		}
 	  	}

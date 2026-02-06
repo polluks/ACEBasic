@@ -616,6 +616,9 @@ void	find_structmem_tail();
 STRUCM	*structmem_exist();
 void	add_struct_member();
 
+/* codegen.c */
+void	gen_rt_call();
+
 /* basfun.c */
 BOOL	strfunc();
 int	stringfunction();

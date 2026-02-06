@@ -407,13 +407,11 @@ char lab[80],lablabel[80];
 
    make_label(lab,lablabel);
 
-   gen("jsr","_ctrl_c_test","  ");
+   gen_rt_call("_ctrl_c_test");
    gen("tst.l","d0","  ");
    gen("beq.s",lab,"  ");
    gen("jmp","_EXIT_PROG","  ");
    gen(lablabel,"  ","  ");
-
-   enter_XREF("_ctrl_c_test");
 }
 
 void break_event_test()
@@ -426,21 +424,19 @@ char lab[80],lablabel[80];
 
    make_label(lab,lablabel);
 
-   gen("jsr","_ctrl_c_test","  ");
+   gen_rt_call("_ctrl_c_test");
    gen("tst.l","d0","  ");
    gen("beq.s",lab,"  ");
 
    if (break_event_branch == callsym)
       gen("jsr",break_event_label,"  ");
    else
-   if (break_event_branch == gosubsym) 
+   if (break_event_branch == gosubsym)
       gen_branch("jsr",break_event_label);
    else
       gen_branch("jmp",break_event_label);
 
    gen(lablabel,"  ","  ");
-
-   enter_XREF("_ctrl_c_test");
 }
 
 void menu_event_test()
@@ -451,7 +447,7 @@ char lab[80],lablabel[80];
    and pass control to the
    MENU trapping subroutine. */
 
- gen("jsr","_menu_test","  ");
+ gen_rt_call("_menu_test");
  gen("tst.l","d0","  ");
  make_label(lab,lablabel);
  gen("beq.s",lab,"  ");
@@ -459,12 +455,11 @@ char lab[80],lablabel[80];
  if (menu_event_branch == callsym)
    gen("jsr",menu_event_label,"  ");
  else
- if (menu_event_branch == gosubsym) 
+ if (menu_event_branch == gosubsym)
     gen_branch("jsr",menu_event_label);
  else
     gen_branch("jmp",menu_event_label);
  gen(lablabel,"  ","  ");
- enter_XREF("_menu_test");
 }
 
 void mouse_event_test()
@@ -476,7 +471,7 @@ char lab[80],lablabel[80];
    MOUSE trapping subroutine. */
 
  gen("moveq","#0","d0");
- gen("jsr","_mouse","  ");
+ gen_rt_call("_mouse");
  gen("tst.l","d0","  ");
  make_label(lab,lablabel);
  gen("beq.s",lab,"  ");
@@ -484,12 +479,11 @@ char lab[80],lablabel[80];
  if (mouse_event_branch == callsym)
     gen("jsr",mouse_event_label,"  ");
  else
- if (mouse_event_branch == gosubsym) 
+ if (mouse_event_branch == gosubsym)
     gen_branch("jsr",mouse_event_label);
  else
     gen_branch("jmp",mouse_event_label);
  gen(lablabel,"  ","  ");
- enter_XREF("_mouse");
 }
 
 void timer_event_test()
@@ -501,7 +495,7 @@ char lab[80],lablabel[80];
    TIMER trapping subroutine. */
 
  gen("move.l",ontimer_seconds,"d0");
- gen("jsr","_ontimer","  ");
+ gen_rt_call("_ontimer");
  gen("tst.l","d0","  ");
  make_label(lab,lablabel);
  gen("beq.s",lab,"  ");
@@ -509,12 +503,11 @@ char lab[80],lablabel[80];
  if (timer_event_branch == callsym)
    gen("jsr",timer_event_label,"  ");
  else
- if (timer_event_branch == gosubsym) 
+ if (timer_event_branch == gosubsym)
    gen_branch("jsr",timer_event_label);
  else
    gen_branch("jmp",timer_event_label);
  gen(lablabel,"  ","  ");
- enter_XREF("_ontimer");
  enter_XREF("_MathBase");  /* timer routines need mathffp.library */
 }
 
@@ -527,7 +520,7 @@ char lab[80],lablabel[80];
    trapping subroutine.
 */
 
- gen("jsr","_testerror","  ");
+ gen_rt_call("_testerror");
  gen("tst.l","d0","  ");
  make_label(lab,lablabel);
  gen("beq.s",lab,"  ");
@@ -535,12 +528,11 @@ char lab[80],lablabel[80];
  if (error_event_branch == callsym)
     gen("jsr",error_event_label,"  ");
  else
- if (error_event_branch == gosubsym) 
+ if (error_event_branch == gosubsym)
     gen_branch("jsr",error_event_label);
  else
     gen_branch("jmp",error_event_label);
  gen(lablabel,"  ","  ");
- enter_XREF("_testerror");
 }
 
 void wdw_close_test()
@@ -557,14 +549,12 @@ char lab[80],lablabel[80];
    make_label(lab,lablabel);
 
    gen("move.l","#1","-(sp)");
-   gen("jsr","_wdw_close_test","  ");
+   gen_rt_call("_wdw_close_test");
    gen("addq","#4","sp");
    gen("tst.l","d0","  ");
    gen("beq.s",lab,"  ");
    gen("jmp","_EXIT_PROG","  ");
    gen(lablabel,"  ","  ");
-
-   enter_XREF("_wdw_close_test");
 }
 
 void wdw_event_test()
@@ -583,21 +573,19 @@ char lab[80],lablabel[80];
    make_label(lab,lablabel);
 
    gen("move.l","#0","-(sp)");
-   gen("jsr","_wdw_close_test","  ");
+   gen_rt_call("_wdw_close_test");
    gen("addq","#4","sp");
    gen("tst.l","d0","  ");
    gen("beq.s",lab,"  ");
- 
+
   if (wdw_event_branch == callsym)
 	gen("jsr",wdw_event_label,"  ");
    else
-   if (wdw_event_branch == gosubsym) 
+   if (wdw_event_branch == gosubsym)
       	gen_branch("jsr",wdw_event_label);
    else
     	gen_branch("jmp",wdw_event_label);
    gen(lablabel,"  ","  ");
-
-   enter_XREF("_wdw_close_test");
 }
 
 void gad_event_test()
@@ -613,9 +601,9 @@ char lab[80],lablabel[80];
 
    gen("move.l","#0","-(sp)");
    if (gadtoolsused)
-      gen("jsr","_gt_gadget_event_test","  ");
+      gen_rt_call("_gt_gadget_event_test");
    else
-      gen("jsr","_gadget_event_test","  ");
+      gen_rt_call("_gadget_event_test");
    gen("addq","#4","sp");
    gen("tst.l","d0","  ");
    gen("beq.s",lab,"  ");
@@ -628,9 +616,4 @@ char lab[80],lablabel[80];
    else
     	gen_branch("jmp",gad_event_label);
    gen(lablabel,"  ","  ");
-
-   if (gadtoolsused)
-      enter_XREF("_gt_gadget_event_test");
-   else
-      enter_XREF("_gadget_event_test");
 }

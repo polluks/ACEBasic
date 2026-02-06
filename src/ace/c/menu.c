@@ -37,8 +37,7 @@ void clear_menu()
 
 	insymbol();
 	
-	gen("jsr","_ClearMenu","  ");
-	enter_XREF("_ClearMenu");
+	gen_rt_call("_ClearMenu");
  	enter_XREF("_IntuitionBase");
 }
 
@@ -48,8 +47,7 @@ void wait_menu()
 	
 	insymbol();
 
-	gen("jsr","_WaitMenu","  ");
-	enter_XREF("_WaitMenu");
+	gen_rt_call("_WaitMenu");
 }
 
 void menu()
@@ -92,10 +90,8 @@ int  mtype;
 
 				if (sym != comma)
 				{ 
-					gen("jsr","_ChangeMenuState","  ");
-					gen("add.l","#12","sp");
-
-					enter_XREF("_ChangeMenuState");	
+					gen_rt_call("_ChangeMenuState");
+					gen("add.l","#12","sp");	
 					return;	
 				}
 			}
@@ -121,10 +117,8 @@ int  mtype;
 			gen("move.l","#0","-(sp)");	/* command-key */
 
 	 /* call function */
-	 gen("jsr","_ModifyMenu","  ");
+	 gen_rt_call("_ModifyMenu");
 	 gen("add.l","#20","sp");
-
-	 enter_XREF("_ModifyMenu");
  	 enter_XREF("_IntuitionBase");
  	 enter_XREF("_GfxBase");
 	}

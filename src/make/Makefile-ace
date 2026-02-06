@@ -79,7 +79,7 @@ endif
 #       via #include directives in other source files:
 #         - lexvar.c  (included in lex.c)
 #         - symvar.c  (included in sym.c)
-SOURCES = alloc.c assign.c basfun.c control.c declare.c \
+SOURCES = alloc.c assign.c basfun.c codegen.c control.c declare.c \
           event.c expr.c factor.c file.c gadget.c gfx.c \
           iff.c lex.c libfunc.c memory.c menu.c message.c \
           misc.c opt.c parse.c parsevar.c print.c screen.c \

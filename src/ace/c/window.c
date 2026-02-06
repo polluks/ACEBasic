@@ -144,9 +144,8 @@ int wtype;
 		gen("move.l","#0","-(sp)");		
 	 
 	 /* call open-window routine */
-	 gen("jsr","_OpenWdw","  ");
+	 gen_rt_call("_OpenWdw");
 	 gen("add.l","#32","sp");
-	 enter_XREF("_OpenWdw");
 	 enter_XREF("_IntuitionBase");
 	 enter_XREF("_GfxBase");
         }
@@ -163,9 +162,8 @@ void wdwclose()
 {
  insymbol();
  if (make_integer(expr()) == shorttype) make_long();	/* Wdw-id */
- gen("jsr","_CloseWdw","  ");
+ gen_rt_call("_CloseWdw");
  gen("addq","#4","sp");
- enter_XREF("_CloseWdw");
  enter_XREF("_IntuitionBase");
 }
 
@@ -173,8 +171,7 @@ void wdwoutput()
 {
  insymbol();
  if (make_integer(expr()) == shorttype) make_long();	/* Wdw-id */
- gen("jsr","_ChangeOutputWdw","  ");
+ gen_rt_call("_ChangeOutputWdw");
  gen("addq","#4","sp");
- enter_XREF("_ChangeOutputWdw");
  enter_XREF("_IntuitionBase");
 }

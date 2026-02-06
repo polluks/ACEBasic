@@ -787,78 +787,69 @@ SHORT popcount;
 
   /* parameterless functions */
 
-  case argcountsym : gen("jsr","_argcount","  ");
+  case argcountsym : gen_rt_call("_argcount");
 		     gen("move.l","d0","-(sp)");
-		     enter_XREF("_argcount");
 		     ftype=longtype;
 		     cli_args=TRUE;
 		     insymbol();
 		     return(ftype);
 		     break;
 
-  case chipsetsym : gen("jsr","_chipset","  ");
+  case chipsetsym : gen_rt_call("_chipset");
 		    gen("move.w","d0","-(sp)");
-		    enter_XREF("_chipset");
 		    enter_XREF("_GfxBase");
 		    ftype=shorttype;
 		    insymbol();
 		    return(ftype);
 		    break;
 
-  case csrlinsym  : gen("jsr","_csrlin","  ");
+  case csrlinsym  : gen_rt_call("_csrlin");
 		    gen("move.w","d0","-(sp)");
-		    enter_XREF("_csrlin");
 		    ftype=shorttype;
 		    insymbol();
 		    return(ftype);
 		    break;
  
-  case datestrsym : gen("jsr","_date","  ");
+  case datestrsym : gen_rt_call("_date");
 		    gen("move.l","d0","-(sp)");
-		    enter_XREF("_date");
 		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
 		    ftype=stringtype;
 		    insymbol();
 		    return(ftype);
 		    break;			
 
-  case daysym   : gen("jsr","_getday","  ");
+  case daysym   : gen_rt_call("_getday");
 		  gen("move.l","d0","-(sp)");
-		  enter_XREF("_getday");
 		  ftype=longtype;
 		  insymbol();
 		  return(ftype);
 		  break;
 
-  case errsym : gen("jsr","_err","  ");
+  case errsym : gen_rt_call("_err");
 		gen("move.l","d0","-(sp)");
-		enter_XREF("_err");
 		ftype=longtype;
 		insymbol();
 		return(ftype);
 		break;
 
-  case headingsym : gen("jsr","_heading","  ");
+  case headingsym : gen_rt_call("_heading");
 		    gen("move.w","d0","-(sp)");
-		    enter_XREF("_heading");
 		    enter_XREF("_IntuitionBase");
 		    ftype=shorttype;
 		    insymbol();
 		    return(ftype);
 		    break;
 
-  case inkeysym : gen("jsr","_inkey","  ");
+  case inkeysym : gen_rt_call("_inkey");
 		  gen("move.l","d0","-(sp)");
-		  enter_XREF("_inkey");
 		  enter_XREF("_DOSBase");
 		  ftype=stringtype;
 	 	  insymbol();
 		  return(ftype);
 		  break;
 
-  case possym  : gen("jsr","_pos","  ");
+  case possym  : gen_rt_call("_pos");
 		 gen("move.w","d0","-(sp)");
-		 enter_XREF("_pos");
 		 ftype=shorttype;
 		 insymbol();
 		 return(ftype);
@@ -884,25 +875,22 @@ SHORT popcount;
 		  else
 		      insymbol();
 		}
-		gen("jsr","_rnd","  ");
+		gen_rt_call("_rnd");
 		gen("move.l","d0","-(sp)");
-		enter_XREF("_rnd");
 		enter_XREF("_MathBase"); /* make sure mathffp lib is open */
 		ftype=singletype;
 		return(ftype);
 		break;
 
-  case systemsym : gen("jsr","_system_version","  ");
+  case systemsym : gen_rt_call("_system_version");
 		   gen("move.w","d0","-(sp)");
-		   enter_XREF("_system_version");
 		   ftype=shorttype;
 		   insymbol();
 		   return(ftype);
 		   break;
 
-  case timersym : gen("jsr","_timer","  ");
+  case timersym : gen_rt_call("_timer");
 		  gen("move.l","d0","-(sp)");
-		  enter_XREF("_timer");
 		  enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
 		  enter_XREF("_MathBase"); /* _timer needs basic ffp funcs */
 		  ftype=singletype;
@@ -910,27 +898,24 @@ SHORT popcount;
 		  return(ftype);
 		  break;
 
-  case timestrsym : gen("jsr","_timeofday","  ");
+  case timestrsym : gen_rt_call("_timeofday");
 		    gen("move.l","d0","-(sp)");
-		    enter_XREF("_timeofday");
 		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
 		    ftype=stringtype;
 		    insymbol();
 		    return(ftype);
 		    break;
 
-  case xcorsym	: gen("jsr","_xcor","  ");
+  case xcorsym	: gen_rt_call("_xcor");
 		  gen("move.w","d0","-(sp)");
-		  enter_XREF("_xcor");
 		  enter_XREF("_GfxBase");
 		  ftype=shorttype;
 		  insymbol();
 		  return(ftype);
 		  break;
 
-  case ycorsym	: gen("jsr","_ycor","  ");
+  case ycorsym	: gen_rt_call("_ycor");
 		  gen("move.w","d0","-(sp)");
-		  enter_XREF("_ycor");
 		  enter_XREF("_GfxBase");
 		  ftype=shorttype;
 		  insymbol();

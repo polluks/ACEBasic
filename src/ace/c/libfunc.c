@@ -197,7 +197,7 @@ char lab[80],lablabel[80];
      make_library_name(ut_libname); /* exec names are case sensitive */
      make_string_const(libraryname);
      gen("move.l","(sp)+","a1");   /* address of library name in a1 */
-     gen("jsr","_open_library","  ");
+     gen_rt_call("_open_library");
      make_library_base(libname);
      gen("move.l","d0",librarybase);
      gen("cmpi.l","#0","d0");
@@ -205,7 +205,6 @@ char lab[80],lablabel[80];
      gen("bne.s",lab,"  ");
      gen("jmp","_EXIT_PROG","  "); /* quit program if can't open library */
      gen(lablabel,"  ","  ");
-     enter_XREF("_open_library");
 
      /* enter new library info' into "other libraries" list */
      enter_new_library(libname);
@@ -234,9 +233,8 @@ int  cc;
 	  strcmp(otherlib[cc].name,"SENTINEL") != 0)
    {
     	gen("move.l",otherlib[cc].base,"a1");  /* library base in a1 */
-    	gen("jsr","_close_library","  ");
+    	gen_rt_call("_close_library");
 	gen("move.l","#0",otherlib[cc].base);
-        enter_XREF("_close_library");
 	cc++;
    }  	
  }   
@@ -249,9 +247,8 @@ int  cc;
   {
     make_library_base(libname);
     gen("move.l",librarybase,"a1");  /* library base in a1 */
-    gen("jsr","_close_library","  ");
+    gen_rt_call("_close_library");
     gen("move.l","#0",librarybase);
-    enter_XREF("_close_library");
   }
   insymbol();
  }

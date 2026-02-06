@@ -207,8 +207,7 @@ BOOL bordercolor=FALSE;
    gen("move.w","(sp)+","d0");  /* X */
    
    /* call paint routine */
-   gen("jsr","_paint","  ");
-   enter_XREF("_paint");
+   gen_rt_call("_paint");
    enter_XREF("_GfxBase");
   }
  }
@@ -372,19 +371,16 @@ BOOL fill=FALSE;
 
      if (fill && !start_angle && !end_angle)
      {
-      gen("jsr","_fillellipse","  ");
-      enter_XREF("_fillellipse");
+      gen_rt_call("_fillellipse");
      }
      else if (fill && (start_angle || end_angle))
      {
       _error(83);  /* fill not supported for arcs */
-      gen("jsr","_ellipse","  ");
-      enter_XREF("_ellipse");
+      gen_rt_call("_ellipse");
      }
      else
      {
-      gen("jsr","_ellipse","  ");
-      enter_XREF("_ellipse");
+      gen_rt_call("_ellipse");
      }
      enter_XREF("_GfxBase");
      enter_XREF("_MathBase");
@@ -662,8 +658,7 @@ void color()
  /* call text color change routine */
  gen("move.w","_fg","d0");
  gen("move.w","_bg","d1");
- gen("jsr","_changetextcolor","  ");
- enter_XREF("_changetextcolor");
+ gen_rt_call("_changetextcolor");
  enter_XREF("_DOSBase");
 }
 
@@ -713,9 +708,7 @@ BOOL relative;
        enter_XREF("_last_areaY");
      }
 
-     gen("jsr","_area","  ");
-
-     enter_XREF("_area");
+     gen_rt_call("_area");
      enter_XREF("_GfxBase");
 
 }
@@ -738,9 +731,7 @@ areafill()
  else
      gen("move.w","#0","d0");
   
- gen("jsr","_areafill","  ");
-
- enter_XREF("_areafill");
+ gen_rt_call("_areafill");
  enter_XREF("_GfxBase");
 }
 
@@ -758,11 +749,9 @@ BOOL linepatterncalled;
  {
   /* restore default pattern */
   gen("move.l","#1","d1");	/* RESTORE flag */
-  gen("jsr","_linepattern","  ");
-  enter_XREF("_linepattern");
+  gen_rt_call("_linepattern");
   gen("move.l","#1","d1");	/* RESTORE flag */
-  gen("jsr","_areapattern","  ");
-  enter_XREF("_areapattern");
+  gen_rt_call("_areapattern");
   insymbol();
  }
  else
@@ -773,8 +762,7 @@ BOOL linepatterncalled;
    make_sure_short(expr());
    gen("move.w","(sp)+","d0");	/* line-pattern */
    gen("move.l","#0","d1");	/* RESTORE flag */
-   gen("jsr","_linepattern","  ");
-   enter_XREF("_linepattern");
+   gen_rt_call("_linepattern");
    linepatterncalled=TRUE;
   }
   else
@@ -797,8 +785,7 @@ BOOL linepatterncalled;
 	    seem to work! 
 	 */
          gen("move.l","#1","d1");	/* set line-pattern to $FFFF */
-         gen("jsr","_linepattern","  ");
-         enter_XREF("_linepattern");
+         gen_rt_call("_linepattern");
 	}
 
        	/* get address of array */
@@ -811,8 +798,7 @@ BOOL linepatterncalled;
 	gen("move.l",numbuf,"d0");	/* size of array */
 
         gen("move.l","#0","d1");	/* RESTORE flag */
-        gen("jsr","_areapattern","  ");
-        enter_XREF("_areapattern");
+        gen_rt_call("_areapattern");
 	enter_XREF("_MathBase");
 	enter_XREF("_MathTransBase");	/* need to find Log2(size) */
       }
@@ -915,9 +901,8 @@ int stype;
   else
   {
   	if (make_integer(stype) == shorttype) make_long(); 
-	gen("jsr","_change_text_style","  ");
+	gen_rt_call("_change_text_style");
 	gen("addq","#4","sp");
-	enter_XREF("_change_text_style");
 	enter_XREF("_GfxBase");
   }
 }
@@ -946,9 +931,8 @@ int ftype;
   		{
   			if (make_integer(ftype) == shorttype) make_long();
 
-			gen("jsr","_change_text_font","  ");
+			gen_rt_call("_change_text_font");
 			gen("addq","#8","sp");
-			enter_XREF("_change_text_font");
 			enter_XREF("_GfxBase");
   		}
 	}		

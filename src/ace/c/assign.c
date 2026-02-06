@@ -244,8 +244,7 @@ char addrbuf[20],buf[80];
  /* copy string on stack to variable */
  gen("move.l","(sp)+","a1");  /* source */
  gen("move.l",addrbuf,"a0");  /* destination */
- gen("jsr","_strcpy","  ");   /* copy source to destination */
- enter_XREF("_strcpy");  
+ gen_rt_call("_strcpy");      /* copy source to destination */
 }
 
 void assign_to_string_array(addrbuf)
@@ -260,8 +259,7 @@ char *addrbuf;
  gen("move.l",addrbuf,"a0");  
  gen("adda.l","d7","a0");    /* destination */
 
- gen("jsr","_strcpy","  ");  /* copy source to destination */
- enter_XREF("_strcpy");  
+ gen_rt_call("_strcpy");     /* copy source to destination */
 }
 
 void assign_to_struct(item)
@@ -348,8 +346,7 @@ int    exprtype,storetype;
        sprintf(numbuf,"#%ld",member->offset);
        gen("move.l","(sp)+","a1");  /* source */
        gen("adda.l",numbuf,"a0");   /* destination = struct address + offset */
-       gen("jsr","_strcpy","  ");   /* copy source to destination */
-       enter_XREF("_strcpy");  
+       gen_rt_call("_strcpy");      /* copy source to destination */
       }
       else
       if (member->type == shorttype)
@@ -544,8 +541,7 @@ int  exprtype;
 			/* string */
 			gen("move.l","(sp)+","a1");
 			gen("lea",ext_name,"a0");	
-			gen("jsr","_strcpy","  ");
-			enter_XREF("_strcpy");
+			gen_rt_call("_strcpy");
 		      }	
 		      else
 			 /* long integer, single-precision */
@@ -871,9 +867,8 @@ SYM  *storage;
   inptype=expr();
   if ((inptype == stringtype) && (lastsym == stringconst))
   {
-   gen("jsr","_Ustringprint","  ");
+   gen_rt_call("_Ustringprint");
    gen("addq","#4","sp");
-   enter_XREF("_Ustringprint");
   }
   else _error(18); 
  }
@@ -914,7 +909,7 @@ SYM  *storage;
 
    switch(storage->type)
    {
-    case shorttype  : gen("jsr","_inputshort","  ");
+    case shorttype  : gen_rt_call("_inputshort");
 
 		      if (storage->object == variable)
 		      {
@@ -927,7 +922,7 @@ SYM  *storage;
 			   /* ordinary variable */
  		           gen("move.w","d0",addrbuf);
 		      }
-		      else 
+		      else
 	 		 if (storage->object == array)
 			 {
 			  gen("move.w","d0","_short_input_temp");
@@ -936,10 +931,33 @@ SYM  *storage;
 			  enter_BSS("_short_input_temp:","ds.w 1");
 			 }
 
- 		      enter_XREF("_inputshort");
 		      break;
 
-    case longtype   : gen("jsr","_inputlong","  ");
+    case longtype   : gen_rt_call("_inputlong");
+
+		      if (storage->object == variable)
+		      {
+		       if ((storage->shared) && (lev == ONE))
+		       {
+         		gen("move.l",addrbuf,"a0");  /* abs address of store */
+            		gen("move.l","d0","(a0)");
+		       }
+		       else
+			   /* ordinary variable */
+	         	   gen("move.l","d0",addrbuf);
+		      }
+		      else
+	 		 if (storage->object == array)
+			 {
+			  gen("move.l","d0","_long_input_temp");
+			  point_to_array(storage,addrbuf);
+			  gen("move.l","_long_input_temp","0(a2,d7.L)");
+			  enter_BSS("_long_input_temp:","ds.l 1");
+			 }
+
+		      break;
+
+    case singletype : gen_rt_call("_inputsingle");
 
 		      if (storage->object == variable)
 		      {
@@ -961,37 +979,11 @@ SYM  *storage;
 			  enter_BSS("_long_input_temp:","ds.l 1");
 			 }
 
-		      enter_XREF("_inputlong");
-		      break;
-
-    case singletype : gen("jsr","_inputsingle","  ");
-
-		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.l","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
-	         	   gen("move.l","d0",addrbuf);
-		      }
-		      else 
-	 		 if (storage->object == array)
-			 {
-			  gen("move.l","d0","_long_input_temp");
-			  point_to_array(storage,addrbuf);
-			  gen("move.l","_long_input_temp","0(a2,d7.L)");
-			  enter_BSS("_long_input_temp:","ds.l 1");
-			 }
-
-		      enter_XREF("_inputsingle");
 		      enter_XREF("_MathBase"); /* need math libs */
 		      enter_XREF("_MathTransBase");
 		      break;
 
-    case stringtype : gen("jsr","_Ustringinput","  ");
+    case stringtype : gen_rt_call("_Ustringinput");
 
 		      if (storage->object == variable)
   	   		 assign_to_string_variable(storage,MAXSTRLEN);
@@ -1002,7 +994,6 @@ SYM  *storage;
 			  assign_to_string_array(addrbuf);
 			 }
 
-   		      enter_XREF("_Ustringinput");
 		      break;
    }
   } else _error(19);
@@ -1148,7 +1139,7 @@ SYM  *storage;
 			      assign_to_string_array(addrbuf);
 			break;
 
-    case singletype :   gen("jsr","_htol","  "); /* return LONG from (a1) */
+    case singletype :   gen_rt_call("_htol"); /* return LONG from (a1) */
 			if (storage->object == variable)
 			{
 		         if ((storage->shared) && (lev == ONE))
@@ -1159,13 +1150,12 @@ SYM  *storage;
 			 else
  			     gen("move.l","d0",addrbuf);
 			}
- 			else 
+ 			else
 			    if (storage->object == array)
 			       gen("move.l","d0","0(a2,d7.L)");
-			enter_XREF("_htol");
 			break;
 
-    case longtype   :	gen("jsr","_htol","  ");
+    case longtype   :	gen_rt_call("_htol");
 			gen("move.l","d0","-(sp)");
 			make_integer(singletype);
 			if (storage->object == variable)
@@ -1178,13 +1168,12 @@ SYM  *storage;
 			 else
  			     gen("move.l","(sp)+",addrbuf);
 			}
-	 		else 
+	 		else
 			    if (storage->object == array)
-			       gen("move.l","(sp)+","0(a2,d7.L)");
-			enter_XREF("_htol");		 
+			       gen("move.l","(sp)+","0(a2,d7.L)");		 
 			break;
 
-    case shorttype   :	gen("jsr","_htol","  ");
+    case shorttype   :	gen_rt_call("_htol");
 			gen("move.l","d0","-(sp)");
 			make_sure_short(singletype);
 			if (storage->object == variable)
@@ -1197,10 +1186,9 @@ SYM  *storage;
 			 else
  			     gen("move.w","(sp)+",addrbuf);
 			}
-	 		else 
+	 		else
 			    if (storage->object == array)
-			       gen("move.w","(sp)+","0(a2,d7.L)");
-			enter_XREF("_htol");			 
+			       gen("move.w","(sp)+","0(a2,d7.L)");			 
 			break;
    }
   } 
@@ -1208,8 +1196,7 @@ SYM  *storage;
 			
   /* advance to next DATA item */
   gen("move.l","_dataptr","a2");
-  gen("jsr","_strlen","  ");
-  enter_XREF("_strlen");
+  gen_rt_call("_strlen");
   gen("addq","#1","d0");  /* include EOS in length */
   gen("move.l","_dataptr","d1");
   gen("add.l","d0","d1");

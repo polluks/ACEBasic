@@ -229,19 +229,17 @@ int  typ1,typ2,dataobj1,dataobj2;
       /* copy first to temp */
       gen("movea.l","d1","a1");    /* source */ 
       gen("lea",tempstrname,"a0"); /* dest */ 
-      gen("jsr","_strcpy","  ");   /* temp = first */
+      gen_rt_call("_strcpy");   /* temp = first */
 
       /* copy second to first */
-      gen("movea.l","d2","a1");    /* source */ 
-      gen("movea.l","d1","a0");    /* dest */ 
-      gen("jsr","_strcpy","  ");   /* first = second */ 
+      gen("movea.l","d2","a1");    /* source */
+      gen("movea.l","d1","a0");    /* dest */
+      gen_rt_call("_strcpy");   /* first = second */
 
       /* copy temp to second */
-      gen("lea",tempstrname,"a1"); /* source */ 
+      gen("lea",tempstrname,"a1"); /* source */
       gen("movea.l","d2","a0");    /* dest */
-      gen("jsr","_strcpy","  ");   /* second = temp */
-
-      enter_XREF("_strcpy");
+      gen_rt_call("_strcpy");   /* second = temp */
      }
      else
      if (typ1 == shorttype)

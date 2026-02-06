@@ -1,6 +1,27 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 1.6 - Changed structmem_exist() to return STRUCM*, replaced manual loops in misc.c push_struct() and assign.c assign_to_struct()
+Last completed: Phase 2.1 - gen_rt_call() in new codegen.c
+  Branch: phase2-codegen
 
-Next step: Phase 2.1 - gen_rt_call(funcname) in new codegen.c
+Phase 1 (all 6 steps) - merged to master
+  1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
+  1.2: Extracted make_ext_name() in misc.c, replaced 6 occurrences
+  1.3: Extracted make_modvar_bss_name() in misc.c, replaced 4 occurrences
+  1.4: Extracted alloc_die() static helper in sym.c, replaced 18 blocks
+  1.5: Extracted sym_to_type() in misc.c, replaced 9 switch blocks
+  1.6: Changed structmem_exist() to return STRUCM*, replaced 2 manual loops
+
+Phase 2 (codegen layer)
+  2.1: Created codegen.c with gen_rt_call(funcname) - wraps gen("jsr",...)+enter_XREF()
+       - New file: src/ace/c/codegen.c
+       - Prototype in acedef.h, added to Makefile-ace SOURCES
+       - Replaced ~235 jsr+enter_XREF pairs across 20 source files
+       - Files modified: declare.c, memory.c, misc.c, iff.c, window.c, screen.c,
+         serial.c, menu.c, libfunc.c, message.c, event.c, gadget.c, print.c,
+         gfx.c, assign.c, file.c, expr.c, factor.c, statement.c, basfun.c
+       - LVO calls through (a6), indirect (a0), and dynamic name calls excluded
+
+Test suite: 118/118 pass
+
+Next step: Phase 2.2 - additional codegen helpers (gen_push_long, gen_pop, etc.)

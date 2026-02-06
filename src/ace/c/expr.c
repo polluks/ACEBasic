@@ -207,11 +207,10 @@ CODE *cx[5];
     gen_Flt(factype);
    }
 
-   gen("jsr","_power","  ");	/* - Call exponentiation function. */
+   gen_rt_call("_power");	/* - Call exponentiation function. */
    gen("addq","#8","sp");	/* - Remove parameters from stack. */
    gen("move.l","d0","-(sp)");  /* - Push the result. */
-				
-   enter_XREF("_power");
+
    enter_XREF("_MathTransBase"); /* opens FFP+IEEE SP transcendental libraries */
 
    localtype=singletype;  /* MUST always return a single-precision value
@@ -332,9 +331,8 @@ CODE *cx[5];
 					}
 					else
 					{
-					    gen("jsr","lmul","  ");
+					    gen_rt_call("lmul");
 					    gen("add.l","#8","sp");
-					    enter_XREF("lmul");
 					}
 					localtype=longtype;
 					break;
@@ -417,10 +415,9 @@ CODE *cx[5];
    }
    else
    {
-       gen("jsr","ace_ldiv","  ");
+       gen_rt_call("ace_ldiv");
        gen("add.l","#8","sp");
        gen("move.l","d0","-(sp)");
-       enter_XREF("ace_ldiv");
    }
   }
   else _error(4); /* notype -> type mismatch */
@@ -496,10 +493,9 @@ CODE *cx[5];
     }
     else
     {
-        gen("jsr","ace_lrem","  ");
+        gen_rt_call("ace_lrem");
         gen("add.l","#8","sp");
         gen("move.l","d0","-(sp)");
-        enter_XREF("ace_lrem");
     }
    }
    else
@@ -507,9 +503,8 @@ CODE *cx[5];
     /* single MOD */
     gen("move.l","(sp)+","d1");   /* divisor */
     gen("move.l","(sp)+","d0");   /* dividend */
-    gen("jsr","_modffp","  ");
+    gen_rt_call("_modffp");
     gen("move.l","d0","-(sp)");
-    enter_XREF("_modffp");
     enter_XREF("_MathBase");
     localtype=singletype;
    }
@@ -578,14 +573,12 @@ CODE *cx[5];
         		gen("move.l","(sp)+","a1"); /* 1st */
 			make_temp_string();
         		gen("lea",tempstrname,"a0");
-        		gen("jsr","_strcpy","  ");
+        		gen_rt_call("_strcpy");
         		/* prepare for strcat */
         		gen("lea",tempstrname,"a0");
         		gen("move.l","a2","a1");
-        		gen("jsr","_strcat","  ");
+        		gen_rt_call("_strcat");
         		gen("pea",tempstrname,"  ");
-        		enter_XREF("_strcpy");
-        		enter_XREF("_strcat");
         		break;
    }
   
@@ -731,23 +724,17 @@ CODE *cx[5];
 			gen("move.l","(sp)+","a0");  /* addr of 1st string */
 			switch(op)
 			{
-			 case equal     : gen("jsr","_streq","  ");
-				 	  enter_XREF("_streq");
+			 case equal     : gen_rt_call("_streq");
 					  break;
-			 case notequal  : gen("jsr","_strne","  ");
-				 	  enter_XREF("_strne");
+			 case notequal  : gen_rt_call("_strne");
 					  break;
-			 case lessthan  : gen("jsr","_strlt","  ");
-				 	  enter_XREF("_strlt");
+			 case lessthan  : gen_rt_call("_strlt");
 					  break;
-			 case gtrthan   : gen("jsr","_strgt","  ");
-				 	  enter_XREF("_strgt");
+			 case gtrthan   : gen_rt_call("_strgt");
 					  break;
-			 case ltorequal : gen("jsr","_strle","  ");
-				 	  enter_XREF("_strle");
+			 case ltorequal : gen_rt_call("_strle");
 					  break;
-			 case gtorequal : gen("jsr","_strge","  ");
-				 	  enter_XREF("_strge");
+			 case gtorequal : gen_rt_call("_strge");
 					  break;
 			}
 			gen("move.l","d0","-(sp)"); /* push boolean result */
@@ -938,13 +925,11 @@ CODE *cx[5];
      pop_operands(ortype);
      if (ortype == shorttype) 
      {
-         gen("jsr","_eqvw","  ");
-         enter_XREF("_eqvw");
+         gen_rt_call("_eqvw");
      }
      else 
        {
-         gen("jsr","_eqvl","  ");
-         enter_XREF("_eqvl");
+         gen_rt_call("_eqvl");
        }
       push_result(ortype);
     } else _error(4);
@@ -992,13 +977,11 @@ CODE *cx[5];
      pop_operands(eqvtype);
      if (eqvtype == shorttype) 
      {
-         gen("jsr","_impw","  ");
-         enter_XREF("_impw");
+         gen_rt_call("_impw");
      }
      else 
        {
-         gen("jsr","_impl","  ");
-         enter_XREF("_impl");
+         gen_rt_call("_impl");
        }
      push_result(eqvtype);
     } else _error(4);
@@ -1041,9 +1024,8 @@ int type;
 ** with rounding.
 */
   gen("move.l","(sp)+","d0");
-  gen("jsr","_round","  ");
+  gen_rt_call("_round");
   gen("move.l","d0","-(sp)");
-  enter_XREF("_round");
   enter_XREF("_MathBase");
 
   /*
