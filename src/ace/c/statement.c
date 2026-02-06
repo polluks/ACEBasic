@@ -69,13 +69,8 @@ extern	SYM	*curr_item;
 extern	CODE	*curr_code;
 extern	CODE	*exit_for_cx;
 
-extern	ACELIBS acelib[NUMACELIBS];
-
-extern	char 	librarybase[MAXIDSIZE+6];
 extern	BOOL 	have_lparen;
 extern	BOOL 	have_equal;
-extern	BOOL 	restore_a4;
-extern	BOOL 	restore_a5;
 extern	BOOL	narratorused;
 extern	BOOL	end_of_source;
 extern	char 	exit_sub_name[80];
@@ -170,14 +165,13 @@ char label_lab[50];
 void statement()
 {
 char  buf[50],destbuf[3],idholder[50],addrbuf[80],sub_name[80],numbuf[40];
-char  func_name[MAXIDSIZE],func_address[MAXIDSIZE+9];
+char  func_name[MAXIDSIZE];
 char  ext_name[MAXIDSIZE+1];
 int   commandsym;
 int   oldobj,oldtyp,stype;
 int   statetype;
 int   oldlevel;
 SYM   *func_item,*sub_item,*mc_item,*inc_item,*dec_item,*invoke_item;
-BYTE  libnum;
 BOOL  need_symbol=TRUE;
 int   i;
 SHORT popcount;
@@ -247,16 +241,7 @@ SHORT popcount;
         { load_func_params(func_item); insymbol(); }
 
      /* call the function */
-     if ((libnum=check_for_ace_lib(func_item->libname)) == NEGATIVE) 
-        make_library_base(func_item->libname);
-     else
-        strcpy(librarybase,acelib[libnum].base);
-     gen("move.l",librarybase,"a6");
-     itoa(func_item->address,func_address,10);
-     strcat(func_address,"(a6)");
-     gen("jsr",func_address,"  ");
-     if (restore_a4) { gen("move.l","_a4_temp","a4"); restore_a4=FALSE; }
-     if (restore_a5) { gen("move.l","_a5_temp","a5"); restore_a5=FALSE; }
+     gen_lib_call(func_item);
     }
     else
     {
@@ -404,16 +389,7 @@ SHORT popcount;
     if (func_item->no_of_params != 0)
     { insymbol(); load_func_params(func_item); }
     /* call it */
-    if ((libnum=check_for_ace_lib(func_item->libname)) == NEGATIVE) 
-       make_library_base(func_item->libname);
-    else
-       strcpy(librarybase,acelib[libnum].base);
-    gen("move.l",librarybase,"a6");
-    itoa(func_item->address,func_address,10);
-    strcat(func_address,"(a6)");
-    gen("jsr",func_address,"  ");
-    if (restore_a4) { gen("move.l","_a4_temp","a4"); restore_a4=FALSE; }
-    if (restore_a5) { gen("move.l","_a5_temp","a5"); restore_a5=FALSE; }
+    gen_lib_call(func_item);
    }
    else
    {

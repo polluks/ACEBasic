@@ -61,10 +61,6 @@ extern	FILE	*dest;
 extern	char	ch;
 extern	int  	lev;
 extern	char 	numbuf[80];
-extern	char 	librarybase[MAXIDSIZE+6];
-extern	ACELIBS	acelib[NUMACELIBS];
-extern	BOOL 	restore_a4;
-extern	BOOL	restore_a5;
 extern 	BOOL 	cli_args;
 extern	SYM	*last_addr_sub_sym;
 extern	int	addr[];
@@ -107,7 +103,7 @@ BOOL factorfunc()
 int factor()
 {
 char buf[80],srcbuf[80],strname[80],strlabel[80],sub_name[80];
-char func_name[MAXIDSIZE],func_address[MAXIDSIZE+9];
+char func_name[MAXIDSIZE];
 char ext_name[MAXIDSIZE+1];
 char *strbuf;
 int  ftype=undefined;
@@ -116,7 +112,6 @@ SYM  *fact_item;
 SYM  *invoke_item;
 SYM  *invoke_sub;
 int  oldlevel;
-BYTE libnum;
 BOOL need_symbol;
 int  i;
 SHORT popcount;
@@ -327,21 +322,8 @@ SHORT popcount;
     		 if (fact_item->no_of_params != 0)
     		    { insymbol(); load_func_params(fact_item); }
     		 /* call it */
-  		 if ((libnum=check_for_ace_lib(fact_item->libname))==NEGATIVE) 
-       		    make_library_base(fact_item->libname);
-    		 else
-       		    strcpy(librarybase,acelib[libnum].base);
-    		 gen("move.l",librarybase,"a6");
-    		 itoa(fact_item->address,func_address,10);
-    		 strcat(func_address,"(a6)");
-    		 gen("jsr",func_address,"  ");
-
+    		 gen_lib_call(fact_item);
 		 gen_push(fact_item->type, "d0"); /* push return value */
-
-                 if (restore_a4) 
-                    { gen("move.l","_a4_temp","a4"); restore_a4=FALSE; }
-                 if (restore_a5) 
-                    { gen("move.l","_a5_temp","a5"); restore_a5=FALSE; }
 
   		 ftype=fact_item->type;
    		 insymbol();

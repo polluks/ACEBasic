@@ -63,6 +63,32 @@ char *dest;
     gen("move.l", src, dest);
 }
 
+/* Generate a shared library function call:
+   check_for_ace_lib + make_library_base + move.l base,a6
+   + jsr offset(a6) + restore a4/a5 if needed. */
+extern	ACELIBS	acelib[];
+extern	char	librarybase[];
+extern	BOOL	restore_a4;
+extern	BOOL	restore_a5;
+
+void gen_lib_call(func_item)
+SYM *func_item;
+{
+ BYTE libnum;
+ char func_address[MAXIDSIZE+9];
+
+ if ((libnum=check_for_ace_lib(func_item->libname)) == NEGATIVE)
+    make_library_base(func_item->libname);
+ else
+    strcpy(librarybase,acelib[libnum].base);
+ gen("move.l",librarybase,"a6");
+ itoa(func_item->address,func_address,10);
+ strcat(func_address,"(a6)");
+ gen("jsr",func_address,"  ");
+ if (restore_a4) { gen("move.l","_a4_temp","a4"); restore_a4=FALSE; }
+ if (restore_a5) { gen("move.l","_a5_temp","a5"); restore_a5=FALSE; }
+}
+
 /* Generate NOP placeholders for potential type coercion.
    Fills cx[] with CODE pointers to the generated NOPs. */
 extern	CODE	*curr_code;

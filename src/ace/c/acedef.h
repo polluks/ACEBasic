@@ -623,6 +623,7 @@ void	gen_push();
 void	gen_pop();
 void	gen_move_typed();
 void	gen_coerce_slots();
+void	gen_lib_call();
 
 /* basfun.c */
 BOOL	strfunc();
