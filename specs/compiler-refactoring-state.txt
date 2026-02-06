@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.2 - gen_frame_addr() in codegen.c
-  Branch: phase2-codegen
+Last completed: Phase 2.3 - gen_push/gen_pop/gen_move_typed in codegen.c
+  Branch: phase2.3-typed-moves (merged to master)
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -29,6 +29,20 @@ Phase 2 (codegen layer)
          declare.c, misc.c, basfun.c, control.c, gfx.c, serial.c, message.c
        - Excluded: sub.c parse_shared_vars() hardcoded (a4)/(a5) for cross-level sharing
 
-Test suite: 118/118 pass
+  2.3: Extracted gen_push/gen_pop/gen_move_typed into codegen.c
+       - gen_push(type, src): move.w/l src, -(sp) based on shorttype
+       - gen_pop(type, dest): move.w/l (sp)+, dest based on shorttype
+       - gen_move_typed(type, src, dest): move.w/l src, dest based on shorttype
+       - Replaced ~37 occurrences across 8 source files
+       - Files modified: expr.c, factor.c, sub.c, assign.c, control.c,
+         declare.c, statement.c, misc.c
+       - Excluded: change_Flt (uses change()), extvar push (3-way with pea),
+         FOR default step (singletype uses different value), FOR step add
+         (move+add coupled), print.c/file.c (pop+type-specific call per case),
+         assign extvar (3-way with string lea+strcpy), INVOKE closure
+         bound-arg read (always move.l), INVOKE closure param copy with
+         bound-arg truncation (extra truncation code)
 
-Next step: Phase 2.3 - additional codegen helpers
+Test suite: 51/51 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10)
+
+Next step: Phase 2.4 or new phase TBD
