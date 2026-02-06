@@ -40,7 +40,6 @@
 #include "acedef.h"
 
 /* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
 static 	CODE	*option[255];
 
 /* externals */

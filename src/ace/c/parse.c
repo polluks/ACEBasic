@@ -129,14 +129,7 @@ int  sub_type,def_expr_type;
    if (sym == shortintsym || sym == longintsym || sym == addresssym ||
        sym == singlesym || sym == stringsym)
    {
-    switch(sym)
-    {
-     case shortintsym : sub_type = shorttype;  break;
-     case longintsym  : sub_type = longtype;   break;
-     case addresssym  : sub_type = longtype;   break;
-     case singlesym   : sub_type = singletype; break;
-     case stringsym   : sub_type = stringtype; break;
-    }
+    sub_type = sym_to_type(sym);
     insymbol();
    }
 

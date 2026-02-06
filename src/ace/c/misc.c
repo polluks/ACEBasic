@@ -50,7 +50,7 @@
 #include "acedef.h"
 
 /* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
+char 	*frame_ptr[] = { "(a4)","(a5)" };
 
 /* externals */
 extern	BOOL	report_errors;
@@ -314,7 +314,6 @@ SYM *item;
 SYM    *structype;
 char   addrbuf[40],absbuf[40],numbuf[40];
 STRUCM *member;
-BOOL   found=FALSE;
 int    mbr_type=undefined;
 
  insymbol();
@@ -326,22 +325,14 @@ int    mbr_type=undefined;
 
   insymbol();
 
-  if (sym != ident) 
+  if (sym != ident)
      _error(7);
   else
   {
    /* does member exist? */
-   member = structype->structmem->next;
-   while ((member != NULL) && (!found)) 
-   {
-    if (strcmp(member->name,id) == 0)
-       found=TRUE;
-    else
-       member = member->next;
-   }
-   
-   /* dereference it? */
-   if (!found) 
+   member = structmem_exist(structype,id);
+
+   if (member == NULL)
       _error(67);  /* not a member! */
    else
    {
@@ -594,4 +585,58 @@ void MsgBox()
 	   		}
 	  	}
 	 }
+}
+
+void make_ext_name(ext_name,ut)
+char *ext_name;
+char *ut;
+{
+char buf[MAXIDSIZE];
+
+ strcpy(buf,ut);
+ remove_qualifier(buf);
+ if (buf[0] != '_')
+ {
+  strcpy(ext_name,"_\0");
+  strcat(ext_name,buf);
+ }
+ else
+     strcpy(ext_name,buf);
+}
+
+int sym_to_type(s)
+int s;
+{
+ switch(s)
+ {
+  case shortintsym : return shorttype;
+  case longintsym  : return longtype;
+  case addresssym  : return longtype;
+  case singlesym   : return singletype;
+  case stringsym   : return stringtype;
+ }
+ return notype;
+}
+
+void make_modvar_bss_name(dest,name)
+char *dest;
+char *name;
+{
+int len;
+
+ strcpy(dest,"_modv_");
+ strcat(dest,name);
+ /* Remove type suffix if present (_IS, _IL, _FS, _FD, _ST) */
+ len = strlen(dest);
+ if (len >= 3 && dest[len-3] == '_')
+ {
+  char c1 = dest[len-2];
+  char c2 = dest[len-1];
+  if ((c1 == 'I' && (c2 == 'S' || c2 == 'L')) ||
+      (c1 == 'F' && (c2 == 'S' || c2 == 'D')) ||
+      (c1 == 'S' && c2 == 'T'))
+  {
+   dest[len-3] = '\0';
+  }
+ }
 }

@@ -449,14 +449,7 @@ BOOL found;
   if (sym == shortintsym || sym == longintsym || sym == addresssym ||
       sym == singlesym || sym == stringsym)
   {
-   switch(sym)
-   {
-    case shortintsym : functype = shorttype;  break;
-    case longintsym  : functype = longtype;   break;
-    case addresssym  : functype = longtype;   break;
-    case singlesym   : functype = singletype; break;
-    case stringsym   : functype = stringtype; break;
-   }
+   functype = sym_to_type(sym);
    insymbol();
   }
 

@@ -56,9 +56,6 @@
 
 #include "acedef.h"
 
-/* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
-
 /* externals */
 extern	int	sym;
 extern	int	lastsym;
@@ -198,20 +195,7 @@ SHORT popcount;
   strcpy(func_name,id);
   remove_qualifier(func_name);
 
-  /* make external variable name 
-     by removing qualifier and 
-     adding an underscore prefix 
-     if one is not present. 
-  */
-  strcpy(buf,ut_id);
-  remove_qualifier(buf);
-  if (buf[0] != '_')
-  {
-   strcpy(ext_name,"_\0");
-   strcat(ext_name,buf);
-  }
-  else 
-      strcpy(ext_name,buf);
+  make_ext_name(ext_name,ut_id);
 
   /* assignment? */
   strcpy(idholder,id);  /* save info for label or assign() */
@@ -443,20 +427,7 @@ SHORT popcount;
 
     if (!exist(sub_name,subprogram)) 
     {
-     /* make external variable name 
-        by removing qualifier and 
-        adding an underscore prefix 
-        if one is not present. 
-     */
-     strcpy(buf,ut_id);
-     remove_qualifier(buf);
-     if (buf[0] != '_')
-     {
-      strcpy(ext_name,"_\0");
-      strcat(ext_name,buf);
-     }
-     else 
-         strcpy(ext_name,buf);
+     make_ext_name(ext_name,ut_id);
 
       if (exist(ext_name,extfunc))
       { 
@@ -1488,14 +1459,7 @@ SHORT popcount;
   	        else
   		{
 		  /* it may be an external variable */
-		  strcpy(buf,ut_id);
-		  remove_qualifier(buf);
-		  if (buf[0] != '_')
-		  {
-			sprintf(ext_name,"_%s",buf);
-		  }
-		  else
-		    	strcpy(ext_name,buf);
+		  make_ext_name(ext_name,ut_id);
 
 		  if ((!exist(id,variable)) && (!exist(ext_name,extvar)))
 		     _error(19); /* simple variable expected */
@@ -1543,14 +1507,7 @@ SHORT popcount;
   	        else
   		{
 		  /* it may be an external variable */
-		  strcpy(buf,ut_id);
-		  remove_qualifier(buf);
-		  if (buf[0] != '_')
-		  {
-			sprintf(ext_name,"_%s",buf);
-		  }
-		  else
-		    	strcpy(ext_name,buf);
+		  make_ext_name(ext_name,ut_id);
 
 		  if ((!exist(id,variable)) && (!exist(ext_name,extvar)))
 		     _error(19); /* simple variable expected */

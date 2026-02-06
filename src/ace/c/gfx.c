@@ -39,9 +39,6 @@
 
 #include "acedef.h"
 
-/* locals */
-static	char	*frame_ptr[] = { "(a4)","(a5)" };
-
 /* externals */
 extern	int	sym;
 extern	int	lev;

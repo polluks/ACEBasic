@@ -38,9 +38,6 @@
 
 #include "acedef.h"
 
-/* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
-
 /* externals */
 extern	int	sym;
 extern	int	typ;
@@ -68,14 +65,7 @@ int   sub_type=undefined;
  if (sym == shortintsym || sym == longintsym || sym == addresssym ||
      sym == singlesym || sym == stringsym)
  {
-  switch(sym)
-  {
-   case shortintsym : sub_type = shorttype;  break;
-   case longintsym  : sub_type = longtype;   break;
-   case addresssym  : sub_type = longtype;   break;
-   case singlesym   : sub_type = singletype; break;
-   case stringsym   : sub_type = stringtype; break;
-  }
+  sub_type = sym_to_type(sym);
   insymbol();
  }
 
@@ -132,14 +122,7 @@ int   sub_type=undefined;
     if (sym == shortintsym || sym == longintsym || sym == addresssym ||
         sym == singlesym || sym == stringsym)
     {
-     switch(sym)
-     {
-      case shortintsym : param_type = shorttype;  break;
-      case longintsym  : param_type = longtype;   break;
-      case addresssym  : param_type = longtype;   break;
-      case singlesym   : param_type = singletype; break;
-      case stringsym   : param_type = stringtype; break;
-     }
+     param_type = sym_to_type(sym);
      insymbol();
     }
 
@@ -332,14 +315,7 @@ char  addrbuf[40];
    if (sym == shortintsym || sym == longintsym || sym == addresssym ||
        sym == singlesym || sym == stringsym)
    {
-    switch(sym)
-    {
-     case shortintsym : param_type = shorttype;  break;
-     case longintsym  : param_type = longtype;   break;
-     case addresssym  : param_type = longtype;   break;
-     case singlesym   : param_type = singletype; break;
-     case stringsym   : param_type = stringtype; break;
-    }
+    param_type = sym_to_type(sym);
     insymbol();
    }
 
@@ -481,24 +457,9 @@ BOOL share_it;
      {
       /* Module simple variable: get absolute BSS address */
       char bss_name[MAXIDSIZE+8];
-      int len;
-      char last;
 
-      strcpy(bss_name, "#_modv_");
-      strcat(bss_name, zero_ptr->name);
-      /* Remove type suffix if present (_IS, _IL, _FS, _FD, _ST) */
-      len = strlen(bss_name);
-      if (len >= 3 && bss_name[len-3] == '_')
-      {
-       char c1 = bss_name[len-2];
-       char c2 = bss_name[len-1];
-       if ((c1 == 'I' && (c2 == 'S' || c2 == 'L')) ||
-           (c1 == 'F' && (c2 == 'S' || c2 == 'D')) ||
-           (c1 == 'S' && c2 == 'T'))
-       {
-        bss_name[len-3] = '\0';
-       }
-      }
+      strcpy(bss_name,"#");
+      make_modvar_bss_name(bss_name+1, zero_ptr->name);
       gen("move.l",bss_name,buf1);  /* store BSS address in level ONE frame */
      }
     }

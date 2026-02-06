@@ -538,6 +538,9 @@ typedef struct aceliblist {
 			   char base[MAXIDSIZE+5]; /* library base: _NAMEBase */
 			  } ACELIBS;
 
+/* --shared globals-- */
+extern	char	*frame_ptr[];
+
 /* --function protos-- */
 
 /* opt.c */
@@ -610,7 +613,7 @@ void	write_xrefs();
 void	enter_BASDATA();
 void	write_basdata();
 void	find_structmem_tail();
-BOOL	structmem_exist();
+STRUCM	*structmem_exist();
 void	add_struct_member();
 
 /* basfun.c */
@@ -781,6 +784,9 @@ void	get_libname();
 void	library();
 void	closelibrary();
 void	remove_qualifier();
+void	make_ext_name();
+void	make_modvar_bss_name();
+int	sym_to_type();
 BOOL	search_func();
 BOOL	found_func();
 void	declare();

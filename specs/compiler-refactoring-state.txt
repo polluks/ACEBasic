@@ -1,0 +1,6 @@
+Compiler Refactoring State
+===========================
+
+Last completed: Phase 1.6 - Changed structmem_exist() to return STRUCM*, replaced manual loops in misc.c push_struct() and assign.c assign_to_struct()
+
+Next step: Phase 2.1 - gen_rt_call(funcname) in new codegen.c

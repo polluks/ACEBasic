@@ -48,9 +48,6 @@
 
 #define QUN_CODE 3
 
-/* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
-
 /* externals */
 extern	int	sym;
 extern	int	lastsym;
@@ -277,36 +274,27 @@ SYM *item;
 SYM    *structype;
 char   addrbuf[40],absbuf[40],numbuf[40];
 STRUCM *member;
-BOOL   found=FALSE;
 int    exprtype,storetype;
 
  if (sym == memberpointer)
  {
   /* assign value to a member */
 
-  /* get pointer to structure 
-     type definition. 
+  /* get pointer to structure
+     type definition.
   */
-  structype = item->other; 
+  structype = item->other;
 
   insymbol();
 
-  if (sym != ident) 
+  if (sym != ident)
      _error(7);
   else
   {
    /* does member exist? */
-   member = structype->structmem->next;
-   while ((member != NULL) && (!found)) 
-   {
-    if (strcmp(member->name,id) == 0)
-       found=TRUE;
-    else
-       member = member->next;
-   }
-   
-   /* dereference it? */
-   if (!found) 
+   member = structmem_exist(structype,id);
+
+   if (member == NULL)
       { _error(67); insymbol(); }  /* not a member! */
    else
    {
@@ -413,20 +401,7 @@ int  exprtype;
  strcpy(sub_name,"_SUB_");
  strcat(sub_name,id);
 
- /* make external variable name 
-    by removing qualifier and  
-    adding an underscore prefix 
-    if one is not present. 
- */
- strcpy(buf,ut_id);
- remove_qualifier(buf);
- if (buf[0] != '_')
- {
-  strcpy(ext_name,"_\0");
-  strcat(ext_name,buf);
- }
- else 
-     strcpy(ext_name,buf);
+ make_ext_name(ext_name,ut_id);
 
  /* does it exist? */
  if (exist(id,constant)) { _error(53); return; }
@@ -481,23 +456,7 @@ int  exprtype;
         else if (storage_item->object == variable)
         {
          /* Module variable: generate BSS name from var name */
-         int len;
-         char last;
-         strcpy(addrbuf, "_modv_");
-         strcat(addrbuf, storage_item->name);
-         /* Remove type suffix if present (_IS, _IL, _FS, _FD, _ST) */
-         len = strlen(addrbuf);
-         if (len >= 3 && addrbuf[len-3] == '_')
-         {
-          char c1 = addrbuf[len-2];
-          char c2 = addrbuf[len-1];
-          if ((c1 == 'I' && (c2 == 'S' || c2 == 'L')) ||
-              (c1 == 'F' && (c2 == 'S' || c2 == 'D')) ||
-              (c1 == 'S' && c2 == 'T'))
-          {
-           addrbuf[len-3] = '\0';
-          }
-         }
+         make_modvar_bss_name(addrbuf, storage_item->name);
         }
         else
         {
@@ -673,14 +632,7 @@ do
  if (sym == shortintsym || sym == longintsym || sym == addresssym ||
      sym == singlesym || sym == stringsym)
  {
-  switch(sym)
-  {
-   case shortintsym : arraytype = shorttype;  break;
-   case longintsym  : arraytype = longtype;   break;
-   case addresssym  : arraytype = longtype;   break;
-   case singlesym   : arraytype = singletype; break;
-   case stringsym   : arraytype = stringtype; break;
-  }
+  arraytype = sym_to_type(sym);
   insymbol();
  }
 

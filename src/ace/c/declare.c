@@ -45,9 +45,6 @@
 
 #include "acedef.h"
 
-/* locals */
-static	char 	*frame_ptr[] = { "(a4)","(a5)" };
-
 /* externals */
 extern	int	sym;
 extern	int	typ;
@@ -542,14 +539,7 @@ int  vartype=undefined;
  if (sym == shortintsym || sym == longintsym || sym == addresssym ||
      sym == singlesym || sym == stringsym)
  {
-   switch(sym)
-   {
-    case shortintsym : vartype = shorttype;  break;
-    case longintsym  : vartype = longtype;   break;
-    case addresssym  : vartype = longtype;   break;
-    case singlesym   : vartype = singletype; break;
-    case stringsym   : vartype = stringtype; break;
-   }
+   vartype = sym_to_type(sym);
    insymbol();
  }
 
@@ -557,7 +547,7 @@ int  vartype=undefined;
  if (sym != ident)
  	_error(7);
  {
- 	/* 
+ 	/*
 	** Add an underscore prefix 
    	** if one is not present.
 	*/
@@ -606,14 +596,7 @@ int  functype=undefined;
  if (sym == shortintsym || sym == longintsym || sym == addresssym ||
      sym == singlesym || sym == stringsym)
  {
-   switch(sym)
-   {
-    case shortintsym : functype = shorttype;  break;
-    case longintsym  : functype = longtype;   break;
-    case addresssym  : functype = longtype;   break;
-    case singlesym   : functype = singletype; break;
-    case stringsym   : functype = stringtype; break;
-   }
+   functype = sym_to_type(sym);
    insymbol();
  }
 
@@ -725,14 +708,7 @@ char bss_size[20];
  if (sym == shortintsym || sym == longintsym || sym == addresssym ||
      sym == singlesym || sym == stringsym)
  {
-   switch(sym)
-   {
-    case shortintsym : vartype = shorttype;  break;
-    case longintsym  : vartype = longtype;   break;
-    case addresssym  : vartype = longtype;   break;
-    case singlesym   : vartype = singletype; break;
-    case stringsym   : vartype = stringtype; break;
-   }
+   vartype = sym_to_type(sym);
 
    insymbol();
  }
