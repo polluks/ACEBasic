@@ -106,11 +106,7 @@ int i;
   /* make sure it's a LONG */
   exprtype = make_integer(exprtype);
   targettype = longtype;
-  for (i=0;i<=2;i++)
-  {
-   gen("nop","  ","  ");
-   cx[i]=curr_code;
-  }
+  gen_coerce_slots(cx, 3);
   coerce(&exprtype,&targettype,cx);
 
   if (sym != thensym) { _error(11); return; }
@@ -203,13 +199,9 @@ int  exprtype;
 
  /* make sure it's a LONG! */
  exprtype=make_integer(exprtype);
- for (i=0;i<=2;i++) 
- {
-  gen("nop","  ","  ");
-  cx[i]=curr_code;
- }
+ gen_coerce_slots(cx, 3);
  coerce(&exprtype,&targettype,cx);
- 
+
  if (exprtype == longtype)
  {
   if ((sym == thensym) || (sym == gotosym))
@@ -334,11 +326,7 @@ int  exprtype;
 
  /* make sure it's a LONG! */
  exprtype=make_integer(exprtype);
- for (i=0;i<=2;i++) 
- {
-  gen("nop","  ","  ");
-  cx[i]=curr_code;
- }
+ gen_coerce_slots(cx, 3);
  coerce(&exprtype,&targettype,cx);  /* cx necessary if change from SHORT */
 
  if (exprtype == longtype)

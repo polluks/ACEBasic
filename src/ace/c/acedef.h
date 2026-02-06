@@ -622,6 +622,7 @@ void	gen_frame_addr();
 void	gen_push();
 void	gen_pop();
 void	gen_move_typed();
+void	gen_coerce_slots();
 
 /* basfun.c */
 BOOL	strfunc();

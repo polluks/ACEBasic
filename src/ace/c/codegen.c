@@ -62,3 +62,19 @@ char *dest;
  else
     gen("move.l", src, dest);
 }
+
+/* Generate NOP placeholders for potential type coercion.
+   Fills cx[] with CODE pointers to the generated NOPs. */
+extern	CODE	*curr_code;
+
+void gen_coerce_slots(cx, count)
+CODE *cx[];
+int count;
+{
+ int i;
+ for (i=0;i<count;i++)
+ {
+  gen("nop","  ","  ");
+  cx[i]=curr_code;
+ }
+}

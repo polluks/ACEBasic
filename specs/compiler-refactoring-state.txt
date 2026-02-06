@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.3 - gen_push/gen_pop/gen_move_typed in codegen.c
-  Branch: phase2.3-typed-moves (merged to master)
+Last completed: Phase 2.4 - gen_coerce_slots in codegen.c
+  Branch: phase2.4-coerce-slots
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -43,6 +43,12 @@ Phase 2 (codegen layer)
          bound-arg read (always move.l), INVOKE closure param copy with
          bound-arg truncation (extra truncation code)
 
+  2.4: Extracted gen_coerce_slots(cx, count) into codegen.c
+       - Generates NOP placeholders and fills cx[] array for type coercion
+       - Replaced 13 for-loops: 10 in expr.c, 3 in control.c
+       - Removed unused extern CODE *curr_code from expr.c
+       - count=5 for expr operators (full coercion), count=3 for control flow (short->long only)
+
 Test suite: 51/51 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10)
 
-Next step: Phase 2.4 or new phase TBD
+Next step: Phase 2.5 - gen_lib_call

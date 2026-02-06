@@ -50,7 +50,6 @@ extern	int	nottype;
 extern	int	andtype;
 extern	int	ortype;
 extern	int	eqvtype;
-extern	CODE	*curr_code;
 extern	BOOL	cpu020_opt;
 extern	int	labelcount;
 extern	char	tempstrname[80];
@@ -182,11 +181,7 @@ CODE *cx[5];
   if ((firsttype == shorttype) || (firsttype == longtype))
   {
    /* may need to coerce to singletype */
-   for (i=0;i<=4;i++)
-   {
-    gen("nop","  ","  ");
-    cx[i]=curr_code;
-   }
+   gen_coerce_slots(cx, 5);
   }
 
   insymbol();
@@ -275,11 +270,7 @@ CODE *cx[5];
   if ((firsttype == shorttype) || (firsttype == longtype))
   {
    /* may need to coerce to singletype or longtype */
-   for (i=0;i<=4;i++)
-   {
-    gen("nop","  ","  ");
-    cx[i]=curr_code;
-   }
+   gen_coerce_slots(cx, 5);
   }
 
   op=sym;  /* multiply or fdiv ? */
@@ -382,11 +373,7 @@ CODE *cx[5];
   firsttype=make_integer(firsttype);  /* short or long -> 1st approximation */ 
 
   /* may need to coerce to long */
-  for (i=0;i<=2;i++)
-  {
-   gen("nop","  ","  ");
-   cx[i]=curr_code;
-  }
+  gen_coerce_slots(cx, 3);
 
   if (firsttype == undefined) return(firsttype);
 
@@ -440,11 +427,7 @@ CODE *cx[5];
  while (sym == modsym) 
  {
   /* may need to coerce to single */
-  for (i=0;i<=4;i++)
-  {
-   gen("nop","  ","  ");
-   cx[i]=curr_code;
-  }
+  gen_coerce_slots(cx, 5);
 
   if (firsttype == undefined) return(firsttype);
 
@@ -530,11 +513,7 @@ CODE *cx[5];
   if ((firsttype == shorttype) || (firsttype == longtype))
   {
    /* may need to coerce */
-   for (i=0;i<=4;i++)
-   {
-    gen("nop","  ","  ");
-    cx[i]=curr_code;
-   }
+   gen_coerce_slots(cx, 5);
   }
   op=sym;
   insymbol();
@@ -675,11 +654,7 @@ CODE *cx[5];
   if ((firsttype == shorttype) || (firsttype == longtype))
   {
    /* may need to coerce */
-   for (i=0;i<=4;i++)
-   {
-    gen("nop","  ","  ");
-    cx[i]=curr_code;
-   }
+   gen_coerce_slots(cx, 5);
   }
   op=sym;
   insymbol();
@@ -795,11 +770,7 @@ CODE *cx[5];
     if ((firsttype == shorttype) || (firsttype == longtype))
     {
      /* may need to coerce */
-     for (i=0;i<=4;i++)
-     {
-      gen("nop","  ","  ");
-      cx[i]=curr_code;
-     }
+     gen_coerce_slots(cx, 5);
     }
     op=sym;
     insymbol();
@@ -843,11 +814,7 @@ CODE *cx[5];
    if ((firsttype == shorttype) || (firsttype == longtype))
     {
      /* may need to coerce */
-     for (i=0;i<=4;i++)
-     {
-      gen("nop","  ","  ");
-      cx[i]=curr_code;
-     }
+     gen_coerce_slots(cx, 5);
     }
     op=sym;
     insymbol();
@@ -901,11 +868,7 @@ CODE *cx[5];
    if ((firsttype == shorttype) || (firsttype == longtype))
     {
      /* may need to coerce */
-     for (i=0;i<=4;i++)
-     {
-      gen("nop","  ","  ");
-      cx[i]=curr_code;
-     }
+     gen_coerce_slots(cx, 5);
     }
     op=sym;
     insymbol();
@@ -953,11 +916,7 @@ CODE *cx[5];
    if ((firsttype == shorttype) || (firsttype == longtype))
    {
      /* may need to coerce */
-     for (i=0;i<=4;i++)
-     {
-      gen("nop","  ","  ");
-      cx[i]=curr_code;
-     }
+     gen_coerce_slots(cx, 5);
     }
     op=sym;
     insymbol();
