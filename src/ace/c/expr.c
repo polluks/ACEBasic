@@ -554,8 +554,8 @@ CODE *cx[5];
 
    switch(modtype)
    {
-    case shorttype  : 	gen("move.w","(sp)+","d1");
-          		gen("move.w","(sp)+","d0");
+    case shorttype  : 	gen_pop(shorttype, "d1");
+          		gen_pop(shorttype, "d0");
             		gen("add.w","d1","d0");
                 	break;
  
@@ -582,11 +582,8 @@ CODE *cx[5];
         		break;
    }
   
-   if (modtype == shorttype)
-            gen("move.w","d0","-(sp)");
-   else
    if (modtype != stringtype)
-      gen("move.l","d0","-(sp)");
+      gen_push(modtype, "d0");
                  break;
 
     case minus : if ((modtype != stringtype) && (modtype != shorttype))
@@ -597,8 +594,8 @@ CODE *cx[5];
 
    switch(modtype)
    {
-    case shorttype  : 	gen("move.w","(sp)+","d1");
-   		     	gen("move.w","(sp)+","d0");
+    case shorttype  : 	gen_pop(shorttype, "d1");
+   		     	gen_pop(shorttype, "d0");
         		gen("sub.w","d1","d0");
                 	break;
  
@@ -614,11 +611,8 @@ CODE *cx[5];
     case stringtype : 	_error(4); break;
   }
   
-   	if (modtype == shorttype)
-     		gen("move.w","d0","-(sp)");
-   	else
-   	    if (modtype != stringtype)
-      		gen("move.l","d0","-(sp)");
+   	if (modtype != stringtype)
+      		gen_push(modtype, "d0");
      }
     } 
     else _error(4); /* notype -> type mismatch */
@@ -699,20 +693,20 @@ CODE *cx[5];
    /* compare on basis of type -> d5 = d0 op d1 */
    switch(simptype)
    {
-    case shorttype  : 	gen("move.w","(sp)+","d1");  /* 2nd */
-        		gen("move.w","(sp)+","d0");  /* 1st */
+    case shorttype  : 	gen_pop(shorttype, "d1");  /* 2nd */
+        		gen_pop(shorttype, "d0");  /* 1st */
         		gen("moveq","#-1","d5");     /* assume true */
         		gen("cmp.w","d1","d0");
         		break;
 
-    case longtype   : 	gen("move.l","(sp)+","d1");  /* 2nd */
-        		gen("move.l","(sp)+","d0");  /* 1st */
+    case longtype   : 	gen_pop(longtype, "d1");  /* 2nd */
+        		gen_pop(longtype, "d0");  /* 1st */
         		gen("moveq","#-1","d5");     /* assume true */
         		gen("cmp.l","d1","d0");
         		break;
 
-    case singletype : 	gen("move.l","(sp)+","d1");  /* 2nd */
-        		gen("move.l","(sp)+","d0");  /* 1st */
+    case singletype : 	gen_pop(singletype, "d1");  /* 2nd */
+        		gen_pop(singletype, "d0");  /* 1st */
         		gen("moveq","#-1","d5");     /* assume true */
         		gen("move.l","_MathBase","a6");
         		gen("jsr","_LVOSPCmp(a6)","  ");
@@ -995,25 +989,14 @@ CODE *cx[5];
 void pop_operands(typ)
 int typ;
 {
-     if (typ == shorttype)
-     {
-      gen("move.w","(sp)+","d0");  /* 2nd operand */
-      gen("move.w","(sp)+","d1");  /* 1st operand -> d0 = d1 op d0 */
-     }
-     else
-     {  
-      gen("move.l","(sp)+","d0");  /* 2nd operand */
-      gen("move.l","(sp)+","d1");  /* 1st operand -> d0 = d1 op d0 */
-     } 
+     gen_pop(typ, "d0");  /* 2nd operand */
+     gen_pop(typ, "d1");  /* 1st operand -> d0 = d1 op d0 */
 }
 
 void push_result(typ)
 int typ;
 {
- if (typ == shorttype)
-    gen("move.w","d0","-(sp)");
- else
-    gen("move.l","d0","-(sp)");
+ gen_push(typ, "d0");
 }
 
 void gen_round(type)
@@ -1047,10 +1030,7 @@ int typ;
 
   if (typ == stringtype) _error(4); /* can't do it */
 
-  if (typ == shorttype)
-     gen("move.w","(sp)+","d0");
-  else
-     gen("move.l","(sp)+","d0");
+  gen_pop(typ, "d0");
 
   if (typ == shorttype) gen("ext.l","d0","  "); /* extend sign */
 

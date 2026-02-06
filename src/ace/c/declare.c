@@ -441,11 +441,9 @@ SYM  *str_item;
 
     switch(vartype)
     {
-     case shorttype  :  gen("move.w","#0",addrbuf); break;
-
-     case longtype   :  gen("move.l","#0",addrbuf); break;
-
-     case singletype :  gen("move.l","#0",addrbuf); break; 
+     case shorttype  :  /* fall through */
+     case longtype   :  /* fall through */
+     case singletype :  gen_move_typed(vartype, "#0", addrbuf); break;
 
      case stringtype :  str_item = curr_item;
 			if (sym == addresssym)
@@ -742,16 +740,16 @@ char bss_size[20];
 		sprintf(extvarlabel,"%s:",extvarid);
 		switch(vartype)
 		{
-			case shorttype:	 enter_BSS(extvarlabel,"ds.w 1"); 
-					 gen("move.w","#0",extvarid);
+			case shorttype:	 enter_BSS(extvarlabel,"ds.w 1");
+					 gen_move_typed(shorttype, "#0", extvarid);
 					 insymbol(); break;
 
 			case longtype: 	 enter_BSS(extvarlabel,"ds.l 1");
-					 gen("move.l","#0",extvarid); 
+					 gen_move_typed(longtype, "#0", extvarid);
 					 insymbol(); break;
 
-			case singletype: enter_BSS(extvarlabel,"ds.l 1"); 
-					 gen("move.l","#0",extvarid); 
+			case singletype: enter_BSS(extvarlabel,"ds.l 1");
+					 gen_move_typed(singletype, "#0", extvarid);
 					 insymbol(); break;
 
 			case stringtype: insymbol();

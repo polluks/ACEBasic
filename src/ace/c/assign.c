@@ -473,21 +473,14 @@ int  exprtype;
            && (storage_item->type != stringtype))
         {
          gen("move.l",addrbuf,"a0");  /* absolute address of store */
-	 if (storage_item->type == shorttype)
-            gen("move.w","(sp)+","(a0)");
-	 else
-            gen("move.l","(sp)+","(a0)");
+	 gen_pop(storage_item->type, "(a0)");
 	}
 	else
         /* ordinary variable or shared string variable */
         if (storage_item->type == stringtype) 
   	   assign_to_string_variable(storage_item,MAXSTRLEN);
         else
-        if (storage_item->type == shorttype)
-           gen("move.w","(sp)+",addrbuf);
-        else
-          /* longtype or singletype */
-          gen("move.l","(sp)+",addrbuf);
+        gen_pop(storage_item->type, addrbuf);
 	/* link function pointer to SUB if @SubName was assigned */
 	if (last_addr_sub_sym != NULL && storage_item->type == longtype)
 	{
@@ -509,20 +502,12 @@ int  exprtype;
            	  lev=oldlevel;
           	}
           	else
-          	if (storage_item->type == shorttype)
-             		gen("move.w","(sp)+",addrbuf);
-          	else
-             		/* longtype or singletype */
-             		gen("move.l","(sp)+",addrbuf);
+          	gen_pop(storage_item->type, addrbuf);
 	}
 	else
 	{
 		/* External subprogram being assigned a value */
-		if (storage_item->type == shorttype)
-			gen("move.w","(sp)+","d0");
-		else
-			/* longint, single, string */
-			gen("move.l","(sp)+","d0");
+		gen_pop(storage_item->type, "d0");
 	}
         break;
 
@@ -571,17 +556,8 @@ int  exprtype;
 		        if (storage_item->type == stringtype) 
 			   assign_to_string_array(addrbuf);
         		else
-			if (storage_item->type == shorttype)
-			{
-			   gen("move.l",addrbuf,"a0");
-			   gen("move.w","(sp)+","0(a0,d7.L)");
-			}
-			else
-			  {
-			   /* long or single */
-			   gen("move.l",addrbuf,"a0");
-			   gen("move.l","(sp)+","0(a0,d7.L)");
-			  }
+			gen("move.l",addrbuf,"a0");
+			gen_pop(storage_item->type, "0(a0,d7.L)");
 			break;
      }
  } else _error(5); /* '=' expected */

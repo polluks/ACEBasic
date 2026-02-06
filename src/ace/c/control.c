@@ -511,11 +511,7 @@ int  exprtype;
       /* get address of object */
       gen_frame_addr(storage_item->address,addr);
 
-      if (storage_item->type == shorttype)
-      gen("move.w","(sp)+",addr);
-      else
-      /* longtype or singletype */
-      gen("move.l","(sp)+",addr);
+      gen_pop(storage_item->type, addr);
      }
  } 
  else _error(5); /* '=' expected */

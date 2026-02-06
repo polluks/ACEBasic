@@ -249,17 +249,11 @@ SHORT popcount;
 		if ((fact_item->shared) && (lev == ONE) && (typ != stringtype))
                 {
 		 gen("move.l",srcbuf,"a0");
-		 if (typ == shorttype)
-                    gen("move.w","(a0)","-(sp)");
-		 else
-                    gen("move.l","(a0)","-(sp)");
+		 gen_push(typ, "(a0)");
 		}
                 else  
 		/* ordinary variable */ 
-  		if (typ == shorttype)
-            	   gen("move.w",srcbuf,"-(sp)");
-  		else  /* string, long, single */ 
-     		   gen("move.l",srcbuf,"-(sp)"); /* push value */
+  		gen_push(typ, srcbuf); /* push value */
 
    		ftype=typ;
    		insymbol();
@@ -318,22 +312,11 @@ SHORT popcount;
 		 gen("jsr",sub_name,"  ");
 
 		 /* push the return value */
-    		 if (fact_item->type == shorttype)
-	 	 {
-          	  if (fact_item->object == subprogram && 
-		      fact_item->address != extfunc)
-			gen("move.w",srcbuf,"-(sp)");
-		  else
-			gen("move.w","d0","-(sp)");
-		 }
-  		 else  /* string, long, single */
-  		 {
-		  if (fact_item->object == subprogram &&
-		      fact_item->address != extfunc)
-  		  	gen("move.l",srcbuf,"-(sp)"); /* push value */
-		  else
-			gen("move.l","d0","-(sp)");
-  		 }
+		 if (fact_item->object == subprogram &&
+		     fact_item->address != extfunc)
+		    gen_push(fact_item->type, srcbuf);
+		 else
+		    gen_push(fact_item->type, "d0");
   		 ftype=fact_item->type;
    		 insymbol();
    		 return(ftype);
@@ -353,10 +336,7 @@ SHORT popcount;
     		 strcat(func_address,"(a6)");
     		 gen("jsr",func_address,"  ");
 
-		 if (fact_item->type == shorttype)
-		    gen("move.w","d0","-(sp)");
-		 else
-		    gen("move.l","d0","-(sp)"); /* push return value */
+		 gen_push(fact_item->type, "d0"); /* push return value */
 
                  if (restore_a4) 
                     { gen("move.l","_a4_temp","a4"); restore_a4=FALSE; }
@@ -374,10 +354,7 @@ SHORT popcount;
 		 insymbol();
 	         call_external_function(ext_name,&need_symbol);
 		 /* push return value */
-		 if (fact_item->type == shorttype)
-		    gen("move.w","d0","-(sp)");
-		 else
-		    gen("move.l","d0","-(sp)");
+		 gen_push(fact_item->type, "d0");
 		 ftype=fact_item->type;
 		 if (need_symbol) insymbol();
 		 return(ftype);
@@ -396,10 +373,7 @@ SHORT popcount;
 		  gen("move.l","a0","-(sp)");
 		 }   
  		 else
-		 if (arraytype == shorttype)
-		    gen("move.w","0(a0,d7.L)","-(sp)");
-		 else
-		    gen("move.l","0(a0,d7.L)","-(sp)");
+		 gen_push(arraytype, "0(a0,d7.L)");
 
    		 ftype=arraytype;  /* typ killed by push_indices()! */
    		 insymbol();
@@ -490,14 +464,14 @@ SHORT popcount;
 	       {
 	        addr[lev] += 2;
 	        gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
-	        gen("move.w", "(sp)+", formaltemp[bound_count + ci]);
+	        gen_pop(shorttype, formaltemp[bound_count + ci]);
 	        formaltype[bound_count + ci] = shorttype;
 	       }
 	       else
 	       {
 	        addr[lev] += 4;
 	        gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
-	        gen("move.l", "(sp)+", formaltemp[bound_count + ci]);
+	        gen_pop(longtype, formaltemp[bound_count + ci]);
 	        formaltype[bound_count + ci] = longtype;
 	       }
 
@@ -590,10 +564,7 @@ SHORT popcount;
 
 	    /* Push return value from d0.
 	       Closure calls always expect d0 return (INVOKABLE SUBs). */
-	    if (invoke_sub->type == shorttype)
-	       gen("move.w","d0","-(sp)");
-	    else
-	       gen("move.l","d0","-(sp)");
+	    gen_push(invoke_sub->type, "d0");
 	    ftype = invoke_sub->type;
 
 	    if (had_parens) insymbol();
@@ -618,17 +589,11 @@ SHORT popcount;
 	    oldlevel=lev; lev=ZERO;
 	    gen_frame_addr(invoke_sub->address, srcbuf);
 	    lev=oldlevel;
-	    if (invoke_sub->type == shorttype)
-	       gen("move.w",srcbuf,"-(sp)");
-	    else
-	       gen("move.l",srcbuf,"-(sp)");
+	    gen_push(invoke_sub->type, srcbuf);
 	   }
 	   else
 	   {
-	    if (invoke_sub->type == shorttype)
-	       gen("move.w","d0","-(sp)");
-	    else
-	       gen("move.l","d0","-(sp)");
+	    gen_push(invoke_sub->type, "d0");
 	   }
 	   ftype = invoke_sub->type;
 
@@ -699,10 +664,7 @@ SHORT popcount;
 	   /* Push args to stack in reverse order */
 	   for (n = n_params - 1; n >= 0; n--)
 	   {
-	    if (p_type[n] == shorttype)
-	     gen("move.w", p_temp[n], "-(sp)");
-	    else
-	     gen("move.l", p_temp[n], "-(sp)");
+	    gen_push(p_type[n], p_temp[n]);
 	   }
 
 	   /* Call through pointer (a2 holds the function address) */
@@ -852,10 +814,10 @@ SHORT popcount;
 		  ftype = make_integer(expr());
 		  switch(ftype)
 		  {
-			case shorttype 	: gen("move.w","(sp)+","d0");
+			case shorttype 	: gen_pop(shorttype, "d0");
 					  break;
 
-			case longtype  	: gen("move.l","(sp)+","d0");
+			case longtype  	: gen_pop(longtype, "d0");
 					  break;
 
 			default		: _error(4);

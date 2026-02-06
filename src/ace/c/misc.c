@@ -296,10 +296,7 @@ char buf[40],numbuf[40];
 
  strcat(numbuf,buf);
 
- if (typ == shorttype)
-    gen("move.w",numbuf,"-(sp)");
- else
-    gen("move.l",numbuf,"-(sp)");
+ gen_push(typ, numbuf);
 }
 
 int push_struct(item)

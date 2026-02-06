@@ -28,3 +28,37 @@ char *buf;
  itoa(-1*address, buf, 10);
  strcat(buf, frame_ptr[lev]);
 }
+
+/* Generate a typed push: move.w/l src, -(sp) */
+void gen_push(type, src)
+int type;
+char *src;
+{
+ if (type == shorttype)
+    gen("move.w", src, "-(sp)");
+ else
+    gen("move.l", src, "-(sp)");
+}
+
+/* Generate a typed pop: move.w/l (sp)+, dest */
+void gen_pop(type, dest)
+int type;
+char *dest;
+{
+ if (type == shorttype)
+    gen("move.w", "(sp)+", dest);
+ else
+    gen("move.l", "(sp)+", dest);
+}
+
+/* Generate a typed move: move.w/l src, dest */
+void gen_move_typed(type, src, dest)
+int type;
+char *src;
+char *dest;
+{
+ if (type == shorttype)
+    gen("move.w", src, dest);
+ else
+    gen("move.l", src, dest);
+}

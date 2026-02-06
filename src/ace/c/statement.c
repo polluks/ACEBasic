@@ -735,14 +735,14 @@ SHORT popcount;
          {
           addr[lev] += 2;
           gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
-          gen("move.w", "(sp)+", formaltemp[bound_count + ci]);
+          gen_pop(shorttype, formaltemp[bound_count + ci]);
           formaltype[bound_count + ci] = shorttype;
          }
          else
          {
           addr[lev] += 4;
           gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
-          gen("move.l", "(sp)+", formaltemp[bound_count + ci]);
+          gen_pop(longtype, formaltemp[bound_count + ci]);
           formaltype[bound_count + ci] = longtype;
          }
 
@@ -911,10 +911,7 @@ SHORT popcount;
      /* Push args to stack in reverse order */
      for (n = n_params - 1; n >= 0; n--)
      {
-      if (p_type[n] == shorttype)
-       gen("move.w", p_temp[n], "-(sp)");
-      else
-       gen("move.l", p_temp[n], "-(sp)");
+      gen_push(p_type[n], p_temp[n]);
      }
 
      /* Call through pointer (a2 holds the function address) */

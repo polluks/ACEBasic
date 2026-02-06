@@ -227,7 +227,7 @@ int   formaltype[MAXPARAMS];
     gen_frame_addr(addr[lev],formaltemp[i]);
     
     /* store it */
-    gen("move.w","(sp)+",formaltemp[i]);
+    gen_pop(shorttype, formaltemp[i]);
    }
    else
    /* long, single, string, array */   
@@ -247,7 +247,7 @@ int   formaltype[MAXPARAMS];
     gen_frame_addr(addr[lev],formaltemp[i]);
     
     /* store it */
-    gen("move.l","(sp)+",formaltemp[i]);
+    gen_pop(longtype, formaltemp[i]);
    }
    
    i++;
@@ -268,10 +268,7 @@ int   formaltype[MAXPARAMS];
    /* load parameters into next frame */
    for (n=0;n<sub_ptr->no_of_params;n++)
    {
-    if (formaltype[n] == shorttype) 
-       gen("move.w",formaltemp[n],formaladdr[n]); /* short */
-    else
-       gen("move.l",formaltemp[n],formaladdr[n]); /* long,string,single,array */
+    gen_move_typed(formaltype[n], formaltemp[n], formaladdr[n]);
    }
   }
 
