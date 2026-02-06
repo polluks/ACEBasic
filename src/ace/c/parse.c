@@ -480,57 +480,22 @@ int  cc;
    if (cli_args) 
       fprintf(dest,"\tjsr\t_parse_cli_args\n"); /* get CLI arguments */
 
-   if (translateused) 
-   {
-    fprintf(dest,"\tjsr\t_opentranslator\n");
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_translate_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_translate_ok:\n");
-   }   
+   if (translateused)
+    gen_lib_open_check("_opentranslator", "_translate_ok");   
 
-   if (mathffpused) 
-   {
-    fprintf(dest,"\tjsr\t_openmathffp\n");
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_mathffp_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_mathffp_ok:\n");
-   }   
+   if (mathffpused)
+    gen_lib_open_check("_openmathffp", "_mathffp_ok");   
 
-   if (mathtransused) 
-   {
-    fprintf(dest,"\tjsr\t_openmathtrans\n"); 
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_mathtrans_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_mathtrans_ok:\n");
-   }   
+   if (mathtransused)
+    gen_lib_open_check("_openmathtrans", "_mathtrans_ok");   
 
-   if (intuitionused && !gfxused) 
-   {
-    fprintf(dest,"\tjsr\t_openintuition\n");   
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_intuition_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_intuition_ok:\n");
-   }   
+   if (intuitionused && !gfxused)
+    gen_lib_open_check("_openintuition", "_intuition_ok");   
 
    if (gfxused)
    {
-    /* open intuition.library */
-    fprintf(dest,"\tjsr\t_openintuition\n");    
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_intuition_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_intuition_ok:\n");
-
-    /* open graphics.library */
-    fprintf(dest,"\tjsr\t_opengfx\n");  
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_gfx_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_gfx_ok:\n");
+    gen_lib_open_check("_openintuition", "_intuition_ok");
+    gen_lib_open_check("_opengfx", "_gfx_ok");
    }   
 
    /* create temporary ILBM.library */
@@ -539,15 +504,8 @@ int  cc;
    /* get timer event trapping start time */
    if (ontimerused) fprintf(dest,"\tjsr\t_ontimerstart\n");
 
-   /* open gadtools.library */
    if (gadtoolsused)
-   {
-    fprintf(dest,"\tjsr\t_opengadtools\n");
-    fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
-    fprintf(dest,"\tbne.s\t_gadtools_ok\n");
-    fprintf(dest,"\tjmp\t_ABORT_PROG\n");
-    fprintf(dest,"_gadtools_ok:\n");
-   }
+    gen_lib_open_check("_opengadtools", "_gadtools_ok");
 
    /* size of stack frame */ 
    if (addr[lev] == 0)

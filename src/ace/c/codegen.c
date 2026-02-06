@@ -89,6 +89,21 @@ SYM *func_item;
  if (restore_a5) { gen("move.l","_a5_temp","a5"); restore_a5=FALSE; }
 }
 
+/* Emit a library-open-and-check block directly to the output file:
+   jsr open_func / cmpi #1,_starterr / bne ok_label / jmp _ABORT / label: */
+extern	FILE	*dest;
+
+void gen_lib_open_check(open_func, ok_label)
+char *open_func;
+char *ok_label;
+{
+ fprintf(dest,"\tjsr\t%s\n", open_func);
+ fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
+ fprintf(dest,"\tbne.s\t%s\n", ok_label);
+ fprintf(dest,"\tjmp\t_ABORT_PROG\n");
+ fprintf(dest,"%s:\n", ok_label);
+}
+
 /* Generate NOP placeholders for potential type coercion.
    Fills cx[] with CODE pointers to the generated NOPs. */
 extern	CODE	*curr_code;

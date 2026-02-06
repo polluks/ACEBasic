@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.5 - gen_lib_call in codegen.c
-  Branch: phase2.5-gen-lib-call
+Last completed: Phase 2.6 - gen_lib_open_check in codegen.c
+  Branch: phase2.6-lib-open-check
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -56,6 +56,13 @@ Phase 2 (codegen layer)
        - Removed unused externs (acelib, librarybase, restore_a4/a5) from statement.c, factor.c
        - Removed unused locals (libnum, func_address) from statement.c, factor.c
 
-Test suite: 51/51 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10)
+  2.6: Extracted gen_lib_open_check(open_func, ok_label) into codegen.c
+       - Emits jsr open_func / cmpi #1,_starterr / bne ok_label / jmp _ABORT / label:
+       - Uses fprintf(dest,...) since these are in the startup section (outside code list)
+       - Replaced 7 blocks in parse.c compile(): translator, mathffp, mathtrans,
+         intuition (2x), gfx, gadtools
+       - Excluded: _startup block (uses rts instead of jmp _ABORT_PROG)
 
-Next step: Phase 2.6 - gen_lib_open_check
+Test suite: 72/72 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4)
+
+Next step: Phase 2.7 - gen_load_var / gen_store_var
