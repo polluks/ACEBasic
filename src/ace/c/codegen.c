@@ -104,6 +104,64 @@ char *ok_label;
  fprintf(dest,"%s:\n", ok_label);
 }
 
+/* Compute effective address string for a variable/array.
+   Module-level objects (address==-32767) use BSS name;
+   normal objects use frame-relative addressing. */
+void gen_var_addr(item, buf)
+SYM *item;
+char *buf;
+{
+ if (item->address == -32767)
+ {
+  if (item->object == array)
+  {
+   if (item->libname != NULL)
+      strcpy(buf, item->libname);
+   else
+      strcpy(buf, "0");
+  }
+  else if (item->object == variable)
+     make_modvar_bss_name(buf, item->name);
+  else
+     gen_frame_addr(item->address, buf);
+ }
+ else
+    gen_frame_addr(item->address, buf);
+}
+
+/* Push a variable's value onto the stack.
+   Handles shared indirection for non-string variables. */
+void gen_load_var(item, srcbuf)
+SYM *item;
+char *srcbuf;
+{
+ if ((item->shared) && (lev == ONE) && (item->type != stringtype))
+ {
+  gen("move.l", srcbuf, "a0");
+  gen_push(item->type, "(a0)");
+ }
+ else
+  gen_push(item->type, srcbuf);
+}
+
+/* Store a value into a variable.
+   src can be "d0", "(sp)+", etc.
+   Handles shared indirection for non-string variables.
+   Caller handles stringtype separately. */
+void gen_store_var(item, addrbuf, src)
+SYM *item;
+char *addrbuf;
+char *src;
+{
+ if ((item->shared) && (lev == ONE))
+ {
+  gen("move.l", addrbuf, "a0");
+  gen_move_typed(item->type, src, "(a0)");
+ }
+ else
+  gen_move_typed(item->type, src, addrbuf);
+}
+
 /* Generate NOP placeholders for potential type coercion.
    Fills cx[] with CODE pointers to the generated NOPs. */
 extern	CODE	*curr_code;

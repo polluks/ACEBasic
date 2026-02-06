@@ -432,55 +432,18 @@ int  exprtype;
        /* get address of object */
        if (storage_item->object == subprogram) { oldlevel=lev; lev=ZERO; }
 
-       /*
-       ** For module-level variables/arrays (address == -32767),
-       ** use absolute BSS addressing instead of frame-relative.
-       */
-       if (storage_item->address == -32767)
-       {
-        if (storage_item->object == array)
-        {
-         /* Module array: use BSS pointer from libname */
-         if (storage_item->libname != NULL)
-            strcpy(addrbuf, storage_item->libname);
-         else
-            strcpy(addrbuf, "0"); /* fallback - should not happen */
-        }
-        else if (storage_item->object == variable)
-        {
-         /* Module variable: generate BSS name from var name */
-         make_modvar_bss_name(addrbuf, storage_item->name);
-        }
-        else
-        {
-         /* Other objects - use standard frame addressing */
-         gen_frame_addr(storage_item->address, addrbuf);
-        }
-       }
-       else
-       {
-        /* Normal frame-relative addressing */
-        gen_frame_addr(storage_item->address, addrbuf);
-       }
+       gen_var_addr(storage_item, addrbuf);
 
        if (storage_item->object == subprogram) lev=oldlevel;
       }
 
       switch(storage_item->object)
       {
-       case variable   : 
-	if ((storage_item->shared) && (lev == ONE) 
-           && (storage_item->type != stringtype))
-        {
-         gen("move.l",addrbuf,"a0");  /* absolute address of store */
-	 gen_pop(storage_item->type, "(a0)");
-	}
-	else
-        /* ordinary variable or shared string variable */
-        if (storage_item->type == stringtype) 
+       case variable   :
+        if (storage_item->type == stringtype)
   	   assign_to_string_variable(storage_item,MAXSTRLEN);
         else
-        gen_pop(storage_item->type, addrbuf);
+	   gen_store_var(storage_item, addrbuf, "(sp)+");
 	/* link function pointer to SUB if @SubName was assigned */
 	if (last_addr_sub_sym != NULL && storage_item->type == longtype)
 	{
@@ -880,16 +843,7 @@ SYM  *storage;
     case shorttype  : gen_rt_call("_inputshort");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.w","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
- 		           gen("move.w","d0",addrbuf);
-		      }
+			 gen_store_var(storage, addrbuf, "d0");
 		      else
 	 		 if (storage->object == array)
 			 {
@@ -904,16 +858,7 @@ SYM  *storage;
     case longtype   : gen_rt_call("_inputlong");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.l","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
-	         	   gen("move.l","d0",addrbuf);
-		      }
+			 gen_store_var(storage, addrbuf, "d0");
 		      else
 	 		 if (storage->object == array)
 			 {
@@ -928,17 +873,8 @@ SYM  *storage;
     case singletype : gen_rt_call("_inputsingle");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.l","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
-	         	   gen("move.l","d0",addrbuf);
-		      }
-		      else 
+			 gen_store_var(storage, addrbuf, "d0");
+		      else
 	 		 if (storage->object == array)
 			 {
 			  gen("move.l","d0","_long_input_temp");
@@ -1108,15 +1044,7 @@ SYM  *storage;
 
     case singletype :   gen_rt_call("_htol"); /* return LONG from (a1) */
 			if (storage->object == variable)
-			{
-		         if ((storage->shared) && (lev == ONE))
-		         {
-        		  gen("move.l",addrbuf,"a0");  /* abs addr of store */
-            		  gen("move.l","d0","(a0)");
-			 }
-			 else
- 			     gen("move.l","d0",addrbuf);
-			}
+			   gen_store_var(storage, addrbuf, "d0");
  			else
 			    if (storage->object == array)
 			       gen("move.l","d0","0(a2,d7.L)");
@@ -1126,36 +1054,20 @@ SYM  *storage;
 			gen("move.l","d0","-(sp)");
 			make_integer(singletype);
 			if (storage->object == variable)
-			{
-		         if ((storage->shared) && (lev == ONE))
-		         {
-         		  gen("move.l",addrbuf,"a0");  /* abs addr of store */
-            		  gen("move.l","(sp)+","(a0)");
-			 }
-			 else
- 			     gen("move.l","(sp)+",addrbuf);
-			}
+			   gen_store_var(storage, addrbuf, "(sp)+");
 	 		else
 			    if (storage->object == array)
-			       gen("move.l","(sp)+","0(a2,d7.L)");		 
+			       gen("move.l","(sp)+","0(a2,d7.L)");
 			break;
 
     case shorttype   :	gen_rt_call("_htol");
 			gen("move.l","d0","-(sp)");
 			make_sure_short(singletype);
 			if (storage->object == variable)
-			{
-		         if ((storage->shared) && (lev == ONE))
-		         {
-         		  gen("move.l",addrbuf,"a0");  /* abs addr of store */
-            		  gen("move.w","(sp)+","(a0)");
-			 }
-			 else
- 			     gen("move.w","(sp)+",addrbuf);
-			}
+			   gen_store_var(storage, addrbuf, "(sp)+");
 	 		else
 			    if (storage->object == array)
-			       gen("move.w","(sp)+","0(a2,d7.L)");			 
+			       gen("move.w","(sp)+","0(a2,d7.L)");
 			break;
    }
   } 

@@ -431,16 +431,7 @@ SYM  *storage;
     case shorttype  : gen_rt_call("_finputshort");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.w","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
- 		           gen("move.w","d0",addrbuf);
-		      }
+			 gen_store_var(storage, addrbuf, "d0");
 		      else
 	 		 if (storage->object == array)
 			 {
@@ -455,16 +446,7 @@ SYM  *storage;
     case longtype   : gen_rt_call("_finputlong");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.l","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
-	         	   gen("move.l","d0",addrbuf);
-		      }
+			 gen_store_var(storage, addrbuf, "d0");
 		      else
 	 		 if (storage->object == array)
 			 {
@@ -479,16 +461,7 @@ SYM  *storage;
     case singletype : gen_rt_call("_finputsingle");
 
 		      if (storage->object == variable)
-		      {
-		       if ((storage->shared) && (lev == ONE))
-		       {
-         		gen("move.l",addrbuf,"a0");  /* abs address of store */
-            		gen("move.l","d0","(a0)");
-		       }
-		       else
-			   /* ordinary variable */
-	         	   gen("move.l","d0",addrbuf);
-		      }
+			 gen_store_var(storage, addrbuf, "d0");
 		      else
 	 		 if (storage->object == array)
 			 {

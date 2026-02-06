@@ -625,6 +625,9 @@ void	gen_move_typed();
 void	gen_coerce_slots();
 void	gen_lib_call();
 void	gen_lib_open_check();
+void	gen_var_addr();
+void	gen_load_var();
+void	gen_store_var();
 
 /* basfun.c */
 BOOL	strfunc();

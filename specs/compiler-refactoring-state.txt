@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.6 - gen_lib_open_check in codegen.c
-  Branch: phase2.6-lib-open-check
+Last completed: Phase 2.7 - gen_var_addr/gen_load_var/gen_store_var in codegen.c
+  Branch: phase2.7-var-access
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -63,6 +63,21 @@ Phase 2 (codegen layer)
          intuition (2x), gfx, gadtools
        - Excluded: _startup block (uses rts instead of jmp _ABORT_PROG)
 
+  2.7: Extracted gen_var_addr/gen_load_var/gen_store_var into codegen.c
+       - gen_var_addr(item, buf): computes effective address for variable/array
+         (handles module-level address==-32767 with BSS name vs frame-relative)
+       - gen_load_var(item, srcbuf): pushes variable value, handles shared indirection
+       - gen_store_var(item, addrbuf, src): stores value to variable, handles shared indirection
+       - Replaced 2 address computation blocks: factor.c (1x), assign.c (1x)
+       - Replaced 1 variable load block: factor.c (1x)
+       - Replaced 10 variable store blocks: assign.c assign() (1x), assign.c input() (3x),
+         assign.c read_data() (3x), file.c input_from_file() (3x)
+       - Files modified: codegen.c, acedef.h, factor.c, assign.c, file.c
+       - Removed unused extern module_opt from factor.c
+       - Excluded: sub.c parse_shared_vars() (different semantics - stores address INTO frame)
+       - Excluded: basfun.c VARPTR (returns address OF variable)
+       - Excluded: input()/read_data()/input_from_file() address computation (bare gen_frame_addr)
+
 Test suite: 72/72 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4)
 
-Next step: Phase 2.7 - gen_load_var / gen_store_var
+Next step: Phase 2.8 (TBD)

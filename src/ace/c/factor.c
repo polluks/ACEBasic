@@ -64,7 +64,6 @@ extern	char 	numbuf[80];
 extern 	BOOL 	cli_args;
 extern	SYM	*last_addr_sub_sym;
 extern	int	addr[];
-extern	BOOL	module_opt;
 extern	int	labelcount;
 extern	char	tempshortname[80];
 extern	char	templongname[80];
@@ -200,36 +199,7 @@ SHORT popcount;
                /* frame address of object */
 	       if (obj == subprogram) { oldlevel=lev; lev=ZERO; }
 
-               /*
-               ** For module-level variables/arrays (address == -32767),
-               ** use absolute BSS addressing instead of frame-relative.
-               */
-               if (curr_item->address == -32767)
-               {
-                if (obj == array)
-                {
-                 /* Module array: use BSS pointer from libname */
-                 if (curr_item->libname != NULL)
-                    strcpy(srcbuf, curr_item->libname);
-                 else
-                    strcpy(srcbuf, "0"); /* fallback - should not happen */
-                }
-                else if (obj == variable)
-                {
-                 /* Module variable: generate BSS name from var name */
-                 make_modvar_bss_name(srcbuf, curr_item->name);
-                }
-                else
-                {
-                 /* Other objects - use standard frame addressing */
-                 gen_frame_addr(curr_item->address, srcbuf);
-                }
-               }
-               else
-               {
-                /* Normal frame-relative addressing */
-                gen_frame_addr(curr_item->address, srcbuf);
-               }
+               gen_var_addr(curr_item, srcbuf);
 
 	       if (obj == subprogram) lev=oldlevel;
   
@@ -240,15 +210,7 @@ SHORT popcount;
 
                if (obj == variable)		 /* variable */
                {
-                /* shared variable in SUB? */
-		if ((fact_item->shared) && (lev == ONE) && (typ != stringtype))
-                {
-		 gen("move.l",srcbuf,"a0");
-		 gen_push(typ, "(a0)");
-		}
-                else  
-		/* ordinary variable */ 
-  		gen_push(typ, srcbuf); /* push value */
+		gen_load_var(fact_item, srcbuf);
 
    		ftype=typ;
    		insymbol();
