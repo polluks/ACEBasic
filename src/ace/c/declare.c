@@ -239,8 +239,7 @@ char   strsize[20],bss_spec[40];
       enter(id,notype,structure,0);
       curr_item->other = structdef_item; /* ptr to structdef node in symtab */
 
-      itoa(-1*curr_item->address,addrbuf,10);
-      strcat(addrbuf,frame_ptr[lev]);
+      gen_frame_addr(curr_item->address,addrbuf);
 
       /* if a pointer to a structure
          make it NULL otherwise create 
@@ -436,9 +435,8 @@ SYM  *str_item;
    {
     enter(id,vartype,variable,0);
 
-    itoa(-1*curr_item->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]);
-    
+    gen_frame_addr(curr_item->address,addrbuf);
+
     insymbol();
 
     switch(vartype)

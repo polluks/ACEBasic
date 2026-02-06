@@ -789,8 +789,7 @@ BOOL linepatterncalled;
 	}
 
        	/* get address of array */
-       	itoa(-1*curr_item->address,addrbuf,10);
-       	strcat(addrbuf,frame_ptr[lev]);
+       	gen_frame_addr(curr_item->address,addrbuf);
        	gen("move.l",addrbuf,"a0");	/* start address of array */
 
        	/* size of array? */

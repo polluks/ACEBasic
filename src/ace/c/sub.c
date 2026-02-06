@@ -224,8 +224,7 @@ int   formaltype[MAXPARAMS];
     /* create temporary store in current stack frame -> don't use a global
        data object as it could be clobbered during recursion! */
     addr[lev] += 2;
-    itoa(-1*addr[lev],formaltemp[i],10);
-    strcat(formaltemp[i],frame_ptr[lev]); 
+    gen_frame_addr(addr[lev],formaltemp[i]);
     
     /* store it */
     gen("move.w","(sp)+",formaltemp[i]);
@@ -245,8 +244,7 @@ int   formaltype[MAXPARAMS];
     /* create temporary store in current stack frame -> don't use a global
        data object as it could be clobbered during recursion! */
     addr[lev] += 4;
-    itoa(-1*addr[lev],formaltemp[i],10);
-    strcat(formaltemp[i],frame_ptr[lev]); 
+    gen_frame_addr(addr[lev],formaltemp[i]);
     
     /* store it */
     gen("move.l","(sp)+",formaltemp[i]);
@@ -333,8 +331,7 @@ char  addrbuf[40];
        /* string parameter? -> associate with BSS object */
        if (curr_item->type == stringtype)  
        {
-          itoa(-1*curr_item->address,addrbuf,10);
-	  strcat(addrbuf,frame_ptr[ONE]);
+          gen_frame_addr(curr_item->address,addrbuf);
 	  gen("move.l",addrbuf,"-(sp)");  /* push value parameter */
           assign_to_string_variable(curr_item,MAXSTRLEN);
        }

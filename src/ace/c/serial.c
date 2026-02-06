@@ -191,8 +191,7 @@ char addrbuf[40];
    else    
    {
     /* get address of string pointed to by variable/array element */
-    itoa(-1*storage->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]);
+    gen_frame_addr(storage->address,addrbuf);
 
     /* pass string address to function (on stack) */
     if (storage->object == array)

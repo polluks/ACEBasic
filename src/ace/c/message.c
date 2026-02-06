@@ -144,8 +144,7 @@ char	addrbuf[40];
 					** Get address of string pointed to 
 					** by variable/array element.
 					*/
-    					itoa(-1*storage->address,addrbuf,10);
-    					strcat(addrbuf,frame_ptr[lev]);
+    					gen_frame_addr(storage->address,addrbuf);
 
     					/*
 					** Pass string address to function 

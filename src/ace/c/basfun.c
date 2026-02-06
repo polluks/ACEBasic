@@ -907,8 +907,7 @@ char varptr_obj_name[MAXIDSIZE];
 
 	   /* Store function address in a temp */
 	   addr[lev] += 4;
-	   itoa(-1*addr[lev], functemp, 10);
-	   strcat(functemp, lev == 0 ? "(a4)" : "(a5)");
+	   gen_frame_addr(addr[lev], functemp);
 	   gen("move.l", "(sp)+", functemp);
 
 	   /* Parse and evaluate bound arguments */
@@ -939,9 +938,7 @@ char varptr_obj_name[MAXIDSIZE];
 
 	     /* Store in temp */
 	     addr[lev] += 4;
-	     itoa(-1*addr[lev], boundtemps[bound_count], 10);
-	     strcat(boundtemps[bound_count],
-	            lev == 0 ? "(a4)" : "(a5)");
+	     gen_frame_addr(addr[lev], boundtemps[bound_count]);
 	     gen("move.l", "(sp)+", boundtemps[bound_count]);
 
 	     bound_count++;

@@ -1,7 +1,7 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.1 - gen_rt_call() in new codegen.c
+Last completed: Phase 2.2 - gen_frame_addr() in codegen.c
   Branch: phase2-codegen
 
 Phase 1 (all 6 steps) - merged to master
@@ -21,7 +21,14 @@ Phase 2 (codegen layer)
          serial.c, menu.c, libfunc.c, message.c, event.c, gadget.c, print.c,
          gfx.c, assign.c, file.c, expr.c, factor.c, statement.c, basfun.c
        - LVO calls through (a6), indirect (a0), and dynamic name calls excluded
+  2.2: Extracted gen_frame_addr(address, buf) into codegen.c
+       - Wraps itoa(-1*address, buf, 10) + strcat(buf, frame_ptr[lev])
+       - Added extern int lev to codegen.c, prototype in acedef.h
+       - Replaced ~46 occurrences across 12 source files
+       - Files modified: assign.c, statement.c, factor.c, sub.c, file.c,
+         declare.c, misc.c, basfun.c, control.c, gfx.c, serial.c, message.c
+       - Excluded: sub.c parse_shared_vars() hardcoded (a4)/(a5) for cross-level sharing
 
 Test suite: 118/118 pass
 
-Next step: Phase 2.2 - additional codegen helpers (gen_push_long, gen_pop, etc.)
+Next step: Phase 2.3 - additional codegen helpers

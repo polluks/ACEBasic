@@ -227,15 +227,13 @@ SHORT popcount;
                 else
                 {
                  /* Other objects - use standard frame addressing */
-                 itoa(-1*curr_item->address,srcbuf,10);
-                 strcat(srcbuf,frame_ptr[lev]);
+                 gen_frame_addr(curr_item->address, srcbuf);
                 }
                }
                else
                {
                 /* Normal frame-relative addressing */
-                itoa(-1*curr_item->address,srcbuf,10);
-                strcat(srcbuf,frame_ptr[lev]);
+                gen_frame_addr(curr_item->address, srcbuf);
                }
 
 	       if (obj == subprogram) lev=oldlevel;
@@ -491,16 +489,14 @@ SHORT popcount;
 	       if (invoke_sub->p_type[bound_count + ci] == shorttype)
 	       {
 	        addr[lev] += 2;
-	        itoa(-1*addr[lev], formaltemp[bound_count + ci], 10);
-	        strcat(formaltemp[bound_count + ci], frame_ptr[lev]);
+	        gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
 	        gen("move.w", "(sp)+", formaltemp[bound_count + ci]);
 	        formaltype[bound_count + ci] = shorttype;
 	       }
 	       else
 	       {
 	        addr[lev] += 4;
-	        itoa(-1*addr[lev], formaltemp[bound_count + ci], 10);
-	        strcat(formaltemp[bound_count + ci], frame_ptr[lev]);
+	        gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
 	        gen("move.l", "(sp)+", formaltemp[bound_count + ci]);
 	        formaltype[bound_count + ci] = longtype;
 	       }
@@ -522,8 +518,7 @@ SHORT popcount;
 	    }
 
 	    /* Load closure record address */
-	    itoa(-1*invoke_item->address, addrtmp, 10);
-	    strcat(addrtmp, frame_ptr[lev]);
+	    gen_frame_addr(invoke_item->address, addrtmp);
 	    gen("move.l", addrtmp, "a2");
 
 	    /* Read bound args from closure record into temps.
@@ -540,16 +535,14 @@ SHORT popcount;
 	     {
 	      /* Stored as long, load as long then truncate later */
 	      addr[lev] += 4;
-	      itoa(-1*addr[lev], formaltemp[ci], 10);
-	      strcat(formaltemp[ci], frame_ptr[lev]);
+	      gen_frame_addr(addr[lev], formaltemp[ci]);
 	      gen("move.l", offsettmp, formaltemp[ci]);
 	      formaltype[ci] = shorttype; /* mark for short copy later */
 	     }
 	     else
 	     {
 	      addr[lev] += 4;
-	      itoa(-1*addr[lev], formaltemp[ci], 10);
-	      strcat(formaltemp[ci], frame_ptr[lev]);
+	      gen_frame_addr(addr[lev], formaltemp[ci]);
 	      gen("move.l", offsettmp, formaltemp[ci]);
 	      formaltype[ci] = longtype;
 	     }
@@ -590,8 +583,7 @@ SHORT popcount;
 	    }
 
 	    /* Call through closure's function pointer */
-	    itoa(-1*invoke_item->address, addrtmp, 10);
-	    strcat(addrtmp, frame_ptr[lev]);
+	    gen_frame_addr(invoke_item->address, addrtmp);
 	    gen("move.l", addrtmp, "a2");
 	    gen("move.l", "4(a2)", "a0");
 	    gen("jsr", "(a0)", "  ");
@@ -616,8 +608,7 @@ SHORT popcount;
 
 	   if (invoke_sub->no_of_params > 0) load_params(invoke_sub);
 
-	   itoa(-1*invoke_item->address,buf,10);
-	   strcat(buf,frame_ptr[lev]);
+	   gen_frame_addr(invoke_item->address, buf);
 	   gen("move.l",buf,"a0");
 	   gen("jsr","(a0)","  ");
 
@@ -625,8 +616,7 @@ SHORT popcount;
 	   if (invoke_sub->address != extfunc)
 	   {
 	    oldlevel=lev; lev=ZERO;
-	    itoa(-1*invoke_sub->address,srcbuf,10);
-	    strcat(srcbuf,frame_ptr[ZERO]);
+	    gen_frame_addr(invoke_sub->address, srcbuf);
 	    lev=oldlevel;
 	    if (invoke_sub->type == shorttype)
 	       gen("move.w",srcbuf,"-(sp)");
@@ -698,8 +688,7 @@ SHORT popcount;
 	   }
 
 	   /* Load function pointer/closure address into a2 */
-	   itoa(-1*invoke_item->address, buf, 10);
-	   strcat(buf, frame_ptr[lev]);
+	   gen_frame_addr(invoke_item->address, buf);
 	   gen("move.l", buf, "a2");
 
 	   /* Check for CLSR magic */

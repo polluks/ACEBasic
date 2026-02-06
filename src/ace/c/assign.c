@@ -193,8 +193,7 @@ char numbuf[10],addrbuf[20];
  enter_BSS(stringvarlabel,bss_size);
 
  /* store bss object address in stack frame */
- itoa(-1*string_item->address,addrbuf,10);
- strcat(addrbuf,frame_ptr[lev]);
+ gen_frame_addr(string_item->address, addrbuf);
 
  gen("pea",stringvarname,"  ");
  gen("move.l","(sp)+",addrbuf); 
@@ -210,8 +209,7 @@ int string_size;
 char addrbuf[20],buf[80];
 
  /* get stack frame address holder */
- itoa(-1*string_item->address,addrbuf,10);
- strcat(addrbuf,frame_ptr[lev]);
+ gen_frame_addr(string_item->address, addrbuf);
 
  if (string_item->new_string_var)
  {
@@ -317,8 +315,7 @@ int    exprtype,storetype;
      else
      {
       /* address of structure */
-      ltoa(-1*item->address,addrbuf,10);
-      strcat(addrbuf,frame_ptr[lev]);
+      gen_frame_addr(item->address, addrbuf);
 
       if (item->shared && lev == ONE)
       {
@@ -371,8 +368,7 @@ int    exprtype,storetype;
    else
    { 
     /* address of structure */
-    ltoa(-1*item->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]);
+    gen_frame_addr(item->address, addrbuf);
     
     if (item->shared && lev == ONE)
     {     
@@ -458,15 +454,13 @@ int  exprtype;
         else
         {
          /* Other objects - use standard frame addressing */
-         itoa(-1*storage_item->address,addrbuf,10);
-         strcat(addrbuf,frame_ptr[lev]);
+         gen_frame_addr(storage_item->address, addrbuf);
         }
        }
        else
        {
         /* Normal frame-relative addressing */
-        itoa(-1*storage_item->address,addrbuf,10);
-        strcat(addrbuf,frame_ptr[lev]);
+        gen_frame_addr(storage_item->address, addrbuf);
        }
 
        if (storage_item->object == subprogram) lev=oldlevel;
@@ -681,9 +675,8 @@ do
 
     max_element = max_array_ndx(array_item); /* number of linear elements */
 
-    /* frame address to hold array pointer */  
-    itoa(-1*array_item->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]);
+    /* frame address to hold array pointer */
+    gen_frame_addr(array_item->address, addrbuf);
 
     insymbol();
 
@@ -892,9 +885,8 @@ SYM  *storage;
 
    storage = curr_item;
 
-   itoa(-1*storage->address,addrbuf,10);
-   strcat(addrbuf,frame_ptr[lev]); 
-  
+   gen_frame_addr(storage->address, addrbuf);
+
    /* ALL data types need a temporary string */
    make_temp_string();
    if (storage->type != stringtype)
@@ -1108,9 +1100,8 @@ SYM  *storage;
 
    storage=curr_item;  /* save storage item information */
 
-   itoa(-1*storage->address,addrbuf,10);
-   strcat(addrbuf,frame_ptr[lev]); 
-  
+   gen_frame_addr(storage->address, addrbuf);
+
    /* is it an array? (this must already have been dimensioned!) */
    if (storage->object == array)
    {

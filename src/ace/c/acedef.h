@@ -618,6 +618,7 @@ void	add_struct_member();
 
 /* codegen.c */
 void	gen_rt_call();
+void	gen_frame_addr();
 
 /* basfun.c */
 BOOL	strfunc();

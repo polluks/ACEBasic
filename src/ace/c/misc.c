@@ -338,8 +338,7 @@ int    mbr_type=undefined;
     mbr_type = member->type;
 
     /* address of structure */
-    itoa(-1*item->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]);
+    gen_frame_addr(item->address,addrbuf);
 
     if (item->shared && lev == ONE)
     {
@@ -384,8 +383,7 @@ int    mbr_type=undefined;
  else
  {
   /* push address of structure */
-  itoa(-1*item->address,addrbuf,10);
-  strcat(addrbuf,frame_ptr[lev]);
+  gen_frame_addr(item->address,addrbuf);
 
   if (item->shared && lev == ONE) 
   {

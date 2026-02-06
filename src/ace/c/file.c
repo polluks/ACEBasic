@@ -158,8 +158,7 @@ SYM  *storage;
     else    
     {
      /* get address of string pointed to by variable/array element */
-     itoa(-1*storage->address,addrbuf,10);
-     strcat(addrbuf,frame_ptr[lev]);
+     gen_frame_addr(storage->address,addrbuf);
 
      /* pass filenumber (d0) and string address (a0) to function */
      if (storage->object == array)
@@ -413,9 +412,8 @@ SYM  *storage;
 
     storage = curr_item;
 
-    itoa(-1*storage->address,addrbuf,10);
-    strcat(addrbuf,frame_ptr[lev]); 
-  
+    gen_frame_addr(storage->address,addrbuf);
+
     /* ALL data types need a temporary string pointer in a1 */
     make_temp_string();
     gen("lea",tempstrname,"a0");  /* unique temp holder */
@@ -625,7 +623,7 @@ char addrbuf[40], sizebuf[10];
 	/*
 	** Push address held by structure variable.
 	*/
-	sprintf(addrbuf,"%d%s",-1*structVar->address, frame_ptr[lev]);
+	gen_frame_addr(structVar->address, addrbuf);
 	if (structVar->shared && lev == ONE)
 	{
 		/*

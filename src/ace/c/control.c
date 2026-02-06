@@ -508,9 +508,8 @@ int  exprtype;
      _error(4);   /* type mismatch */
   else
      {
-      /* get address of object */ 
-      itoa(-1*storage_item->address,addr,10);
-      strcat(addr,frame_ptr[lev]);
+      /* get address of object */
+      gen_frame_addr(storage_item->address,addr);
 
       if (storage_item->type == shorttype)
       gen("move.w","(sp)+",addr);

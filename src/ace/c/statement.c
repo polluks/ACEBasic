@@ -443,8 +443,7 @@ SHORT popcount;
            { mc_item->no_of_params=0; need_symbol=FALSE; }
 
        /* call routine */
-       itoa(-1*mc_item->address,addrbuf,10);
-       strcat(addrbuf,frame_ptr[lev]);
+       gen_frame_addr(mc_item->address, addrbuf);
        gen("move.l",addrbuf,"a0");
        gen("jsr","(a0)","  ");
        /* pop parameters? */
@@ -735,16 +734,14 @@ SHORT popcount;
          if (invoke_sub->p_type[bound_count + ci] == shorttype)
          {
           addr[lev] += 2;
-          itoa(-1*addr[lev], formaltemp[bound_count + ci], 10);
-          strcat(formaltemp[bound_count + ci], frame_ptr[lev]);
+          gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
           gen("move.w", "(sp)+", formaltemp[bound_count + ci]);
           formaltype[bound_count + ci] = shorttype;
          }
          else
          {
           addr[lev] += 4;
-          itoa(-1*addr[lev], formaltemp[bound_count + ci], 10);
-          strcat(formaltemp[bound_count + ci], frame_ptr[lev]);
+          gen_frame_addr(addr[lev], formaltemp[bound_count + ci]);
           gen("move.l", "(sp)+", formaltemp[bound_count + ci]);
           formaltype[bound_count + ci] = longtype;
          }
@@ -765,8 +762,7 @@ SHORT popcount;
       }
 
       /* Load closure record address */
-      itoa(-1*invoke_item->address, addrtmp, 10);
-      strcat(addrtmp, frame_ptr[lev]);
+      gen_frame_addr(invoke_item->address, addrtmp);
       gen("move.l", addrtmp, "a2");
 
       /* Read bound args from closure record into temps.
@@ -782,16 +778,14 @@ SHORT popcount;
        if (invoke_sub->p_type[ci] == shorttype)
        {
         addr[lev] += 4;
-        itoa(-1*addr[lev], formaltemp[ci], 10);
-        strcat(formaltemp[ci], frame_ptr[lev]);
+        gen_frame_addr(addr[lev], formaltemp[ci]);
         gen("move.l", offsettmp, formaltemp[ci]);
         formaltype[ci] = shorttype;
        }
        else
        {
         addr[lev] += 4;
-        itoa(-1*addr[lev], formaltemp[ci], 10);
-        strcat(formaltemp[ci], frame_ptr[lev]);
+        gen_frame_addr(addr[lev], formaltemp[ci]);
         gen("move.l", offsettmp, formaltemp[ci]);
         formaltype[ci] = longtype;
        }
@@ -831,8 +825,7 @@ SHORT popcount;
       }
 
       /* Call through closure's function pointer */
-      itoa(-1*invoke_item->address, addrtmp, 10);
-      strcat(addrtmp, frame_ptr[lev]);
+      gen_frame_addr(invoke_item->address, addrtmp);
       gen("move.l", addrtmp, "a2");
       gen("move.l", "4(a2)", "a0");
       gen("jsr", "(a0)", "  ");
@@ -847,8 +840,7 @@ SHORT popcount;
      /* SUB calling convention (load_params) */
      if (invoke_item->other->no_of_params > 0) load_params(invoke_item->other);
 
-     itoa(-1*invoke_item->address,addrbuf,10);
-     strcat(addrbuf,frame_ptr[lev]);
+     gen_frame_addr(invoke_item->address, addrbuf);
      gen("move.l",addrbuf,"a0");
      gen("jsr","(a0)","  ");
 
@@ -908,8 +900,7 @@ SHORT popcount;
      }
 
      /* Load function pointer/closure address into a2 */
-     itoa(-1*invoke_item->address, addrbuf, 10);
-     strcat(addrbuf, frame_ptr[lev]);
+     gen_frame_addr(invoke_item->address, addrbuf);
      gen("move.l", addrbuf, "a2");
 
      /* Check for CLSR magic */
@@ -1217,8 +1208,7 @@ SHORT popcount;
         else
            {
 	    /* get address of array from stack frame */
-            itoa(-1*curr_item->address,addrbuf,10);
-            strcat(addrbuf,frame_ptr[lev]);
+            gen_frame_addr(curr_item->address, addrbuf);
 	    gen("move.l",addrbuf,"-(sp)"); /* push address of mode-array */
 	    /* SIZE of array not checked here! (must be >= 9 elements) */
            } 
