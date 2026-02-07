@@ -31,7 +31,7 @@ totalSkip = 0
 
 /* Categories to test */
 IF category = 'all' THEN
-    categories = 'syntax arithmetic floats control subs errors screens gtgadgets legacygadgets assert callback closures'
+    categories = 'syntax arithmetic floats control subs errors screens gtgadgets legacygadgets assert callback closures strings math logic fileio memory'
 ELSE
     categories = category
 
