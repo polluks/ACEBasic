@@ -213,6 +213,53 @@ SYM  *item;
  }
 }
 
+/*-----------------------------------*/
+/* handle pointer dereference assign */
+/*-----------------------------------*/
+
+static void handle_pointer_assign(pointer_sym)
+int pointer_sym;
+{
+ char *move_instr;
+ int statetype;
+
+ if (pointer_sym == shortpointer)
+    move_instr = "move.w";
+ else
+    move_instr = "move.l";
+
+ insymbol();
+ if (expr() != longtype)  /* address */
+    _error(4);
+ else
+ {
+  if (sym != becomes)
+     _error(5);
+  else
+  {
+   insymbol();
+   /* coerce expression to target type */
+   switch (pointer_sym)
+   {
+    case shortpointer:
+       make_sure_short(expr());
+       break;
+    case longpointer:
+       if ((statetype=make_integer(expr())) == notype)
+       { _error(4); return; }
+       if (statetype == shorttype) make_long();
+       break;
+    case singlepointer:
+       gen_Flt(expr());
+       break;
+   }
+   gen(move_instr,"(sp)+","d0");  /* pop expression */
+   gen("move.l","(sp)+","a0");    /* pop address */
+   gen(move_instr,"d0","(a0)");   /* store expression */
+  }
+ }
+}
+
 /*-----------*/
 /* statement */
 /*-----------*/
@@ -1456,73 +1503,16 @@ SHORT popcount;
   handle_inc_dec(FALSE);
  else
  /* *%<address> = <expr> */
- if (sym == shortpointer) 
- { 
-  insymbol();
-  if (expr() != longtype)  /* address */
-     _error(4);
-  else
-  {
-   if (sym != becomes)
-      _error(5);
-   else
-   {
-    insymbol();
-    make_sure_short(expr());  
-    gen("move.w","(sp)+","d0");  /* pop expression */ 
-    gen("move.l","(sp)+","a0");  /* pop address */
-    gen("move.w","d0","(a0)");   /* store expression */
-   }
-  }
- }
+ if (sym == shortpointer)
+  handle_pointer_assign(shortpointer);
  else
  /* *&<address> = <expr> */
- if (sym == longpointer) 
- { 
-  insymbol();
-  if (expr() != longtype)  /* address */
-     _error(4);
-  else
-  {
-   if (sym != becomes)
-      _error(5);
-   else
-   {
-    insymbol();
-    if ((statetype=make_integer(expr())) == notype)
-       _error(4);
-    else 
-    {
-     /* statetype is either short or long now */
-     if (statetype == shorttype) make_long();
-     gen("move.l","(sp)+","d0");  /* pop expression */ 
-     gen("move.l","(sp)+","a0");  /* pop address */
-     gen("move.l","d0","(a0)");   /* store expression */
-    }
-   }
-  }
- }
+ if (sym == longpointer)
+  handle_pointer_assign(longpointer);
  else
  /* *!<address> = <expr> */
- if (sym == singlepointer) 
- { 
-  insymbol();
-  if (expr() != longtype)  /* address */
-     _error(4);
-  else
-  {
-   if (sym != becomes)
-      _error(5);
-   else
-   {
-    insymbol();
-    gen_Flt(expr());
-    gen("move.l","(sp)+","d0");  /* pop expression */ 
-    gen("move.l","(sp)+","a0");  /* pop address */
-    gen("move.l","d0","(a0)");   /* store expression */
-   }
-  }
- }
+ if (sym == singlepointer)
+  handle_pointer_assign(singlepointer);
  else
  /* feature not implemented? */  
  if (obj == rsvd_word) { _error(68); insymbol(); }

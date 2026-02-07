@@ -85,6 +85,12 @@ Phase 3 (parser decomposition)
        - Parameterizes add/sub and SPAdd/SPSub based on BOOL flag
        - Removed unused inc_item/dec_item locals from statement()
 
-Test suite: 72/72 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4)
+  3.2: Extracted pointer dereference assignment in statement.c
+       - Extracted static handle_pointer_assign(pointer_sym) function
+       - Replaces ~68 duplicated lines (3 handlers for *%, *&, *!) with shared function + 3 one-line calls
+       - Parameterizes move_instr (move.w/move.l) and coercion (make_sure_short/make_integer+make_long/gen_Flt)
+       - Net savings: ~17 lines, eliminates structural duplication
 
-Next step: Phase 3.2 - Extract pointer dereference assignment
+Test suite: 74/74 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4, assert 2)
+
+Next step: Phase 3.3 - TBD
