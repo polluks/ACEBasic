@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 2.7 - gen_var_addr/gen_load_var/gen_store_var in codegen.c
-  Branch: phase2.7-var-access
+Last completed: Phase 3.1 - Merge increment/decrement handlers
+  Branch: phase3.1-inc-dec
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -12,7 +12,7 @@ Phase 1 (all 6 steps) - merged to master
   1.5: Extracted sym_to_type() in misc.c, replaced 9 switch blocks
   1.6: Changed structmem_exist() to return STRUCM*, replaced 2 manual loops
 
-Phase 2 (codegen layer)
+Phase 2 (codegen layer) - merged to master
   2.1: Created codegen.c with gen_rt_call(funcname) - wraps gen("jsr",...)+enter_XREF()
        - New file: src/ace/c/codegen.c
        - Prototype in acedef.h, added to Makefile-ace SOURCES
@@ -78,6 +78,13 @@ Phase 2 (codegen layer)
        - Excluded: basfun.c VARPTR (returns address OF variable)
        - Excluded: input()/read_data()/input_from_file() address computation (bare gen_frame_addr)
 
+Phase 3 (parser decomposition)
+  3.1: Merged increment/decrement handlers in statement.c
+       - Extracted static handle_inc_dec(is_increment) function
+       - Replaces ~95 duplicated lines with 55-line shared function + 2 one-line calls
+       - Parameterizes add/sub and SPAdd/SPSub based on BOOL flag
+       - Removed unused inc_item/dec_item locals from statement()
+
 Test suite: 72/72 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4)
 
-Next step: Phase 2.8 (TBD)
+Next step: Phase 3.2 - Extract pointer dereference assignment

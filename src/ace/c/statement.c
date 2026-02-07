@@ -158,6 +158,61 @@ char label_lab[50];
     lev=oldlevel;
 }
 
+/*-----------------------------------*/
+/* handle ++ (increment) and -- (decrement) */
+/*-----------------------------------*/
+
+static void handle_inc_dec(is_increment)
+BOOL is_increment;
+{
+char ext_name[MAXIDSIZE+1];
+SYM  *item;
+
+ insymbol();
+ if (sym != ident)
+    _error(7);
+ else
+ {
+   /* it may be an external variable */
+   make_ext_name(ext_name,ut_id);
+
+   if ((!exist(id,variable)) && (!exist(ext_name,extvar)))
+      _error(19); /* simple variable expected */
+   else
+   {
+    item=curr_item;
+    if (item->type == stringtype)
+       _error(4);
+    else
+    {
+     /* get address of variable */
+     address_of_object();
+     gen("move.l","(sp)+","a0");
+
+     /* increment or decrement by 1 */
+     switch(item->type)
+     {
+      case shorttype  : gen(is_increment ? "add.w" : "sub.w","#1","(a0)");
+     		       break;
+
+      case longtype   : gen(is_increment ? "add.l" : "sub.l","#1","(a0)");
+     		       break;
+
+      case singletype : gen("movea.l","_MathBase","a6");
+			       gen("move.l","(a0)","d0");
+			       gen("move.l","#$80000041","d1");
+			       gen("jsr",is_increment ? "_LVOSPAdd(a6)" : "_LVOSPSub(a6)","  ");
+			       gen("move.l","d0","(a0)");
+			       enter_XREF("_MathBase");
+			       enter_XREF(is_increment ? "_LVOSPAdd" : "_LVOSPSub");
+			       break;
+     }
+    }
+   }
+   insymbol();
+ }
+}
+
 /*-----------*/
 /* statement */
 /*-----------*/
@@ -171,7 +226,7 @@ int   commandsym;
 int   oldobj,oldtyp,stype;
 int   statetype;
 int   oldlevel;
-SYM   *func_item,*sub_item,*mc_item,*inc_item,*dec_item,*invoke_item;
+SYM   *func_item,*sub_item,*mc_item,*invoke_item;
 BOOL  need_symbol=TRUE;
 int   i;
 SHORT popcount;
@@ -1392,101 +1447,13 @@ SHORT popcount;
  /* write */
  if (sym == writesym) { check_for_event(); write_to_file(); }
  else
- /* ++ */
+/* ++ */
  if (sym == increment)
- { 
-   insymbol();
-                if (sym != ident)
-     		   _error(7);
-  	        else
-  		{
-		  /* it may be an external variable */
-		  make_ext_name(ext_name,ut_id);
-
-		  if ((!exist(id,variable)) && (!exist(ext_name,extvar)))
-		     _error(19); /* simple variable expected */
-		  else
-		  {
-		   inc_item=curr_item;
-		   if (inc_item->type == stringtype)
-		      _error(4);
-		   else
-		   {
-		    /* get address of variable */
-		    address_of_object();
-		    gen("move.l","(sp)+","a0");
-
-		    /* increment it by 1 */
-		    switch(inc_item->type)
-		    {
-		     case shorttype  : gen("add.w","#1","(a0)");
-		     		       break;
-
-		     case longtype   : gen("add.l","#1","(a0)");
-		     		       break;
-
-		     case singletype : gen("movea.l","_MathBase","a6");
-				       gen("move.l","(a0)","d0");
-				       gen("move.l","#$80000041","d1");
-				       gen("jsr","_LVOSPAdd(a6)","  ");
-				       gen("move.l","d0","(a0)");
-				       enter_XREF("_MathBase");
-				       enter_XREF("_LVOSPAdd");
-				       break;
-		    }
- 		   }
- 		  }
-		 insymbol();
-		} 
- }		 
+  handle_inc_dec(TRUE);
  else
  /* -- */
  if (sym == decrement)
- { 
-   insymbol();
-                if (sym != ident)
-     		   _error(7);
-  	        else
-  		{
-		  /* it may be an external variable */
-		  make_ext_name(ext_name,ut_id);
-
-		  if ((!exist(id,variable)) && (!exist(ext_name,extvar)))
-		     _error(19); /* simple variable expected */
-		  else
-		  {
-		   dec_item=curr_item;
-		   if (dec_item->type == stringtype)
-		      _error(4);
-		   else
-		   {
-		    /* get address of variable */
-		    address_of_object();
-		    gen("move.l","(sp)+","a0");
-
-		    /* increment it by 1 */
-		    switch(dec_item->type)
-		    {
-		     case shorttype  : gen("sub.w","#1","(a0)");
-		     		       break;
-
-		     case longtype   : gen("sub.l","#1","(a0)");
-		     		       break;
-
-		     case singletype : gen("movea.l","_MathBase","a6");
-				       gen("move.l","(a0)","d0");
-				       gen("move.l","#$80000041","d1");
-				       gen("jsr","_LVOSPSub(a6)","  ");
-				       gen("move.l","d0","(a0)");
-				       enter_XREF("_MathBase");
-				       enter_XREF("_LVOSPSub");
-				       break;
-		    }
- 		   }
- 		  }
- 		 insymbol();
-		} 
- }		 
+  handle_inc_dec(FALSE);
  else
  /* *%<address> = <expr> */
  if (sym == shortpointer) 
