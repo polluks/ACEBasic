@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 3.4 - Break up statement()
-  Branch: phase3.4-statement-breakup
+Last completed: Phase 3.5 - Break up factor()
+  Branch: phase3.5-factor-breakup
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -123,6 +123,19 @@ Phase 3 (parser decomposition)
        - All new functions are static (no acedef.h changes needed)
        - Small inline blocks (<10 lines) kept inline for readability
 
+  3.5: Break up factor() into dispatcher with static handler functions
+       - Extracted 2 static handler functions from factor()'s switch/case
+       - handle_ident_factor (~184 lines): ident sym - variable, structure, constant,
+         extvar, subprogram, function, extfunc, array lookup and code generation
+       - handle_parameterless (~129 lines): all 15 parameterless functions
+         (argcount, chipset, csrlin, date$, day, err, heading, inkey$, pos,
+         rnd, system, timer, time$, xcor, ycor)
+       - factor() locals reduced from 10 declarations to 3 (buf, ftype, invoke_item)
+       - factor() is now a clean dispatcher (~100 lines, down from ~400)
+       - Small inline cases kept: constants, lparen, atsymbol, invokesym
+       - Removed 10 unused extern declarations from factor.c
+       - All new functions are static (no acedef.h changes needed)
+
 Test suite: 178/178 pass
 
-Next step: Phase 3.5 - TBD
+Next step: Phase 3.6 - Further decomposition (optional)

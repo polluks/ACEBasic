@@ -4,7 +4,7 @@
 
    ** Parser: Factor code **
    ** Copyright (C) 1998 David Benn
-   ** 
+   **
    ** This program is free software; you can redistribute it and/or
    ** modify it under the terms of the GNU General Public License
    ** as published by the Free Software Foundation; either version 2
@@ -21,8 +21,8 @@
 
    Author: David J Benn
      Date: 26th October-30th November, 1st-13th December 1991,
-	   14th,20th-27th January 1992, 
-           2nd-17th, 21st-29th February 1992, 
+	   14th,20th-27th January 1992,
+           2nd-17th, 21st-29th February 1992,
 	   1st,13th,14th,22nd,23rd March 1992,
 	   21st,22nd April 1992,
 	   2nd,3rd,11th,15th,16th May 1992,
@@ -47,34 +47,24 @@
 extern	int	sym;
 extern	int	obj;
 extern	int	typ;
-extern	char   	id[MAXIDSIZE]; 
+extern	char   	id[MAXIDSIZE];
 extern	char   	ut_id[MAXIDSIZE];
 extern	SHORT  	shortval;
-extern	LONG   	longval; 
+extern	LONG   	longval;
 extern	LONG   singleval;
 extern	char   	stringval[MAXSTRLEN];
 extern	SYM	*curr_item;
-extern	CODE	*curr_code;
-extern	SHORT	dimsize[255];
-extern	BOOL	end_of_source;
-extern	FILE	*dest;
-extern	char	ch;
 extern	int  	lev;
 extern	char 	numbuf[80];
 extern 	BOOL 	cli_args;
-extern	SYM	*last_addr_sub_sym;
-extern	int	addr[];
-extern	int	labelcount;
-extern	char	tempshortname[80];
-extern	char	templongname[80];
 
 /* functions */
 BOOL factorfunc()
 {
-/* 
+/*
 ** Return TRUE if fsym is in the list of
-** functions (generally parameterless) 
-** found in factor(). 
+** functions (generally parameterless)
+** found in factor().
 ** PRINT needs this information.
 */
 
@@ -99,55 +89,16 @@ BOOL factorfunc()
   }
 }
 
-int factor()
+static int handle_ident_factor()
 {
-char buf[80],srcbuf[80],strname[80],strlabel[80],sub_name[80];
+char srcbuf[80],sub_name[80];
 char func_name[MAXIDSIZE];
 char ext_name[MAXIDSIZE+1];
-char *strbuf;
 int  ftype=undefined;
 int  arraytype=undefined;
 SYM  *fact_item;
-SYM  *invoke_item;
 int  oldlevel;
 BOOL need_symbol;
-
- ftype=stringfunction();
- if (ftype != undefined) return(ftype);
-
- ftype=numericfunction();
- if (ftype != undefined) return(ftype);
-
- switch(sym)
- {
-  case shortconst  : sprintf(numbuf,"#%d",shortval);
-                     gen("move.w",numbuf,"-(sp)");
-                     ftype=typ;
-                     insymbol();
-                     return(ftype);
-                     break;
-
-  case longconst   : sprintf(numbuf,"#%ld",longval);
-       		     gen("move.l",numbuf,"-(sp)");
-                     ftype=typ;
-                     insymbol();
-                     return(ftype);
-                     break;
-
-  case singleconst : sprintf(numbuf,"#$%lx",singleval);
-       		     gen("move.l",numbuf,"-(sp)");
-                     ftype=typ;
-       		     insymbol();
-                     return(ftype);
-                     break;
-  
-  case stringconst : make_string_const(stringval);
-       		     ftype=typ;
-       		     insymbol();
-                     return(ftype);
-       		     break;
-
-  case ident : /* does object exist? */
 
 	       /* in case it's a subprogram */
   	       strcpy(sub_name,"_SUB_");
@@ -160,35 +111,35 @@ BOOL need_symbol;
 	       make_ext_name(ext_name,ut_id);
 
 	       /* what sort of object is it? */
-	       if (exist(id,array)) 
+	       if (exist(id,array))
                   { obj=array; arraytype=typ=curr_item->type; }
                else
-                if (exist(sub_name,subprogram)) 
+                if (exist(sub_name,subprogram))
        	 	   { obj=subprogram; typ=curr_item->type; }
 	       else
-                if (exist(sub_name,definedfunc)) 
+                if (exist(sub_name,definedfunc))
        	 	   { obj=definedfunc; typ=curr_item->type; }
                else
-                if (exist(func_name,function)) 
+                if (exist(func_name,function))
        	 	   { obj=function; typ=curr_item->type; }
-	       else		
-		if (exist(ext_name,extfunc)) 
-		   { obj=extfunc; typ=curr_item->type; } 
 	       else
-		if (exist(ext_name,extvar)) 
-		   { obj=extvar; typ=curr_item->type; }	
+		if (exist(ext_name,extfunc))
+		   { obj=extfunc; typ=curr_item->type; }
 	       else
-		if (exist(id,structure)) obj=structure; 
+		if (exist(ext_name,extvar))
+		   { obj=extvar; typ=curr_item->type; }
+	       else
+		if (exist(id,structure)) obj=structure;
                else
-		if (exist(id,constant)) 
-		   { obj=constant; typ=curr_item->type; } 
+		if (exist(id,constant))
+		   { obj=constant; typ=curr_item->type; }
 	       else
 	        if (exist(id,obj))    /* obj == variable? */
 		   typ=curr_item->type;
                else
 		  {
 		   /* object doesn't exist so create a default variable */
-		   enter(id,typ,obj,0);  
+		   enter(id,typ,obj,0);
 		  }
 
 	       fact_item=curr_item;
@@ -199,8 +150,8 @@ BOOL need_symbol;
                gen_var_addr(curr_item, srcbuf);
 
 	       if (obj == subprogram) lev=oldlevel;
-  
-               /* 
+
+               /*
 	       ** what sort of object? -> constant,variable,subprogram,
 	       ** function (library,external,defined),array,structure.
 	       */
@@ -223,7 +174,7 @@ BOOL need_symbol;
 	       else
    	       if (obj == constant)  /* defined constant */
 	       {
-		push_num_constant(typ,fact_item); 
+		push_num_constant(typ,fact_item);
 		ftype=typ;
 		insymbol();
 	  	if (sym == lparen) _error(71);  /* undimensioned array? */
@@ -233,12 +184,12 @@ BOOL need_symbol;
 		if (obj == extvar)  /* external variable */
 		{
 		 if (typ == shorttype)
-		    /* short integer */	
+		    /* short integer */
 		    gen("move.w",ext_name,"-(sp)");
 		 else
 		 if (typ == stringtype)
 		    /* string */
-		    gen("pea",ext_name,"  ");		 
+		    gen("pea",ext_name,"  ");
 		 else
 		    /* long integer, single-precision */
 		    gen("move.l",ext_name,"-(sp)");
@@ -287,7 +238,7 @@ BOOL need_symbol;
   		 ftype=fact_item->type;
    		 insymbol();
    		 return(ftype);
-	        }		 
+	        }
   		else
 	        if (obj == extfunc)
                 {
@@ -312,7 +263,7 @@ BOOL need_symbol;
 		  /* push start address of string within BSS object */
 		  gen("adda.l","d7","a0");
 		  gen("move.l","a0","-(sp)");
-		 }   
+		 }
  		 else
 		 gen_push(arraytype, "0(a0,d7.L)");
 
@@ -320,14 +271,184 @@ BOOL need_symbol;
    		 insymbol();
    		 return(ftype);
 		}
-  		break;
+
+	       return(undefined);
+}
+
+static int handle_parameterless()
+{
+int ftype;
+
+ switch(sym)
+ {
+  case argcountsym : gen_rt_call("_argcount");
+		     gen("move.l","d0","-(sp)");
+		     ftype=longtype;
+		     cli_args=TRUE;
+		     insymbol();
+		     return(ftype);
+
+  case chipsetsym : gen_rt_call("_chipset");
+		    gen("move.w","d0","-(sp)");
+		    enter_XREF("_GfxBase");
+		    ftype=shorttype;
+		    insymbol();
+		    return(ftype);
+
+  case csrlinsym  : gen_rt_call("_csrlin");
+		    gen("move.w","d0","-(sp)");
+		    ftype=shorttype;
+		    insymbol();
+		    return(ftype);
+
+  case datestrsym : gen_rt_call("_date");
+		    gen("move.l","d0","-(sp)");
+		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
+		    ftype=stringtype;
+		    insymbol();
+		    return(ftype);
+
+  case daysym   : gen_rt_call("_getday");
+		  gen("move.l","d0","-(sp)");
+		  ftype=longtype;
+		  insymbol();
+		  return(ftype);
+
+  case errsym : gen_rt_call("_err");
+		gen("move.l","d0","-(sp)");
+		ftype=longtype;
+		insymbol();
+		return(ftype);
+
+  case headingsym : gen_rt_call("_heading");
+		    gen("move.w","d0","-(sp)");
+		    enter_XREF("_IntuitionBase");
+		    ftype=shorttype;
+		    insymbol();
+		    return(ftype);
+
+  case inkeysym : gen_rt_call("_inkey");
+		  gen("move.l","d0","-(sp)");
+		  enter_XREF("_DOSBase");
+		  ftype=stringtype;
+	 	  insymbol();
+		  return(ftype);
+
+  case possym  : gen_rt_call("_pos");
+		 gen("move.w","d0","-(sp)");
+		 ftype=shorttype;
+		 insymbol();
+		 return(ftype);
+
+  case rndsym : insymbol();
+		if (sym == lparen)
+		{
+		  /* ignore dummy expression if exists */
+		  insymbol();
+		  ftype = make_integer(expr());
+		  switch(ftype)
+		  {
+			case shorttype 	: gen_pop(shorttype, "d0");
+					  break;
+
+			case longtype  	: gen_pop(longtype, "d0");
+					  break;
+
+			default		: _error(4);
+		  }
+		  if (sym != rparen) _error(9);
+		  else
+		      insymbol();
+		}
+		gen_rt_call("_rnd");
+		gen("move.l","d0","-(sp)");
+		enter_XREF("_MathBase"); /* make sure mathffp lib is open */
+		ftype=singletype;
+		return(ftype);
+
+  case systemsym : gen_rt_call("_system_version");
+		   gen("move.w","d0","-(sp)");
+		   ftype=shorttype;
+		   insymbol();
+		   return(ftype);
+
+  case timersym : gen_rt_call("_timer");
+		  gen("move.l","d0","-(sp)");
+		  enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
+		  enter_XREF("_MathBase"); /* _timer needs basic ffp funcs */
+		  ftype=singletype;
+		  insymbol();
+		  return(ftype);
+
+  case timestrsym : gen_rt_call("_timeofday");
+		    gen("move.l","d0","-(sp)");
+		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
+		    ftype=stringtype;
+		    insymbol();
+		    return(ftype);
+
+  case xcorsym	: gen_rt_call("_xcor");
+		  gen("move.w","d0","-(sp)");
+		  enter_XREF("_GfxBase");
+		  ftype=shorttype;
+		  insymbol();
+		  return(ftype);
+
+  case ycorsym	: gen_rt_call("_ycor");
+		  gen("move.w","d0","-(sp)");
+		  enter_XREF("_GfxBase");
+		  ftype=shorttype;
+		  insymbol();
+		  return(ftype);
+ }
+
+ return(undefined);
+}
+
+int factor()
+{
+char buf[80];
+int  ftype=undefined;
+SYM  *invoke_item;
+
+ ftype=stringfunction();
+ if (ftype != undefined) return(ftype);
+
+ ftype=numericfunction();
+ if (ftype != undefined) return(ftype);
+
+ switch(sym)
+ {
+  case shortconst  : sprintf(numbuf,"#%d",shortval);
+                     gen("move.w",numbuf,"-(sp)");
+                     ftype=typ;
+                     insymbol();
+                     return(ftype);
+
+  case longconst   : sprintf(numbuf,"#%ld",longval);
+       		     gen("move.l",numbuf,"-(sp)");
+                     ftype=typ;
+                     insymbol();
+                     return(ftype);
+
+  case singleconst : sprintf(numbuf,"#$%lx",singleval);
+       		     gen("move.l",numbuf,"-(sp)");
+                     ftype=typ;
+       		     insymbol();
+                     return(ftype);
+
+  case stringconst : make_string_const(stringval);
+       		     ftype=typ;
+       		     insymbol();
+                     return(ftype);
+
+  case ident : return(handle_ident_factor());
 
   case lparen : insymbol();
   		ftype=expr();
   		if (sym != rparen) _error(9);
   		insymbol();
   		return(ftype);
-         	break;
 
   /* @<object> */
   case atsymbol : insymbol();
@@ -342,7 +463,6 @@ BOOL need_symbol;
 		      insymbol();
 		  }
 	          return(ftype);
-		  break;
 
   /* INVOKE -- indirect function call through a variable (expression context) */
   case invokesym :
@@ -360,144 +480,23 @@ BOOL need_symbol;
 	 }
 	}
 	return(ftype);
-	break;
 
   /* parameterless functions */
-
-  case argcountsym : gen_rt_call("_argcount");
-		     gen("move.l","d0","-(sp)");
-		     ftype=longtype;
-		     cli_args=TRUE;
-		     insymbol();
-		     return(ftype);
-		     break;
-
-  case chipsetsym : gen_rt_call("_chipset");
-		    gen("move.w","d0","-(sp)");
-		    enter_XREF("_GfxBase");
-		    ftype=shorttype;
-		    insymbol();
-		    return(ftype);
-		    break;
-
-  case csrlinsym  : gen_rt_call("_csrlin");
-		    gen("move.w","d0","-(sp)");
-		    ftype=shorttype;
-		    insymbol();
-		    return(ftype);
-		    break;
- 
-  case datestrsym : gen_rt_call("_date");
-		    gen("move.l","d0","-(sp)");
-		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
-		    ftype=stringtype;
-		    insymbol();
-		    return(ftype);
-		    break;			
-
-  case daysym   : gen_rt_call("_getday");
-		  gen("move.l","d0","-(sp)");
-		  ftype=longtype;
-		  insymbol();
-		  return(ftype);
-		  break;
-
-  case errsym : gen_rt_call("_err");
-		gen("move.l","d0","-(sp)");
-		ftype=longtype;
-		insymbol();
-		return(ftype);
-		break;
-
-  case headingsym : gen_rt_call("_heading");
-		    gen("move.w","d0","-(sp)");
-		    enter_XREF("_IntuitionBase");
-		    ftype=shorttype;
-		    insymbol();
-		    return(ftype);
-		    break;
-
-  case inkeysym : gen_rt_call("_inkey");
-		  gen("move.l","d0","-(sp)");
-		  enter_XREF("_DOSBase");
-		  ftype=stringtype;
-	 	  insymbol();
-		  return(ftype);
-		  break;
-
-  case possym  : gen_rt_call("_pos");
-		 gen("move.w","d0","-(sp)");
-		 ftype=shorttype;
-		 insymbol();
-		 return(ftype);
-		 break;
-
-  case rndsym : insymbol();
-		if (sym == lparen)
-		{
-		  /* ignore dummy expression if exists */
-		  insymbol();
-		  ftype = make_integer(expr());
-		  switch(ftype)
-		  {
-			case shorttype 	: gen_pop(shorttype, "d0");
-					  break;
-
-			case longtype  	: gen_pop(longtype, "d0");
-					  break;
-
-			default		: _error(4);
-		  }	
-		  if (sym != rparen) _error(9);
-		  else
-		      insymbol();
-		}
-		gen_rt_call("_rnd");
-		gen("move.l","d0","-(sp)");
-		enter_XREF("_MathBase"); /* make sure mathffp lib is open */
-		ftype=singletype;
-		return(ftype);
-		break;
-
-  case systemsym : gen_rt_call("_system_version");
-		   gen("move.w","d0","-(sp)");
-		   ftype=shorttype;
-		   insymbol();
-		   return(ftype);
-		   break;
-
-  case timersym : gen_rt_call("_timer");
-		  gen("move.l","d0","-(sp)");
-		  enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
-		  enter_XREF("_MathBase"); /* _timer needs basic ffp funcs */
-		  ftype=singletype;
-		  insymbol();
-		  return(ftype);
-		  break;
-
-  case timestrsym : gen_rt_call("_timeofday");
-		    gen("move.l","d0","-(sp)");
-		    enter_XREF("_DOSBase"); /* DateStamp() needs dos.library */
-		    ftype=stringtype;
-		    insymbol();
-		    return(ftype);
-		    break;
-
-  case xcorsym	: gen_rt_call("_xcor");
-		  gen("move.w","d0","-(sp)");
-		  enter_XREF("_GfxBase");
-		  ftype=shorttype;
-		  insymbol();
-		  return(ftype);
-		  break;
-
-  case ycorsym	: gen_rt_call("_ycor");
-		  gen("move.w","d0","-(sp)");
-		  enter_XREF("_GfxBase");
-		  ftype=shorttype;
-		  insymbol();
-		  return(ftype);
-		  break;
+  case argcountsym :
+  case chipsetsym :
+  case csrlinsym :
+  case datestrsym :
+  case daysym :
+  case errsym :
+  case headingsym :
+  case inkeysym :
+  case possym :
+  case rndsym :
+  case systemsym :
+  case timersym :
+  case timestrsym :
+  case xcorsym :
+  case ycorsym : return(handle_parameterless());
  }
 
  /* none of the above! */
