@@ -260,28 +260,19 @@ int pointer_sym;
  }
 }
 
-/*-----------*/
-/* statement */
-/*-----------*/
- 
-void statement()
+/*------------------*/
+/* statement helpers */
+/*------------------*/
+
+static void handle_ident_statement()
 {
-char  buf[50],destbuf[3],idholder[50],addrbuf[80],sub_name[80],numbuf[40];
+char  sub_name[80], idholder[50];
 char  func_name[MAXIDSIZE];
 char  ext_name[MAXIDSIZE+1];
-int   commandsym;
-int   oldobj,oldtyp,stype;
-int   statetype;
-int   oldlevel;
-SYM   *func_item,*sub_item,*mc_item,*invoke_item;
+int   oldobj, oldtyp;
+SYM   *func_item, *sub_item;
 BOOL  need_symbol=TRUE;
-int   i;
-SHORT popcount;
 
- /* data object assignment (variable, subprogram or array element), 
-    label declaration or subprogram call without CALL? */
- if (sym == ident)
- {
   /* make subprogram name */
   strcpy(sub_name,"_SUB_");
   strcat(sub_name,id);
@@ -298,28 +289,28 @@ SHORT popcount;
   oldtyp=typ;
 
   insymbol();
-  
+
   /* a variable/subprogram assignment or an array element assignment? */
-  if ((sym == equal) || (sym == memberpointer) || ((sym == lparen) 
+  if ((sym == equal) || (sym == memberpointer) || ((sym == lparen)
       && (!exist(sub_name,subprogram)) && (!exist(func_name,function))
-      && (!exist(ext_name,extfunc)))) 
+      && (!exist(ext_name,extfunc))))
   {
      strcpy(id,idholder);  /* restore info */
      obj=oldobj;
      typ=oldtyp;
      if (sym == equal)  have_equal=TRUE;
-     if (sym == lparen) 
-         if (!exist(id,array)) { _error(71); insymbol(); return; } 
+     if (sym == lparen)
+         if (!exist(id,array)) { _error(71); insymbol(); return; }
      else
 	 have_lparen=TRUE;
-     assign(); 
+     assign();
      have_equal=FALSE;
      have_lparen=FALSE;
   }
   else
   /* implicit subprogram or function call (ie: without CALL command)? */
   if (exist(func_name,function) || exist(sub_name,subprogram) ||
-      exist(ext_name,extfunc)) 
+      exist(ext_name,extfunc))
   {
     sub_item=curr_item; /* - store curr_item because the next call to exist()
 			     will clobber it! (for use by SUB call)
@@ -335,7 +326,7 @@ SHORT popcount;
      if (need_symbol) insymbol();
     }
     else
-    if (exist(func_name,function)) 
+    if (exist(func_name,function))
     {
      /* call shared library function */
      func_item=curr_item;
@@ -363,23 +354,17 @@ SHORT popcount;
    /* label? */
    if (sym == colon)
         handle_label(idholder);
-   else 
+   else
        _error(24);   /* colon expected */
    insymbol();
   }
- }
- else
- /* line number? */
- if (sym == shortconst || sym == longconst)
- {
-  make_label_from_linenum(sym,idholder);
-  handle_label(idholder);
-  insymbol();
- }
- else
- /* assign with LET ? */ 
- if (sym == letsym) 
- { 
+}
+
+static void handle_let()
+{
+char  idholder[50];
+int   oldobj, oldtyp;
+
   insymbol();
 
   if (sym == ident)
@@ -397,13 +382,452 @@ SHORT popcount;
      typ=oldtyp;
      if (sym == equal) have_equal=TRUE;
      if (sym == lparen) have_lparen=TRUE;
-     assign(); 
+     assign();
      have_equal=FALSE;
      have_lparen=FALSE;
    }
   }
-  else _error(7); 
+  else _error(7);
+}
+
+static void handle_assert()
+{
+  insymbol();
+  make_integer(expr());
+  gen("move.l","(sp)+","d0");         /* condition in d0 */
+
+  if (sym == comma) {
+    /* optional message provided */
+    insymbol();
+    if (expr() != stringtype) _error(4);
+    gen("move.l","(sp)+","a0");       /* string addr in a0 */
+  } else {
+    /* no message - pass NULL */
+    gen("move.l","#0","a0");
+  }
+
+  gen_rt_call("_assert");
+}
+
+static void handle_call()
+{
+char  buf[50], addrbuf[80], sub_name[80], numbuf[40];
+char  func_name[MAXIDSIZE];
+char  ext_name[MAXIDSIZE+1];
+SYM   *func_item, *mc_item;
+BOOL  need_symbol=TRUE;
+int   i;
+SHORT popcount;
+
+  check_for_event();
+
+  insymbol();
+  if (sym != ident)
+     _error(32);
+  else
+  {
+   /* function? */
+   strcpy(func_name,id);
+   remove_qualifier(func_name);
+
+   if (exist(func_name,function))
+   {
+    func_item=curr_item;
+    if (func_item->no_of_params != 0)
+    { insymbol(); load_func_params(func_item); }
+    /* call it */
+    gen_lib_call(func_item);
+   }
+   else
+   {
+    /* subprogram, machine code subroutine or external function? */
+    strcpy(sub_name,"_SUB_");
+    strcat(sub_name,id);
+
+    if (!exist(sub_name,subprogram))
+    {
+     make_ext_name(ext_name,ut_id);
+
+      if (exist(ext_name,extfunc))
+      {
+       /* external function? */
+       insymbol();
+       call_external_function(ext_name,&need_symbol);
+      }
+     else
+     {
+      /* machine code subroutine? */
+      if (exist(id,variable) && (curr_item->type == longtype))
+      {
+       mc_item=curr_item;
+       insymbol();
+       if (sym == lparen) { load_mc_params(mc_item); need_symbol=TRUE; }
+       else
+           { mc_item->no_of_params=0; need_symbol=FALSE; }
+
+       /* call routine */
+       gen_frame_addr(mc_item->address, addrbuf);
+       gen("move.l",addrbuf,"a0");
+       gen("jsr","(a0)","  ");
+       /* pop parameters? */
+       if (mc_item->no_of_params != 0)
+       {
+         popcount=0;
+         for (i=0;i<mc_item->no_of_params;i++)
+         {
+          if (mc_item->p_type[i] == shorttype)
+	    popcount += 2;
+    	  else
+	    popcount += 4;
+         }
+        /* add popcount to sp */
+        strcpy(buf,"#\0");
+        itoa(popcount,numbuf,10);
+        strcat(buf,numbuf);
+        gen("add.l",buf,"sp");
+       }
+      }
+      else _error(37); /* undeclared subprogram */
+     }
+    }
+    else
+       {
+        /* user-defined subprogram */
+        if (curr_item->is_callback)
+           _error(85);  /* CALLBACK SUB cannot be called from ACE code */
+        else
+        {
+           if (curr_item->no_of_params != 0)
+              { insymbol(); load_params(curr_item); }
+           gen("jsr",sub_name,"  ");
+        }
+       }
+   }
+  }
+  if (need_symbol) insymbol();
+}
+
+static void handle_exit_statement()
+{
+  insymbol();
+
+  if (sym == forsym)
+  {
+  	/* EXIT FOR */
+	gen("nop","  ","  ");
+	exit_for_cx = curr_code;
+	insymbol();
+  }
+  else
+  if (lev == ONE)
+  {
+	/* EXIT SUB */
+   	if (sym != subsym)
+      	   _error(35);
+   	else
+      	   gen("jmp",exit_sub_name,"  ");
+
+   	insymbol();
+  }
+  else
+     {
+      	_error(36); /* can only use EXIT SUB in a subprogram! */
+      	insymbol();
+     }
+}
+
+static void handle_goto_gosub()
+{
+char  buf[50], destbuf[3];
+int   commandsym;
+int   oldlevel;
+
+  check_for_event();
+  oldlevel=lev; /* labels are defined at level ZERO only */
+  lev=ZERO;
+  commandsym=sym;
+  insymbol();
+  if (sym == ident || sym == shortconst || sym==longconst)
+  {
+   if (sym != ident) make_label_from_linenum(sym,id);
+   strcpy(buf,id);
+   strcat(buf,":\0");
+   if (!exist(buf,label))
+      strcpy(destbuf,"* "); /* mark for later check */
+   else
+      strcpy(destbuf,"  ");
+
+   /* generate appropriate branch */
+   switch(commandsym)
+   {
+    case gotosym  : gen("jmp",id,destbuf); break;
+    case gosubsym : gen("jsr",id,destbuf); break;
+   }
+  }
+  lev=oldlevel;
+  insymbol();
+}
+
+static void handle_invoke_stmt()
+{
+SYM  *invoke_item;
+
+  insymbol();
+  if (sym != ident) _error(7);
+  else
+  {
+   if (!exist(id,variable) || curr_item->type != longtype) _error(4);
+   else
+   {
+    invoke_item = curr_item;
+    insymbol();
+    handle_invoke(invoke_item, FALSE);
+   }
+  }
+}
+
+static void handle_locate()
+{
+  insymbol();
+  make_sure_short(expr());  /* ROW */
+
+  if (sym == comma)
+  {
+   insymbol();
+   make_sure_short(expr());
+  }
+  else gen("move.w","#1","-(sp)");  /* COLUMN */
+
+  gen("move.w","(sp)+","d1");  /* pop COLUMN */
+  gen("move.w","(sp)+","d0");  /* pop ROW */
+
+  gen_rt_call("_locate");
+  enter_XREF("_DOSBase");
+}
+
+static void handle_on()
+{
+  insymbol();
+  if (sym==breaksym || sym==mousesym || sym==menusym ||
+      sym==timersym || sym==errorsym || sym==windowsym ||
+      sym==gadgetsym)
+     get_event_trap_label();
+  else
+     on_branch();
+}
+
+static void handle_palette()
+{
+   insymbol();
+   make_sure_short(expr()); /* color-id */
+   if (sym != comma) _error(16);
+   else
+   {
+    insymbol();
+    gen_Flt(expr()); /* red */
+    if (sym != comma) _error(16);
+    else
+    {
+     insymbol();
+     gen_Flt(expr()); /* green */
+     if (sym != comma) _error(16);
+     else
+     {
+       insymbol();
+       gen_Flt(expr()); /* blue */
+
+       /* pop parameters */
+       gen("move.l","(sp)+","d3"); /* blue */
+       gen("move.l","(sp)+","d2"); /* green */
+       gen("move.l","(sp)+","d1"); /* red */
+       gen("move.w","(sp)+","d0"); /* color-id  (0-31) */
+
+       /* open the screen */
+       gen_rt_call("_palette");
+       enter_XREF("_GfxBase");
+       enter_XREF("_MathBase"); /* must convert 0-1 values to bytes: 0-15 */
+     }
+    }
+   }
+}
+
+static void handle_randomize()
+{
+int statetype;
+
+  insymbol();
+  statetype = expr();
+  if ((statetype = make_integer(statetype)) == notype) _error(4);
+  if (statetype == shorttype) make_long();
+  gen("move.l","(sp)+","d0");
+  gen_rt_call("_randomise");
+  enter_XREF("_MathBase");
+}
+
+static void handle_say()
+{
+char addrbuf[80];
+
+  insymbol();
+  if (expr() != stringtype) _error(4);  /* phoneme string on stack */
+
+  if (sym == comma)
+  {
+   insymbol();
+   if ((sym == ident) && (obj == variable))
+   {
+    if (!exist(id,array)) _error(28);
+    else
+        if (curr_item->type != shorttype) _error(28);
+        else
+           {
+	    /* get address of array from stack frame */
+            gen_frame_addr(curr_item->address, addrbuf);
+	    gen("move.l",addrbuf,"-(sp)"); /* push address of mode-array */
+	    /* SIZE of array not checked here! (must be >= 9 elements) */
+           }
+   insymbol();
+   }
+   else _error(28);
+  }
+  else gen("move.l","#0","-(sp)");  /* no mode-array -> push NULL */
+
+  gen_rt_call("_say");
+  gen("addq","#8","sp");  /* pop two parameters */
+  enter_XREF("_cleanup_async_speech");
+  narratorused=TRUE;
+}
+
+static void handle_setxy()
+{
+  insymbol();
+  make_sure_short(expr()); /* x */
+  if (sym != comma) _error(16);
+  else
+  {
+   insymbol();
+   make_sure_short(expr()); /* y */
+   /* pop operands */
+   gen("move.w","(sp)+","d1"); /* y */
+   gen("move.w","(sp)+","d0"); /* x */
+   gen_rt_call("_setxy");
+   enter_XREF("_GfxBase");
+  }
+}
+
+static void handle_sleep()
+{
+int stype;
+
+    insymbol();
+
+    if (sym != forsym)
+    {
+	  /* SLEEP */
+	  gen_rt_call("_sleep");
+    }
+    else
+    {
+	  /* SLEEP FOR <seconds> */
+	  insymbol();
+	  stype = expr();
+	  if (stype == stringtype) _error(4);
+	  else
+	  {
+		gen_Flt(stype);
+	  	gen_rt_call("_sleep_for_secs"); gen("addq","#4","sp");
+	  	enter_XREF("_MathBase");
+	  }
+    }
+}
+
+static void handle_system()
+{
+int stype;
+
+  insymbol();
+  stype = make_integer(expr());
+  if (stype == shorttype || stype == longtype)
+  {
+     /* SYSTEM returncode */
+     if (stype == shorttype) make_long()  ; /* get short integer exit value */
+     gen("move.l","(sp)+","_returncode");
+     gen("jmp","_EXIT_PROG","  ");
+     enter_XREF("_returncode");
+  }
+  else
+  {
+     /* SYSTEM command-string */
+     gen_rt_call("_system_call");
+     gen("addq","#4","sp");
+  }
+}
+
+static void handle_wave()
+{
+int statetype;
+
+  /* voice */
+  insymbol();
+  make_sure_short(expr());  /* voice (short) 0..3 */
+
+  /* wave definition */
+  if (sym != comma) _error(16);
+  else
+  {
+   insymbol();
+   if (sym == sinsym)
+   {
+    gen("move.l","#0","a0");  /* SIN wave = 0 -> flag for _wave */
+    insymbol();
+   }
+   else
+   {
+    /* now expect an address -> pointer to a block of bytes */
+    if (expr() != longtype) _error(4);
+
+    /* number of bytes? */
+    if (sym != comma) _error(16);
+    else
+    {
+     insymbol();
+     if ((statetype=make_integer(expr())) == shorttype) make_long();
+
+     if (statetype == notype) _error(4); /* string -> type mismatch */
+    }
+
+    gen("move.l","(sp)+","d1");  /* pop # of bytes of waveform data */
+    gen("move.l","(sp)+","a0");  /* pop address of waveform data */
+   }
+  }
+  gen("move.w","(sp)+","d0");  /* pop voice */
+  gen_rt_call("_wave");
+}
+
+/*-----------*/
+/* statement */
+/*-----------*/
+
+void statement()
+{
+char  idholder[50];
+
+ /* data object assignment (variable, subprogram or array element),
+    label declaration or subprogram call without CALL? */
+ if (sym == ident)
+  handle_ident_statement();
+ else
+ /* line number? */
+ if (sym == shortconst || sym == longconst)
+ {
+  make_label_from_linenum(sym,idholder);
+  handle_label(idholder);
+  insymbol();
  }
+ else
+ /* assign with LET ? */
+ if (sym == letsym)
+  handle_let();
  else
  /* multi-statement? */
  if (sym == colon)
@@ -442,23 +866,7 @@ SHORT popcount;
  else
  /* assert */
  if (sym == assertsym)
- {
-  insymbol();
-  make_integer(expr());
-  gen("move.l","(sp)+","d0");         /* condition in d0 */
-
-  if (sym == comma) {
-    /* optional message provided */
-    insymbol();
-    if (expr() != stringtype) _error(4);
-    gen("move.l","(sp)+","a0");       /* string addr in a0 */
-  } else {
-    /* no message - pass NULL */
-    gen("move.l","#0","a0");
-  }
-
-  gen_rt_call("_assert");
- }
+  handle_assert();
  else
  /* bevelbox */
  if (sym == bevelboxsym) bevel_box();
@@ -473,94 +881,7 @@ SHORT popcount;
  else
  /* call */
  if (sym == callsym)
- {
-  check_for_event();
-
-  insymbol();
-  if (sym != ident) 
-     _error(32);
-  else
-  {
-   /* function? */
-   strcpy(func_name,id);
-   remove_qualifier(func_name);
-
-   if (exist(func_name,function)) 
-   { 
-    func_item=curr_item;
-    if (func_item->no_of_params != 0)
-    { insymbol(); load_func_params(func_item); }
-    /* call it */
-    gen_lib_call(func_item);
-   }
-   else
-   {
-    /* subprogram, machine code subroutine or external function? */
-    strcpy(sub_name,"_SUB_");
-    strcat(sub_name,id);
-
-    if (!exist(sub_name,subprogram)) 
-    {
-     make_ext_name(ext_name,ut_id);
-
-      if (exist(ext_name,extfunc))
-      { 
-       /* external function? */
-       insymbol();
-       call_external_function(ext_name,&need_symbol);
-      }
-     else
-     { 
-      /* machine code subroutine? */
-      if (exist(id,variable) && (curr_item->type == longtype))
-      {
-       mc_item=curr_item;
-       insymbol();
-       if (sym == lparen) { load_mc_params(mc_item); need_symbol=TRUE; } 
-       else 
-           { mc_item->no_of_params=0; need_symbol=FALSE; }
-
-       /* call routine */
-       gen_frame_addr(mc_item->address, addrbuf);
-       gen("move.l",addrbuf,"a0");
-       gen("jsr","(a0)","  ");
-       /* pop parameters? */
-       if (mc_item->no_of_params != 0)
-       {
-         popcount=0;
-         for (i=0;i<mc_item->no_of_params;i++) 
-         {
-          if (mc_item->p_type[i] == shorttype) 
-	    popcount += 2;
-    	  else
-	    popcount += 4;
-         }
-        /* add popcount to sp */
-        strcpy(buf,"#\0");
-        itoa(popcount,numbuf,10);
-        strcat(buf,numbuf);
-        gen("add.l",buf,"sp");
-       }
-      }
-      else _error(37); /* undeclared subprogram */
-     }
-    }
-    else
-       {
-        /* user-defined subprogram */
-        if (curr_item->is_callback)
-           _error(85);  /* CALLBACK SUB cannot be called from ACE code */
-        else
-        {
-           if (curr_item->no_of_params != 0)
-              { insymbol(); load_params(curr_item); }
-           gen("jsr",sub_name,"  ");
-        }
-       }
-   }
-  }
-  if (need_symbol) insymbol();
- }
+  handle_call();
  else
  /* case */
  if (sym == casesym) { check_for_event(); case_statement(); }
@@ -629,33 +950,7 @@ SHORT popcount;
  else
  /* exit (ie: EXIT SUB/FOR) */
  if (sym == exitsym)
- { 
-  insymbol();
-
-  if (sym == forsym)
-  {
-  	/* EXIT FOR */
-	gen("nop","  ","  ");
-	exit_for_cx = curr_code;
-	insymbol();
-  }
-  else
-  if (lev == ONE)
-  {  
-	/* EXIT SUB */
-   	if (sym != subsym) 
-      	   _error(35);
-   	else
-      	   gen("jmp",exit_sub_name,"  ");
-
-   	insymbol();
-  }
-  else
-     {
-      	_error(36); /* can only use EXIT SUB in a subprogram! */
-      	insymbol();
-     }
- }
+  handle_exit_statement();
  else
  /* external */
  if (sym == externalsym) define_external_object();
@@ -713,32 +1008,7 @@ SHORT popcount;
  else
  /* goto or gosub */
  if ((sym == gotosym) || (sym == gosubsym))
- {
-  check_for_event();
-  oldlevel=lev; /* labels are defined at level ZERO only */
-  lev=ZERO;
-  commandsym=sym;
-  insymbol();
-  if (sym == ident || sym == shortconst || sym==longconst)
-  {
-   if (sym != ident) make_label_from_linenum(sym,id);   
-   strcpy(buf,id);
-   strcat(buf,":\0");
-   if (!exist(buf,label)) 
-      strcpy(destbuf,"* "); /* mark for later check */
-   else 
-      strcpy(destbuf,"  ");
-
-   /* generate appropriate branch */
-   switch(commandsym)
-   {
-    case gotosym  : gen("jmp",id,destbuf); break;
-    case gosubsym : gen("jsr",id,destbuf); break;
-   }
-  }
-  lev=oldlevel;
-  insymbol(); 
- }
+  handle_goto_gosub();
  else
  /* home */
  if (sym == homesym)
@@ -756,20 +1026,7 @@ SHORT popcount;
  else
  /* INVOKE -- indirect function call through a variable */
  if (sym == invokesym)
- {
-  insymbol();
-  if (sym != ident) _error(7);
-  else
-  {
-   if (!exist(id,variable) || curr_item->type != longtype) _error(4);
-   else
-   {
-    invoke_item = curr_item;
-    insymbol();
-    handle_invoke(invoke_item, FALSE);
-   }
-  }
- }
+  handle_invoke_stmt();
  else
  /* kill */
  if (sym == killsym) kill();
@@ -794,23 +1051,7 @@ SHORT popcount;
  else
  /* locate */
  if (sym == locatesym)
- {
-  insymbol();
-  make_sure_short(expr());  /* ROW */
-
-  if (sym == comma)
-  {
-   insymbol();
-   make_sure_short(expr());
-  }
-  else gen("move.w","#1","-(sp)");  /* COLUMN */
-
-  gen("move.w","(sp)+","d1");  /* pop COLUMN */
-  gen("move.w","(sp)+","d0");  /* pop ROW */  
-
-  gen_rt_call("_locate");
-  enter_XREF("_DOSBase");
- }
+  handle_locate();
  else
  /* longint */
  if (sym == longintsym || sym == addresssym) declare_variable(longtype);
@@ -835,16 +1076,8 @@ SHORT popcount;
  }
  else
  /* on <event> | <integer-expression> */
- if (sym == onsym) 
- {
-  insymbol();
-  if (sym==breaksym || sym==mousesym || sym==menusym || 
-      sym==timersym || sym==errorsym || sym==windowsym || 
-      sym==gadgetsym)
-     get_event_trap_label();
-  else
-     on_branch();    
- }
+ if (sym == onsym)
+  handle_on();
  else
  /* open */
  if (sym == opensym) open_a_file();
@@ -857,39 +1090,7 @@ SHORT popcount;
  else
  /* palette */
  if (sym == palettesym)
- {
-   insymbol();
-   make_sure_short(expr()); /* color-id */
-   if (sym != comma) _error(16);
-   else
-   {
-    insymbol();
-    gen_Flt(expr()); /* red */
-    if (sym != comma) _error(16);
-    else
-    {
-     insymbol();
-     gen_Flt(expr()); /* green */
-     if (sym != comma) _error(16);
-     else
-     {
-       insymbol();
-       gen_Flt(expr()); /* blue */
-       
-       /* pop parameters */
-       gen("move.l","(sp)+","d3"); /* blue */
-       gen("move.l","(sp)+","d2"); /* green */
-       gen("move.l","(sp)+","d1"); /* red */
-       gen("move.w","(sp)+","d0"); /* color-id  (0-31) */
-
-       /* open the screen */
-       gen_rt_call("_palette");
-       enter_XREF("_GfxBase");
-       enter_XREF("_MathBase"); /* must convert 0-1 values to bytes: 0-15 */
-     }
-    }
-   }
- }
+  handle_palette();
  else
  /* pattern */
  if (sym == patternsym) pattern();
@@ -960,15 +1161,7 @@ SHORT popcount;
  else
  /* randomize */
  if (sym == randomizesym)
- {
-  insymbol();
-  statetype = expr();
-  if ((statetype = make_integer(statetype)) == notype) _error(4);
-  if (statetype == shorttype) make_long();
-  gen("move.l","(sp)+","d0");
-  gen_rt_call("_randomise");
-  enter_XREF("_MathBase");
- }
+  handle_randomize();
  else
  /* repeat */
  if (sym == repeatsym) repeat_statement();
@@ -986,36 +1179,7 @@ SHORT popcount;
  else
  /* say */
  if (sym == saysym)
- {
-  insymbol();
-  if (expr() != stringtype) _error(4);  /* phoneme string on stack */
-
-  if (sym == comma)
-  {
-   insymbol();
-   if ((sym == ident) && (obj == variable)) 
-   {
-    if (!exist(id,array)) _error(28); 
-    else
-        if (curr_item->type != shorttype) _error(28); 
-        else
-           {
-	    /* get address of array from stack frame */
-            gen_frame_addr(curr_item->address, addrbuf);
-	    gen("move.l",addrbuf,"-(sp)"); /* push address of mode-array */
-	    /* SIZE of array not checked here! (must be >= 9 elements) */
-           } 
-   insymbol();
-   }
-   else _error(28); 
-  }
-  else gen("move.l","#0","-(sp)");  /* no mode-array -> push NULL */
-
-  gen_rt_call("_say");
-  gen("addq","#8","sp");  /* pop two parameters */
-  enter_XREF("_cleanup_async_speech");
-  narratorused=TRUE;
- }
+  handle_say();
  else
  /* screen */
  if (sym == screensym) { screen(); check_for_event(); }
@@ -1036,21 +1200,7 @@ SHORT popcount;
  else
  /* setxy */
  if (sym == setxysym)
- {
-  insymbol();
-  make_sure_short(expr()); /* x */
-  if (sym != comma) _error(16);
-  else
-  {
-   insymbol();
-   make_sure_short(expr()); /* y */
-   /* pop operands */
-   gen("move.w","(sp)+","d1"); /* y */
-   gen("move.w","(sp)+","d0"); /* x */
-   gen_rt_call("_setxy");
-   enter_XREF("_GfxBase");
-  }
- }
+  handle_setxy();
  else
  /* shared */
  if (sym == sharedsym && lev == ZERO) { _error(69); insymbol(); }
@@ -1062,29 +1212,8 @@ SHORT popcount;
  if (sym == singlesym) declare_variable(singletype);
  else
  /* sleep */
- if (sym == sleepsym) 
- {
-    insymbol();
-
-    if (sym != forsym)
-    { 
-	  /* SLEEP */
-	  gen_rt_call("_sleep");
-    }
-    else
-    { 
-	  /* SLEEP FOR <seconds> */ 
-	  insymbol();
-	  stype = expr();
-	  if (stype == stringtype) _error(4);
-	  else
-	  {
-		gen_Flt(stype); 
-	  	gen_rt_call("_sleep_for_secs"); gen("addq","#4","sp");
-	  	enter_XREF("_MathBase");
-	  }
-    }
- }
+ if (sym == sleepsym)
+  handle_sleep();
  else
  /* string */
  if (sym == stringsym) declare_variable(stringtype);
@@ -1103,24 +1232,7 @@ SHORT popcount;
  else
  /* system */
  if (sym == systemsym)
- {
-  insymbol();
-  stype = make_integer(expr());
-  if (stype == shorttype || stype == longtype)
-  {
-     /* SYSTEM returncode */
-     if (stype == shorttype) make_long()  ; /* get short integer exit value */
-     gen("move.l","(sp)+","_returncode");
-     gen("jmp","_EXIT_PROG","  ");
-     enter_XREF("_returncode");
-  }
-  else
-  {
-     /* SYSTEM command-string */
-     gen_rt_call("_system_call");
-     gen("addq","#4","sp");
-  }
- }
+  handle_system();
  else
  /* turn */
  if (sym == turnsym)
@@ -1157,44 +1269,8 @@ SHORT popcount;
  }
  else
  /* wave */
- if (sym == wavesym) 
- {
-  /* voice */
-  insymbol();
-  make_sure_short(expr());  /* voice (short) 0..3 */
-
-  /* wave definition */
-  if (sym != comma) _error(16);
-  else
-  {
-   insymbol();
-   if (sym == sinsym) 
-   {
-    gen("move.l","#0","a0");  /* SIN wave = 0 -> flag for _wave */
-    insymbol();
-   }
-   else
-   {
-    /* now expect an address -> pointer to a block of bytes */
-    if (expr() != longtype) _error(4);
-    
-    /* number of bytes? */
-    if (sym != comma) _error(16);
-    else
-    {
-     insymbol();
-     if ((statetype=make_integer(expr())) == shorttype) make_long();  
-
-     if (statetype == notype) _error(4); /* string -> type mismatch */
-    }   
-
-    gen("move.l","(sp)+","d1");  /* pop # of bytes of waveform data */
-    gen("move.l","(sp)+","a0");  /* pop address of waveform data */
-   }
-  }
-  gen("move.w","(sp)+","d0");  /* pop voice */
-  gen_rt_call("_wave");
- }
+ if (sym == wavesym)
+  handle_wave();
  else
  /* while.. */
  if (sym == whilesym) while_statement();

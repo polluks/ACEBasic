@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 3.3 - INVOKE refactor
-  Branch: phase3.3-invoke-refactor
+Last completed: Phase 3.4 - Break up statement()
+  Branch: phase3.4-statement-breakup
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -100,6 +100,29 @@ Phase 3 (parser decomposition)
        - Removed unused locals from factor.c: invoke_sub, i, popcount
        - Net savings: ~280 lines
 
-Test suite: 64/64 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, closures 9, callback 4)
+  3.4: Break up statement() into dispatcher with static handler functions
+       - Extracted 16 static handler functions from statement()'s if/else-if chain
+       - handle_ident_statement (~88 lines): ident sym - assignment, implicit call, or label
+       - handle_call (~89 lines): callsym - CALL command (function, SUB, machine code, external)
+       - handle_let (~26 lines): letsym - LET assignment
+       - handle_assert (~18 lines): assertsym - ASSERT with optional message
+       - handle_exit_statement (~28 lines): exitsym - EXIT FOR/SUB
+       - handle_goto_gosub (~27 lines): gotosym/gosubsym - GOTO/GOSUB
+       - handle_invoke_stmt (~15 lines): invokesym - INVOKE indirect call
+       - handle_locate (~17 lines): locatesym - LOCATE row,col
+       - handle_on (~10 lines): onsym - ON event/expression
+       - handle_palette (~34 lines): palettesym - PALETTE color,r,g,b
+       - handle_randomize (~10 lines): randomizesym - RANDOMIZE seed
+       - handle_say (~31 lines): saysym - SAY phoneme string
+       - handle_setxy (~16 lines): setxysym - SETXY x,y
+       - handle_sleep (~23 lines): sleepsym - SLEEP / SLEEP FOR
+       - handle_system (~19 lines): systemsym - SYSTEM returncode/command
+       - handle_wave (~38 lines): wavesym - WAVE voice,definition
+       - statement() locals reduced from 16 declarations to 1 (idholder[50])
+       - statement() is now a clean dispatcher (~510 lines, down from ~973)
+       - All new functions are static (no acedef.h changes needed)
+       - Small inline blocks (<10 lines) kept inline for readability
 
-Next step: Phase 3.4 - TBD
+Test suite: 178/178 pass
+
+Next step: Phase 3.5 - TBD
