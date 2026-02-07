@@ -628,6 +628,10 @@ void	gen_lib_open_check();
 void	gen_var_addr();
 void	gen_load_var();
 void	gen_store_var();
+void	gen_startup_code();
+void	gen_exit_code();
+void	gen_asm_header();
+void	gen_asm_end();
 
 /* invoke.c */
 int	handle_invoke();

@@ -177,3 +177,158 @@ int count;
   cx[i]=curr_code;
  }
 }
+
+/* Emit startup assembly code (main program only).
+   addr_lev is the value of addr[lev] for the stack frame size. */
+extern	BOOL	cli_args;
+extern	BOOL	translateused;
+extern	BOOL	mathffpused;
+extern	BOOL	mathtransused;
+extern	BOOL	intuitionused;
+extern	BOOL	gfxused;
+extern	BOOL	iffused;
+extern	BOOL	ontimerused;
+extern	BOOL	gadtoolsused;
+extern	BOOL	basdatapresent;
+extern	BOOL	module_opt;
+
+void gen_startup_code(addr_lev)
+int addr_lev;
+{
+char buf[40],bytes[40];
+
+ if (!module_opt)
+ {
+   /*
+   ** Check for Wb start BEFORE DOING ANYTHING ELSE!
+   ** This also always opens dos.library and stores
+   ** CLI argument data.
+   */
+   fprintf(dest,"\tjsr\t_startup\n");
+   fprintf(dest,"\tcmpi.b\t#1,_starterr\n");
+   fprintf(dest,"\tbne.s\t_START_PROG\n");
+   fprintf(dest,"\trts\n");
+   fprintf(dest,"_START_PROG:\n");
+
+   /* storage for initial stack pointer */
+   enter_BSS("_initialSP:","ds.l 1");
+   fprintf(dest,"\tmove.l\tsp,_initialSP\n");
+
+   fprintf(dest,"\tmovem.l\td1-d7/a0-a6,-(sp)\n");
+
+   if (cli_args)
+      fprintf(dest,"\tjsr\t_parse_cli_args\n");
+
+   if (translateused)
+    gen_lib_open_check("_opentranslator", "_translate_ok");
+
+   if (mathffpused)
+    gen_lib_open_check("_openmathffp", "_mathffp_ok");
+
+   if (mathtransused)
+    gen_lib_open_check("_openmathtrans", "_mathtrans_ok");
+
+   if (intuitionused && !gfxused)
+    gen_lib_open_check("_openintuition", "_intuition_ok");
+
+   if (gfxused)
+   {
+    gen_lib_open_check("_openintuition", "_intuition_ok");
+    gen_lib_open_check("_opengfx", "_gfx_ok");
+   }
+
+   /* create temporary ILBM.library */
+   if (iffused) fprintf(dest,"\tjsr\t_create_ILBMLib\n");
+
+   /* get timer event trapping start time */
+   if (ontimerused) fprintf(dest,"\tjsr\t_ontimerstart\n");
+
+   if (gadtoolsused)
+    gen_lib_open_check("_opengadtools", "_gadtools_ok");
+
+   /* size of stack frame */
+   if (addr_lev == 0)
+      strcpy(bytes,"#\0");
+   else
+      strcpy(bytes,"#-");
+   itoa(addr_lev,buf,10);
+   strcat(bytes,buf);
+
+   /* create stack frame */
+   fprintf(dest,"\tlink\ta4,%s\n\n",bytes);
+
+   /* initialise global DATA pointer */
+   if (basdatapresent) fprintf(dest,"\tmove.l\t#_BASICdata,_dataptr\n");
+ }
+}
+
+/* Emit exit/cleanup assembly code (main program only). */
+extern	BOOL	narratorused;
+
+void gen_exit_code()
+{
+ if (!module_opt)
+ {
+   /* exiting code */
+   fprintf(dest,"\n_EXIT_PROG:\n");
+
+   fprintf(dest,"\tunlk\ta4\n");
+
+   /*
+   ** Programs which abort should cleanup libraries, free allocated memory
+   ** and possibly reply to a Wb startup message.
+   */
+   if (intuitionused || gfxused || mathffpused || mathtransused ||
+       translateused || gadtoolsused)
+      fprintf(dest,"_ABORT_PROG:\n");
+
+   /* Free memory allocated via ALLOC and db.lib calls to alloc(). */
+   fprintf(dest,"\tjsr\t_free_alloc\n");
+
+   /* close libraries */
+   if (gfxused)
+   {
+    fprintf(dest,"\tjsr\t_closegfx\n");
+    fprintf(dest,"\tjsr\t_closeintuition\n");
+   }
+   if (narratorused) fprintf(dest,"\tjsr\t_cleanup_async_speech\n");
+   if (intuitionused && !gfxused) fprintf(dest,"\tjsr\t_closeintuition\n");
+   if (mathtransused) fprintf(dest,"\tjsr\t_closemathtrans\n");
+   if (mathffpused) fprintf(dest,"\tjsr\t_closemathffp\n");
+   if (translateused) fprintf(dest,"\tjsr\t_closetranslator\n");
+   if (gadtoolsused) fprintf(dest,"\tjsr\t_closegadtools\n");
+
+   /* delete temporary ILBM.library */
+   if (iffused) fprintf(dest,"\tjsr\t_remove_ILBMLib\n");
+
+   /* restore registers */
+   fprintf(dest,"\tmovem.l\t(sp)+,d1-d7/a0-a6\n");
+
+   /* restore initial stack pointer */
+   fprintf(dest,"\tmove.l\t_initialSP,sp\n");
+
+   /*
+   ** Close dos.library and reply to Wb message
+   ** as the LAST THING DONE before rts'ing.
+   */
+   fprintf(dest,"\tjsr\t_cleanup\n");
+
+   /* return */
+   fprintf(dest,"\n\trts\n");
+ }
+}
+
+/* Emit assembly file header: optional 68020 machine directive + SECTION. */
+extern	BOOL	cpu020_opt;
+
+void gen_asm_header()
+{
+ if (cpu020_opt) fprintf(dest,"\n\tmachine 68020\n");
+ fprintf(dest,"\n\tSECTION code,CODE\n\n");
+}
+
+/* Emit assembly file end directive. */
+void gen_asm_end()
+{
+ fprintf(dest,"\n\tEND\n");
+}
