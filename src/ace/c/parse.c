@@ -343,28 +343,14 @@ void parse()
  kill_symtab();
 }
 
-void compile(source_name,dest_name)
-char *source_name,*dest_name;
+static void emit_startup_xrefs()
 {
-char buf[40],bytes[40],icon_name[MAXSTRLEN];
-FILE *icon_src,*icon_dest;
-int  cc;
-
- /* 
- ** Parse the source file producing XREFs, code, data, 
- ** bss & basdata segments.
- */
- parse();
-
- /* optimise? */
- if (optimise_opt && !early_exit) optimise();
-
  if (!module_opt)
  {
    /* startup xrefs for startup.lib */
    enter_XREF("_startup");
    enter_XREF("_cleanup");
- 
+
    /* command line argument xref */
    if (cli_args) enter_XREF("_parse_cli_args");
 
@@ -423,10 +409,10 @@ int  cc;
    if (ontimerused) enter_XREF("_ontimerstart");
 
    /*
-   ** Always call this in case a db.lib function 
+   ** Always call this in case a db.lib function
    ** allocates memory via alloc(). This also takes
    ** care of the use of ALLOC by an ACE program.
-   ** To do this we always need to externally 
+   ** To do this we always need to externally
    ** reference the free_alloc() function.
    */
    enter_XREF("_free_alloc");
@@ -438,32 +424,18 @@ int  cc;
    */
     enter_XREF("_EXIT_PROG");
  }
-  
- /* DATA statements? */
- if (basdatapresent) enter_BSS("_dataptr:","ds.l 1");
- if ((readpresent) && (!basdatapresent)) _error(25); 
+}
 
- /* ------------------------------------------------- */
- /* create A68K compatible 68000 assembly source file */
- /* ------------------------------------------------- */
-
- if (!early_exit) 
-	printf("\ncreating %s\n",dest_name);
- else
-	printf("\nfreeing code list...\n");
-
- if (!early_exit) write_xrefs();
-
- /* startup code */
- if (cpu020_opt) fprintf(dest,"\n\tmachine 68020\n");
- fprintf(dest,"\n\tSECTION code,CODE\n\n");
+static void emit_startup_code()
+{
+char buf[40],bytes[40];
 
  if (!module_opt)
  {
-   /* 
-   ** Check for Wb start BEFORE DOING ANYTHING ELSE! 
-   ** This also always opens dos.library and stores 
-   ** CLI argument data. 
+   /*
+   ** Check for Wb start BEFORE DOING ANYTHING ELSE!
+   ** This also always opens dos.library and stores
+   ** CLI argument data.
    */
    fprintf(dest,"\tjsr\t_startup\n");
    fprintf(dest,"\tcmpi.b\t#1,_starterr\n"); /* see _startup in startup.lib */
@@ -477,26 +449,26 @@ int  cc;
 
    fprintf(dest,"\tmovem.l\td1-d7/a0-a6,-(sp)\n"); /* save initial registers */
 
-   if (cli_args) 
+   if (cli_args)
       fprintf(dest,"\tjsr\t_parse_cli_args\n"); /* get CLI arguments */
 
    if (translateused)
-    gen_lib_open_check("_opentranslator", "_translate_ok");   
+    gen_lib_open_check("_opentranslator", "_translate_ok");
 
    if (mathffpused)
-    gen_lib_open_check("_openmathffp", "_mathffp_ok");   
+    gen_lib_open_check("_openmathffp", "_mathffp_ok");
 
    if (mathtransused)
-    gen_lib_open_check("_openmathtrans", "_mathtrans_ok");   
+    gen_lib_open_check("_openmathtrans", "_mathtrans_ok");
 
    if (intuitionused && !gfxused)
-    gen_lib_open_check("_openintuition", "_intuition_ok");   
+    gen_lib_open_check("_openintuition", "_intuition_ok");
 
    if (gfxused)
    {
     gen_lib_open_check("_openintuition", "_intuition_ok");
     gen_lib_open_check("_opengfx", "_gfx_ok");
-   }   
+   }
 
    /* create temporary ILBM.library */
    if (iffused) fprintf(dest,"\tjsr\t_create_ILBMLib\n");
@@ -507,24 +479,24 @@ int  cc;
    if (gadtoolsused)
     gen_lib_open_check("_opengadtools", "_gadtools_ok");
 
-   /* size of stack frame */ 
+   /* size of stack frame */
    if (addr[lev] == 0)
       strcpy(bytes,"#\0");
    else
-      strcpy(bytes,"#-");     
-   itoa(addr[lev],buf,10);   
-   strcat(bytes,buf);     
- 
+      strcpy(bytes,"#-");
+   itoa(addr[lev],buf,10);
+   strcat(bytes,buf);
+
    /* create stack frame */
-   fprintf(dest,"\tlink\ta4,%s\n\n",bytes); 
+   fprintf(dest,"\tlink\ta4,%s\n\n",bytes);
 
    /* initialise global DATA pointer */
    if (basdatapresent) fprintf(dest,"\tmove.l\t#_BASICdata,_dataptr\n");
  }
+}
 
- /* write code & kill code list */
- kill_code();
-
+static void emit_exit_code()
+{
  if (!module_opt)
  {
    /* exiting code */
@@ -532,9 +504,9 @@ int  cc;
 
    fprintf(dest,"\tunlk\ta4\n");
 
-   /* 
+   /*
    ** Programs which abort should cleanup libraries, free allocated memory
-   ** and possibly reply to a Wb startup message. 
+   ** and possibly reply to a Wb startup message.
    */
    if (intuitionused || gfxused || mathffpused || mathtransused ||
        translateused || gadtoolsused)
@@ -544,7 +516,7 @@ int  cc;
    fprintf(dest,"\tjsr\t_free_alloc\n");
 
    /* close libraries */
-   if (gfxused) 
+   if (gfxused)
    {
     fprintf(dest,"\tjsr\t_closegfx\n");
     fprintf(dest,"\tjsr\t_closeintuition\n");
@@ -565,7 +537,7 @@ int  cc;
    /* restore initial stack pointer */
    fprintf(dest,"\tmove.l\t_initialSP,sp\n");
 
-   /* 
+   /*
    ** Close dos.library and reply to Wb message
    ** as the LAST THING DONE before rts'ing.
    */
@@ -574,40 +546,23 @@ int  cc;
    /* return */
    fprintf(dest,"\n\trts\n");
  }
+}
 
- if (!early_exit)
- {
-   write_data();
-   write_basdata();  
-   write_bss();
- }
+static void emit_icon(source_name)
+char *source_name;
+{
+char icon_name[MAXSTRLEN];
+FILE *icon_src,*icon_dest;
+int  cc;
 
- fprintf(dest,"\n\tEND\n");
-
- /* errors? */
- if (errors > 0) putchar('\n');
-
- printf("%s compiled ",source_name);
-
- if (errors == 0)    
-    printf("with no errors.\n");
- else
- {
-  exitvalue=10; /* set ERROR for bas script */
-  printf("with %d ",errors);
-  if (errors > 1) printf("errors.\n");
-  else printf("error.\n");
- }
-
- /* make icon? */
  if (make_icon && !early_exit)
  {
   if ((icon_src = fopen("ACE:icons/exe.info","r")) == NULL)
-    puts("can't open ACE:icons/exe.info for reading."); 
+    puts("can't open ACE:icons/exe.info for reading.");
   else
   {
-   cc=0; while(source_name[cc] != '.') cc++; 
-   source_name[cc] = '\0';   
+   cc=0; while(source_name[cc] != '.') cc++;
+   source_name[cc] = '\0';
    sprintf(icon_name,"%s.info",source_name);
    if ((icon_dest = fopen(icon_name,"w")) == NULL)
       printf("can't open %s.info for writing.\n",source_name);
@@ -620,6 +575,73 @@ int  cc;
    }
   }
  }
+}
+
+void compile(source_name,dest_name)
+char *source_name,*dest_name;
+{
+ /*
+ ** Parse the source file producing XREFs, code, data,
+ ** bss & basdata segments.
+ */
+ parse();
+
+ /* optimise? */
+ if (optimise_opt && !early_exit) optimise();
+
+ emit_startup_xrefs();
+
+ /* DATA statements? */
+ if (basdatapresent) enter_BSS("_dataptr:","ds.l 1");
+ if ((readpresent) && (!basdatapresent)) _error(25);
+
+ /* ------------------------------------------------- */
+ /* create A68K compatible 68000 assembly source file */
+ /* ------------------------------------------------- */
+
+ if (!early_exit)
+	printf("\ncreating %s\n",dest_name);
+ else
+	printf("\nfreeing code list...\n");
+
+ if (!early_exit) write_xrefs();
+
+ /* startup code */
+ if (cpu020_opt) fprintf(dest,"\n\tmachine 68020\n");
+ fprintf(dest,"\n\tSECTION code,CODE\n\n");
+
+ emit_startup_code();
+
+ /* write code & kill code list */
+ kill_code();
+
+ emit_exit_code();
+
+ if (!early_exit)
+ {
+   write_data();
+   write_basdata();
+   write_bss();
+ }
+
+ fprintf(dest,"\n\tEND\n");
+
+ /* errors? */
+ if (errors > 0) putchar('\n');
+
+ printf("%s compiled ",source_name);
+
+ if (errors == 0)
+    printf("with no errors.\n");
+ else
+ {
+  exitvalue=10; /* set ERROR for bas script */
+  printf("with %d ",errors);
+  if (errors > 1) printf("errors.\n");
+  else printf("error.\n");
+ }
+
+ emit_icon(source_name);
 }
 
 void show_title()

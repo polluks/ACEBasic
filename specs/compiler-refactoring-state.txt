@@ -136,6 +136,30 @@ Phase 3 (parser decomposition)
        - Removed 10 unused extern declarations from factor.c
        - All new functions are static (no acedef.h changes needed)
 
-Test suite: 178/178 pass
+  3.6: Further decomposition of large functions
+       - 3.6.1: Decomposed for_statement() in control.c
+         - Extracted static gen_for_condition(countertype, cntbuf, limbuf, stpbuf, cx1_out, cx2_out)
+           (~65 lines: 3-way type dispatch for counter-vs-limit comparison)
+         - Extracted static gen_for_increment(steptype, stpbuf, cntbuf, counteraddr)
+           (~17 lines: 3-way type dispatch for counter += step)
+         - for_statement() reduced from 189 to ~107 lines
+         - Removed unused labname2/lablabel2 locals from for_statement()
+       - 3.6.2: Decomposed compile() in parse.c
+         - Extracted static emit_startup_xrefs() (~72 lines: conditional enter_XREF calls)
+         - Extracted static emit_startup_code() (~66 lines: fprintf-based startup assembly)
+         - Extracted static emit_exit_code() (~49 lines: EXIT_PROG through rts)
+         - Extracted static emit_icon(source_name) (~21 lines: icon file copying)
+         - compile() reduced from 278 to ~65 lines, a clear orchestrator
+         - Removed buf/bytes/icon_name/icon_src/icon_dest/cc locals from compile()
+       - 3.6.3: Decomposed insymbol() in lex.c
+         - Extracted static scan_identifier() (~78 lines: char accumulation + qualifier + reserved word)
+         - Extracted static scan_number() (~87 lines: integer/float + scientific notation)
+         - Extracted static scan_symbol() (~77 lines: single/multi-char + hex/octal constants)
+         - insymbol() reduced from 344 to ~103 lines
+         - Removed 15 unused locals from insymbol() (moved into helpers)
+         - String constant (16 lines) and backslash (4 lines) kept inline
+       - Branch: phase3.6-further-decomp
 
-Next step: Phase 3.6 - Further decomposition (optional)
+Test suite: 178/178 pass (verified: build clean, all categories pass)
+
+Next step: None - refactoring complete

@@ -723,92 +723,21 @@ LONG n;
  }
 }
 
-void insymbol()
-/* lexical analyser */
+static void scan_identifier()
 {
-int  i,cc=0;
-BOOL found;
-char ssym[3];
-LONG n[2],n0,n1;
-int  index;
-int  periods;
-BOOL period;
-LONG places;
-int  placecount;
-char ffpbuf[20];
-int  ex;
-LONG val;
-BYTE num;
-int  sign;
-char lastch=' ';
-BOOL ans;
+int cc=0;
 
- lastsym=sym;   
- sym = undefined;
- obj = undefined;
- typ = undefined;
- found = FALSE;
-
- if (!end_of_source)
- {
-  /* skip whitespace */
-  while (ch <= ' ') 
-  { 
-   nextch(); 
-   if (end_of_source) return; 
-   if (sym == endofline) return;  /* for PRINT */
-  }
-
-  /* single-line comment? */
-  if (ch == '\'') 
-  {
    do
    {
-    nextch();
-   }
-   while ((sym != endofline) && (!end_of_source));
-   if (end_of_source) return;
-   if (sym == endofline) return;  /* for PRINT '... */
-  }
-
-  /* block comment? */
-  if (ch == '{')
-  {
-   do
-   {
-    nextch();
-   }
-   while ((ch != '}') && (!end_of_source));
-
-   if (!end_of_source) nextch();  /* character after "}" */
-   else
-       return;
-
-   if (sym == endofline) return;  /* for PRINT {..} */
-
-   /* skip whitespace */
-   while (ch <= ' ') 
-   { 
-    nextch(); 
-    if (end_of_source) return; 
-    if (sym == endofline) return;  /* for PRINT {..} eoln */
-   }
-  }
-
-  /* identifier or reserved word? */
-  if (letter() || (ch == '_'))
-  {
-   do
-   {
-    ut_id[cc]=ut_ch; /* keep an "untouched" version (ie: upper/lower case) 
-			for DATA statements, library function searches 
+    ut_id[cc]=ut_ch; /* keep an "untouched" version (ie: upper/lower case)
+			for DATA statements, library function searches
 			and external functions */
     id[cc++]=ch;
     nextch();
    }
    while ((letter() || digit() || (ch == '.') || (ch == '_')) &&
-	  (cc < MAXIDSIZE-4));  /* reserve 4 chars for suffix (_XX) + null */  
- 
+	  (cc < MAXIDSIZE-4));  /* reserve 4 chars for suffix (_XX) + null */
+
    id[cc]='\0';
    ut_id[cc]='\0';
 
@@ -844,64 +773,55 @@ BOOL ans;
 
    /* reserved word? */
    if ((sym = rsvd_wd(id)) == undefined)
-   { 
+   {
     /* no, it's an identifier */
     convert_special_ident();
 
-    sym=ident; 
+    sym=ident;
 
-    if (typ == undefined) 
-    { 
-    	/* 
+    if (typ == undefined)
+    {
+    	/*
 	** Data type = ASCII value of 1st char in id minus 'A'.
 	** Note that the underscore character is also catered
 	** for here since it is higher in the ASCII table than
-	** "Z". See lexvar.c, misc.c and setup() (above) for 
+	** "Z". See lexvar.c, misc.c and setup() (above) for
 	** more info.
     	*/
-	typ=idtype[id[0]-'A']; 
+	typ=idtype[id[0]-'A'];
 
-        obj=variable;        
+        obj=variable;
     }
    }
    else
     {
-     /* 
+     /*
      ** It's a reserved word, so typ & obj mean nothing, but may
-     ** have been set by qualifier() if qualifier character was a '$' 
+     ** have been set by qualifier() if qualifier character was a '$'
      */
      typ=undefined;
      obj=rsvd_word;
     }
-  }
-  else
-  /* string constant? */
-  if (ch == '"')
-  {
-   inside_string = TRUE;
-   cc=0;
-   do
-   {
-    nextch();
-    stringval[cc++] = ch;
-   }
-   while ((ch != '"') && (ch != '\0') && (cc < MAXSTRLEN));
-   if (ch == '"') --cc;
-   if (ch == '"') nextch();
-   stringval[cc]='\0';
-   sym=stringconst; typ=stringtype; obj=constant;
-   inside_string = FALSE;
-  }
-  else
-  /* numeric literal? */
-  if (digit() || (ch == '.'))
-  {
+}
+
+static void scan_number()
+{
+int  i;
+LONG n[2],n0,n1;
+int  index;
+int  periods;
+BOOL period;
+LONG places;
+int  placecount;
+int  ex;
+int  sign;
+
    n[0]=n[1]=0;
    index=0;
    period=FALSE;
    periods=0;
    placecount=0;
-   
+
    /* is first char '.'? */
    if (ch == '.')
    {
@@ -926,7 +846,7 @@ BOOL ans;
     }
    }
    while ((digit() || ch == '.') && (periods <= 1));
- 
+
    /* integer or real? */
    if (period && (periods == 1))
    {
@@ -937,12 +857,8 @@ BOOL ans;
     n0=n[0];
     n1=n[1];
     singleval= SPAdd(SPFlt(n0),SPDiv(SPFlt(places), SPFlt(n1)));
-    /*ex = fpa(singleval,ffpbuf);
-    ffpbuf[14]='\0'; 
-    printf("FFP: %s\t%lx\t",ffpbuf,singleval);
-    ffprint(ex,ffpbuf);*/
-   }  
-  else 
+   }
+  else
       classify_integer(n[0]);
 
   reclassify_number();
@@ -956,7 +872,7 @@ BOOL ans;
    if (ch == '+') { sign=1; nextch(); }
    else
       if (ch == '-') { sign=-1; nextch(); }
-   if (!digit()) _error(3);  /* expect a digit */ 
+   if (!digit()) _error(3);  /* expect a digit */
    /* get digits */
    while (digit()) { ex = 10*ex + (ch-48); nextch(); }
    ex *= sign;
@@ -965,67 +881,65 @@ BOOL ans;
    {
 
     /* mantissa */
-    if (sym != singleconst) 
-    { 
-     singleval = SPFlt(n[0]); 
+    if (sym != singleconst)
+    {
+     singleval = SPFlt(n[0]);
      sym=singleconst; typ=singletype;
     }
 
-    /* if exponent is zero: 10^ex = 1 -> num*1 = num 
+    /* if exponent is zero: 10^ex = 1 -> num*1 = num
        so just return singleval as it is. */
     if (ex != 0) singleval = SPMul(SPPow(SPFlt(ex),10.0),singleval);
 
     reclassify_number();
    }
    else { singleval = 0.0; _warn(1); }
-  }    
-  obj=constant;
- }
- else
-  /* reserved symbol? */
-  if (ch == '\\') /* backslash */
-  { 
-   sym=idiv;  
-   nextch();
   }
-  else
-  if (ssymbol() || (ch == '&') || (ch == '#'))
-  {
+  obj=constant;
+}
+
+static void scan_symbol()
+{
+char ssym[3];
+LONG val;
+BYTE num;
+char lastch;
+
    /* one character symbol? */
    ssym[0]=ch;
    ssym[1]='\0';
    sym = rsvd_sym(ssym);  /* tentatively */
 
    lastch=ch;  /* might be '&' or '*' */
-   nextch();   
+   nextch();
 
    /* multiple character symbol? (++,--,->,<>,<=,>=,:=,&H,&O,*%,*&,*!) */
 
    /* ++ */
-   if (sym==plus && ch=='+') 
+   if (sym==plus && ch=='+')
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
-   else 
+   else
    /* --,-> */
-   if (sym==minus && (ch=='-' || ch=='>')) 
+   if (sym==minus && (ch=='-' || ch=='>'))
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
    else
    /* <>,<= */
-   if (sym==lessthan && (ch=='>' || ch=='=')) 
+   if (sym==lessthan && (ch=='>' || ch=='='))
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
    else
    /* >=,:= */
-   if ((sym==gtrthan || sym==colon) && ch=='=') 
+   if ((sym==gtrthan || sym==colon) && ch=='=')
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
    else
    /* &H,&O */
-   if (lastch=='&' && (ch=='H' || ch=='O')) 
+   if (lastch=='&' && (ch=='H' || ch=='O'))
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
    else
    /* *%,*&,*! */
    if (lastch=='*' && (ch=='%' || ch=='&' || ch=='!'))
       { ssym[1]=ch; ssym[2]='\0'; sym=rsvd_sym(ssym); nextch(); }
-  
- 
+
+
        /* hexadecimal constant? */
        if (sym == hexprefix)
        {
@@ -1038,7 +952,7 @@ BOOL ans;
          val = 16*val + num;
          nextch();
         }
-        classify_integer(val); 
+        classify_integer(val);
 	reclassify_number();
        }
        else
@@ -1046,8 +960,8 @@ BOOL ans;
       if ((sym == octalprefix) || ((ssym[0] == '&') && (strlen(ssym)==1)))
       {
        val=0;
-       if (octal_digit() == -1) 
-           _error(2); 
+       if (octal_digit() == -1)
+           _error(2);
        else
        {
         while ((num = octal_digit()) != -1)
@@ -1059,13 +973,111 @@ BOOL ans;
 	reclassify_number();
        }
       }
-    }
-    /*
-    ** Unknown symbol.
-    */
-    if (sym == undefined) { _error(2); nextch(); }
-    /*showsym(sym); lf();*/
- } 
+}
+
+void insymbol()
+/* lexical analyser */
+{
+int cc;
+
+ lastsym=sym;
+ sym = undefined;
+ obj = undefined;
+ typ = undefined;
+
+ if (!end_of_source)
+ {
+  /* skip whitespace */
+  while (ch <= ' ')
+  {
+   nextch();
+   if (end_of_source) return;
+   if (sym == endofline) return;  /* for PRINT */
+  }
+
+  /* single-line comment? */
+  if (ch == '\'')
+  {
+   do
+   {
+    nextch();
+   }
+   while ((sym != endofline) && (!end_of_source));
+   if (end_of_source) return;
+   if (sym == endofline) return;  /* for PRINT '... */
+  }
+
+  /* block comment? */
+  if (ch == '{')
+  {
+   do
+   {
+    nextch();
+   }
+   while ((ch != '}') && (!end_of_source));
+
+   if (!end_of_source) nextch();  /* character after "}" */
+   else
+       return;
+
+   if (sym == endofline) return;  /* for PRINT {..} */
+
+   /* skip whitespace */
+   while (ch <= ' ')
+   {
+    nextch();
+    if (end_of_source) return;
+    if (sym == endofline) return;  /* for PRINT {..} eoln */
+   }
+  }
+
+  /* identifier or reserved word? */
+  if (letter() || (ch == '_'))
+  {
+   scan_identifier();
+  }
+  else
+  /* string constant? */
+  if (ch == '"')
+  {
+   inside_string = TRUE;
+   cc=0;
+   do
+   {
+    nextch();
+    stringval[cc++] = ch;
+   }
+   while ((ch != '"') && (ch != '\0') && (cc < MAXSTRLEN));
+   if (ch == '"') --cc;
+   if (ch == '"') nextch();
+   stringval[cc]='\0';
+   sym=stringconst; typ=stringtype; obj=constant;
+   inside_string = FALSE;
+  }
+  else
+  /* numeric literal? */
+  if (digit() || (ch == '.'))
+  {
+   scan_number();
+  }
+  else
+  /* reserved symbol? */
+  if (ch == '\\') /* backslash */
+  {
+   sym=idiv;
+   nextch();
+  }
+  else
+  if (ssymbol() || (ch == '&') || (ch == '#'))
+  {
+   scan_symbol();
+  }
+  /*
+  ** Unknown symbol.
+  */
+  if (sym == undefined) { _error(2); nextch(); }
+  /*showsym(sym); lf();*/
+ }
 }
 
 /*

@@ -463,6 +463,104 @@ SHORT i;
  }
 }
 
+static void gen_for_condition(countertype, cntbuf, limbuf, stpbuf, cx1_out, cx2_out)
+int countertype;
+char *cntbuf, *limbuf, *stpbuf;
+CODE **cx1_out, **cx2_out;
+{
+char labname2[80],lablabel2[80];
+char labname3[80],lablabel3[80];
+
+    if (countertype == shorttype)
+    {
+     gen("move.w",cntbuf,"d0");   /* counter */
+     gen("move.w",limbuf,"d1");   /* limit */
+     gen("cmpi.w","#0",stpbuf);
+     make_label(labname2,lablabel2);
+     gen("blt",labname2,"  ");
+     gen("cmp.w","d1","d0");
+     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
+     *cx1_out=curr_code;
+     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
+     gen("jmp",labname3,"  ");
+     gen(lablabel2,"  ","  ");
+     gen("cmp.w","d1","d0");
+     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
+     *cx2_out=curr_code;
+     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
+    }
+    else
+    if (countertype == longtype)
+    {
+     gen("move.l",cntbuf,"d0");   /* counter */
+     gen("move.l",limbuf,"d1");   /* limit */
+     gen("cmpi.l","#0",stpbuf);
+     make_label(labname2,lablabel2);
+     gen("blt",labname2,"  ");
+     gen("cmp.l","d1","d0");
+     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
+     *cx1_out=curr_code;
+     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
+     gen("jmp",labname3,"  ");
+     gen(lablabel2,"  ","  ");
+     gen("cmp.l","d1","d0");
+     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
+     *cx2_out=curr_code;
+     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
+   }
+    else
+    if (countertype == singletype)
+    {
+     gen("moveq","#0","d1");
+     gen("move.l",stpbuf,"d0");   /* d0 < d1? (where d1=0) */
+     gen("move.l","_MathBase","a6");
+     gen("jsr","_LVOSPCmp(a6)","  ");
+     enter_XREF("_MathBase");
+     enter_XREF("_LVOSPCmp");
+     make_label(labname2,lablabel2);
+     gen("blt",labname2,"  ");  /* test result of ffp Cmp above */
+     gen("move.l",cntbuf,"d0");   /* counter */
+     gen("move.l",limbuf,"d1");   /* limit */
+     gen("move.l","_MathBase","a6");
+     gen("jsr","_LVOSPCmp(a6)","  ");
+     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
+     *cx1_out=curr_code;
+     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
+     gen("jmp",labname3,"  ");
+     gen(lablabel2,"  ","  ");
+     gen("move.l",cntbuf,"d0");   /* counter */
+     gen("move.l",limbuf,"d1");   /* limit */
+     gen("move.l","_MathBase","a6");
+     gen("jsr","_LVOSPCmp(a6)","  ");
+     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
+     *cx2_out=curr_code;
+     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
+    }
+}
+
+static void gen_for_increment(steptype, stpbuf, cntbuf, counteraddr)
+int steptype;
+char *stpbuf, *cntbuf, *counteraddr;
+{
+    switch(steptype)
+    {
+     case shorttype  : 	gen("move.w",stpbuf,"d0");
+		     	gen("add.w","d0",counteraddr);
+			break;
+     case longtype   : 	gen("move.l",stpbuf,"d0");
+		     	gen("add.l","d0",counteraddr);
+			break;
+     case singletype :  gen("move.l",stpbuf,"d0");
+			gen("move.l",cntbuf,"d1");
+			gen("move.l","_MathBase","a6");
+			gen("jsr","_LVOSPAdd(a6)","  ");
+			gen("move.l","d0",counteraddr);
+     			enter_XREF("_MathBase");
+     			enter_XREF("_LVOSPAdd");
+			break;
+    }
+}
+
 int for_assign(addr)
 char *addr;
 {
@@ -513,7 +611,7 @@ void for_statement()
    NEXT [variable]
 */
 CODE *cx1,*cx2;
-char labname1[80],lablabel1[80],labname2[80],lablabel2[80];
+char labname1[80],lablabel1[80];
 char labname3[80],lablabel3[80];
 char counteraddr[10],limitaddr[10],stepaddr[10];
 char for_id[50],cntbuf[10],limbuf[10],stpbuf[10];
@@ -568,71 +666,7 @@ int  countertype,limittype,steptype;
     strcpy(limbuf,limitaddr);
     strcpy(stpbuf,stepaddr);
    
-    if (countertype == shorttype)
-    {
-     gen("move.w",cntbuf,"d0");   /* counter */
-     gen("move.w",limbuf,"d1");   /* limit */
-     gen("cmpi.w","#0",stepaddr);
-     make_label(labname2,lablabel2);
-     gen("blt",labname2,"  ");
-     gen("cmp.w","d1","d0");
-     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
-     cx1=curr_code;
-     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
-     gen("jmp",labname3,"  ");
-     gen(lablabel2,"  ","  ");
-     gen("cmp.w","d1","d0");
-     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
-     cx2=curr_code;
-     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
-    }
-    else
-    if (countertype == longtype)
-    {
-     gen("move.l",cntbuf,"d0");   /* counter */
-     gen("move.l",limbuf,"d1");   /* limit */
-     gen("cmpi.l","#0",stepaddr);
-     make_label(labname2,lablabel2);
-     gen("blt",labname2,"  ");
-     gen("cmp.l","d1","d0");
-     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
-     cx1=curr_code;
-     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
-     gen("jmp",labname3,"  ");
-     gen(lablabel2,"  ","  ");
-     gen("cmp.l","d1","d0");
-     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
-     cx2=curr_code;
-     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
-   }
-    else
-    if (countertype == singletype)
-    { 
-     gen("moveq","#0","d1");
-     gen("move.l",stpbuf,"d0");   /* d0 < d1? (where d1=0) */
-     gen("move.l","_MathBase","a6");
-     gen("jsr","_LVOSPCmp(a6)","  ");
-     enter_XREF("_MathBase");
-     enter_XREF("_LVOSPCmp");
-     make_label(labname2,lablabel2);
-     gen("blt",labname2,"  ");  /* test result of ffp Cmp above */
-     gen("move.l",cntbuf,"d0");   /* counter */
-     gen("move.l",limbuf,"d1");   /* limit */
-     gen("move.l","_MathBase","a6");
-     gen("jsr","_LVOSPCmp(a6)","  ");
-     gen("bgt","  ","  ");	  /* if STEP +ve -> counter>limit? */
-     cx1=curr_code;
-     make_label(labname3,lablabel3); /* don't want to do -ve step test too! */
-     gen("jmp",labname3,"  ");
-     gen(lablabel2,"  ","  ");
-     gen("move.l",cntbuf,"d0");   /* counter */
-     gen("move.l",limbuf,"d1");   /* limit */
-     gen("move.l","_MathBase","a6");
-     gen("jsr","_LVOSPCmp(a6)","  ");
-     gen("blt","  ","  ");      /* if STEP -ve -> counter<limit? */
-     cx2=curr_code;
-     gen(lablabel3,"  ","  ");    /* label for bypassing -ve step test */
-    }
+    gen_for_condition(countertype, cntbuf, limbuf, stpbuf, &cx1, &cx2);
 
     /* statement block */
     while ((sym != nextsym) && (!end_of_source)) statement();
@@ -652,23 +686,7 @@ int  countertype,limittype,steptype;
     if (sym != colon) insymbol();   /* return this sym to statement */
 
     /* counter=counter+step */
-    switch(steptype)
-    {
-     case shorttype  : 	gen("move.w",stpbuf,"d0");
-		     	gen("add.w","d0",counteraddr);
-			break;
-     case longtype   : 	gen("move.l",stpbuf,"d0");
-		     	gen("add.l","d0",counteraddr);
-			break;
-     case singletype :  gen("move.l",stpbuf,"d0");
-			gen("move.l",cntbuf,"d1");
-			gen("move.l","_MathBase","a6");
-			gen("jsr","_LVOSPAdd(a6)","  ");
-			gen("move.l","d0",counteraddr);
-     			enter_XREF("_MathBase");
-     			enter_XREF("_LVOSPAdd");
-			break;
-    }
+    gen_for_increment(steptype, stpbuf, cntbuf, counteraddr);
 
     check_for_event();
 
