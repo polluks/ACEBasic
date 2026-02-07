@@ -46,6 +46,8 @@ assign ACEbmaps: ACE:bmaps
 assign ACEinclude: ACE:include
 path ACE:bin add
 protect ACE:bin/bas +s
-protect ACE:bin/module +s
+
+
+
 
 

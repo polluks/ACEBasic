@@ -1,0 +1,153 @@
+Compiler Source Refactoring Plan
+=================================
+
+Goal: Reduce duplication, centralize assembly code generation, and
+improve readability of the ACE compiler source (src/ace/c/).
+
+Each step is a separate git branch, built and tested before merging.
+Work incrementally: one step at a time, verify, then proceed.
+
+
+Phase 1: Small Independent Helpers
+------------------------------------
+
+These are mechanical extractions that reduce noise and make later
+phases cleaner. Each is low risk.
+
+1.1  Consolidate frame_ptr[] declaration
+     - Currently declared identically in 5 files:
+       statement.c, factor.c, control.c, assign.c, misc.c
+     - Move to a single shared location (e.g. acedef.h or a shared .c)
+     - Update all files to use the shared definition
+
+1.2  Extract make_ext_name(ext_name, ut_id)
+     - Replaces the "copy ut_id, remove_qualifier, prepend underscore"
+       pattern that appears 6 times across:
+       statement.c (4x), factor.c (1x), assign.c (1x)
+     - Place in misc.c, declare in acedef.h
+
+1.3  Extract make_modvar_bss_name(dest_buf, var_name)
+     - Replaces the "_modv_" prefix + type-suffix stripping pattern
+       (_IS, _IL, _FS, _FD, _ST) that appears 3 times in:
+       sym.c, factor.c, assign.c
+     - Place in misc.c, declare in acedef.h
+
+1.4  Extract alloc_or_die(size, error_msg)
+     - Replaces the 18 identical alloc-check-cleanup blocks in sym.c:
+       alloc() == NULL -> printf -> early_exit -> kill_all_lists -> cleanup
+     - Returns the pointer, aborts on failure
+     - Place in sym.c (internal helper)
+
+1.5  Extract sym_to_type(sym)
+     - Replaces the switch mapping type keywords to type constants:
+       shortintsym->shorttype, longintsym->longtype, etc.
+     - Duplicated in parse.c and assign.c
+     - Place in misc.c, declare in acedef.h
+
+1.6  Unify structure member search
+     - misc.c push_struct() and assign.c assign_to_struct() both
+       have identical member-search loops
+     - sym.c structmem_exist() already does this but returns BOOL
+     - Change to return the member pointer (or NULL), use everywhere
+     - Update in sym.c, declare in acedef.h
+
+
+Phase 2: Codegen Layer (codegen.c)
+------------------------------------
+
+Create src/ace/c/codegen.c as a semantic code generation layer that
+builds on top of the existing gen() function. Add to Makefile-ace.
+Declare functions in acedef.h.
+
+These functions encapsulate recurring assembly patterns so that
+parser code expresses intent rather than 68000 mnemonics.
+
+2.1  gen_rt_call(funcname)
+     - Generates: gen("jsr", funcname, "  "); enter_XREF(funcname);
+     - Replaces 101+ paired jsr/enter_XREF occurrences across 12+ files
+     - Biggest immediate payoff, simplest change
+
+2.2  gen_frame_addr(item, buf)
+     - Generates: itoa(-1*item->address, buf, 10); strcat(buf, frame_ptr[lev]);
+     - Replaces 20+ two-line address computations across all major files
+
+2.3  gen_push(type, src) / gen_pop(type, dest) / gen_move_typed(type, src, dest)
+     - gen_push: move.w/l src,-(sp) based on type
+     - gen_pop:  move.w/l (sp)+,dest based on type
+     - gen_move_typed: move.w/l src,dest based on type
+     - Replaces pervasive type-switched move instructions (50+ sites)
+
+2.4  gen_coerce_slots(cx, count)
+     - Generates NOP placeholders for potential type coercion
+     - Replaces 13 identical for-loops in expr.c and control.c
+
+2.5  gen_lib_call(func_item)
+     - Generates: check_for_ace_lib + make_library_base + move.l base,a6
+       + jsr offset(a6) + register restore
+     - Replaces 3 identical blocks in statement.c (2x) and factor.c (1x)
+
+2.6  gen_lib_open_check(open_func, ok_label)
+     - Generates: jsr open_func / cmpi / bne ok_label / jmp _ABORT / label:
+     - Replaces 7 identical blocks in parse.c compile()
+     - Also routes these through gen() so the optimizer can see them
+
+2.7  gen_load_var(item) / gen_store_var(item)
+     - Consolidates variable access logic: module vars (_modv_ prefix),
+       shared vars (indirection through pointer), frame vars (offset)
+     - Currently duplicated between factor.c and assign.c (~40 lines each)
+     - Also covers the shared-variable patterns in input() and read_data()
+     - Most complex step, do last in this phase
+
+
+Phase 3: Parser Decomposition
+--------------------------------
+
+With codegen noise removed and helpers in place, decompose the large
+parser functions. Each handler becomes much more readable.
+
+3.1  Merge increment/decrement handlers
+     - statement.c ++ handler (~50 lines) and -- handler (~50 lines)
+       are nearly identical
+     - Extract gen_inc_dec(is_increment) with a flag parameter
+     - Differs only in add vs sub instructions
+
+3.2  Extract pointer dereference assignment
+     - statement.c *%, *&, *! handlers share identical structure
+     - Extract gen_pointer_assign(pointer_type)
+     - Will be cleaner with gen_push/gen_pop from Phase 2
+
+3.3  INVOKE refactor
+     - ~400 duplicated lines between statement.c and factor.c
+     - Three sub-paths: closure dispatch, SUB calling, unknown-signature
+     - Extract shared helpers with a return-value flag parameter
+     - Most complex refactoring, highest line savings
+
+3.4  Break up statement()
+     - Currently ~1,493 lines, single if/else-if chain
+     - Extract per-statement handlers as static functions:
+       handle_ident_statement(), handle_call_statement(),
+       handle_invoke_statement(), handle_palette_statement(), etc.
+     - statement() becomes a dispatcher calling these handlers
+
+3.5  Break up factor()
+     - Currently ~868 lines
+     - Extract: handle_ident_factor(), handle_invoke_factor(),
+       handle_parameterless_functions()
+     - factor() becomes a dispatcher
+
+3.6  Further decomposition (optional, as needed)
+     - insymbol() in lex.c (~344 lines)
+     - compile() in parse.c (~320 lines) -- partially addressed by 2.6
+     - dim() in assign.c (~251 lines)
+     - input() / read_data() in assign.c -- partially addressed by 2.7
+     - for_statement() in control.c (~189 lines)
+
+
+State File
+-----------
+
+Maintain specs/compiler-refactoring-state.txt with only:
+- What was completed in the last phase/step (briefly, 1-2 lines)
+- Which phase/step is next
+
+This keeps context minimal across conversations.
