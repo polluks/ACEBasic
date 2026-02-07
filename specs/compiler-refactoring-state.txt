@@ -1,8 +1,8 @@
 Compiler Refactoring State
 ===========================
 
-Last completed: Phase 3.1 - Merge increment/decrement handlers
-  Branch: phase3.1-inc-dec
+Last completed: Phase 3.3 - INVOKE refactor
+  Branch: phase3.3-invoke-refactor
 
 Phase 1 (all 6 steps) - merged to master
   1.1: Consolidated frame_ptr[] from 11 static copies to one in misc.c + extern in acedef.h
@@ -91,6 +91,15 @@ Phase 3 (parser decomposition)
        - Parameterizes move_instr (move.w/move.l) and coercion (make_sure_short/make_integer+make_long/gen_Flt)
        - Net savings: ~17 lines, eliminates structural duplication
 
-Test suite: 74/74 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, subs 8, closures 9, callback 4, assert 2)
+  3.3: Extracted INVOKE handling into invoke.c
+       - New file: src/ace/c/invoke.c with handle_invoke(invoke_item, wants_return)
+       - Prototype in acedef.h, added to Makefile-ace SOURCES (30 modules)
+       - Replaced ~280 lines in statement.c and ~310 lines in factor.c
+       - Three dispatch paths: closure, SUB calling convention, unknown signature
+       - wants_return flag controls whether return value is pushed onto stack
+       - Removed unused locals from factor.c: invoke_sub, i, popcount
+       - Net savings: ~280 lines
 
-Next step: Phase 3.3 - TBD
+Test suite: 64/64 pass (syntax 12, arithmetic 9, floats 10, control 10, errors 10, closures 9, callback 4)
+
+Next step: Phase 3.4 - TBD

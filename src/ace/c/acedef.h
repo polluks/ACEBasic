@@ -629,6 +629,9 @@ void	gen_var_addr();
 void	gen_load_var();
 void	gen_store_var();
 
+/* invoke.c */
+int	handle_invoke();
+
 /* basfun.c */
 BOOL	strfunc();
 int	stringfunction();
