@@ -1,0 +1,34 @@
+; ** Install CubicIDE-ACE plugin into CubicIDE **
+;
+; Run this script from the CubicIDE-ACE directory:
+;   execute install-cubicide
+;
+; Copies add-ons/ and etc/ into the golded: assign.
+
+; Check if golded: assign exists
+IF EXISTS golded:
+  echo ""
+  echo "CubicIDE-ACE Plugin Installer"
+  echo "=============================="
+  echo ""
+  echo "This will copy the ACE plugin files into golded:"
+  echo "  add-ons/ace/  -> golded:add-ons/ace/"
+  echo "  etc/registry/ -> golded:etc/registry/"
+  echo ""
+  ASK "Continue with copy? (y/n) "
+  IF WARN
+    echo ""
+    echo "Copying add-ons..."
+    copy add-ons golded:add-ons ALL CLONE
+    echo "Copying etc..."
+    copy etc golded:etc ALL CLONE
+    echo ""
+    echo "Installation complete."
+    echo "Please (re)start CubicIDE to activate the plugin."
+  ELSE
+    echo "Installation cancelled."
+  ENDIF
+ELSE
+  echo "Error: golded: assign not found."
+  echo "CubicIDE must be installed and the golded: assign must be set."
+ENDIF

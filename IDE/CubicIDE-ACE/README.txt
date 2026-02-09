@@ -1,14 +1,6 @@
-Short:        CubicIDE ACE Plugin
-Author:       Manfred Bergmann
-Uploader:     manfred bergmann me com
-Type:         dev/basic
-Version:      0.2
-Architecture: generic
-Distribution: Aminet
-Requires:     CubicIDE, ace-basic
-Replaces:
-
 Installation of the ACE CubicIDE plugin.
+
+Use the installer script to install.
 
 The plugin offers the following functionality:
 - syntax highlighting based on the standard "generic.parser" provided by
