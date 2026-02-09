@@ -1,6 +1,93 @@
                                   CHANGELOG
                                   =========
 
+v2.8.0 (2026-02-09)
+-------------------
+
+New Features:
+
+  - INVOKABLE Keyword: New SUB modifier for closures used as callbacks.
+    SUBs declared with INVOKABLE can be passed via BIND and correctly
+    invoked through function pointers with runtime CLSR detection in
+    both expression and statement contexts.
+
+  - YAP Preprocessor: New BASIC preprocessor (Yet Another Preprocessor)
+    replacing the legacy APP. Supports #define/#undef macros, #ifdef/
+    #ifndef/#else/#endif conditionals, #include "file" and #include
+    <file> with nested includes (up to 8 levels), include-once tracking,
+    -D/-U CLI options, and -I include path. Written in ACE BASIC.
+
+  - List Submodule: Lisp-style linked list library (submods/list/) with
+    typed cons cells supporting INTEGER, SINGLE, STRING, and ADDRESS
+    values. Lists are effectively immutable when only non-destructive
+    functions are used. Includes higher-order functions (LMap, LFilter,
+    LReduce, LForEach) using closures/INVOKABLE. Comprehensive test
+    suite with 190+ assertions.
+
+  - REM #using Directive (#47): Source files can now declare object file
+    dependencies with REM #using <path>. The bas script automatically
+    parses these and links the specified object files.
+
+  - Installer (#32): AmigaDOS Installer script (Install-ACE) for
+    end-user installation with Cubic icons.
+
+New Submodules:
+
+  - list.b: Lisp-style linked list with higher-order function support.
+
+Changes:
+
+  - 68000 Runtime Libraries: Separate runtime libraries (db.lib,
+    startup.lib) for 68000 targets, alongside the default 68020 builds.
+
+  - Removed Legacy APP Preprocessor: The old C-based APP preprocessor
+    source has been removed in favor of YAP.
+
+  - Deprecated ACPP and NAP: The C-comment preprocessor (ACPP) and
+    NAP preprocessor are deprecated. YAP supersedes both (influenced
+    by NAP's design) and provides a unified preprocessing solution.
+
+  - CubicIDE Integration: Added CubicIDE ACE plugin and IDE folder.
+
+Bug Fixes:
+
+  - Fix Assembler Label Suffixes (#44): Type qualifier characters
+    (%, &, !, #, $) in SUB/FUNCTION names are now mapped to portable
+    assembler-safe suffixes (_IS, _IL, _FS, _FD, _ST) for vasm
+    compatibility.
+
+  - Fix INVOKE in Statement Context: INVOKE with runtime CLSR detection
+    now works correctly in statement context (previously only worked in
+    expression context).
+
+  - Fix REM #using with No Directives (#47): The bas script no longer
+    errors when source files contain no REM #using directives.
+
+Compiler Internals:
+
+  - Major refactoring (#55): Extracted codegen.c module with reusable
+    code generation helpers (gen_rt_call, gen_frame_addr, gen_push,
+    gen_pop, gen_lib_call, gen_var_addr, etc.). Broke up large functions
+    (statement, factor, compile, insymbol, for_statement) into focused
+    handlers. Extracted invoke.c for SUB/FUNCTION call handling. Total
+    reduction of ~1500 lines of duplicated code.
+
+Testing:
+
+  - 60 new test cases across 10 categories (strings, math, logic,
+    fileio, memory, control, syntax, subs, arithmetic, errors).
+  - Recursion test suite (7 tests).
+  - YAP preprocessor test suite (11 tests covering all features).
+  - Verified on A600 ECS hardware.
+
+Documentation:
+
+  - Internal calling conventions document (AmigaGuide).
+  - INVOKABLE keyword documented in ref.txt and ace.txt.
+  - List submodule README and API documentation.
+
+------------------------------------------------------------------------------
+
 v2.7.1 (2026-02-03)
 -------------------
 
