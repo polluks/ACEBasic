@@ -86,10 +86,12 @@ IF NOT "$usingobj" EQ ""
 ENDIF
 
 ; preprocess source file.
+echo "Preprocessing..."
 cmd_yap $srcbase.b T:$srcbase.b
 IF ERROR
   SKIP end
 ENDIF
+echo "...Done"
 
 ; Check if assembly-only compilation (-S flag)
 rx "if pos('S', '$aceopts') > 0 then say 1; else say 0" >T:bas_isasm
