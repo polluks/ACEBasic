@@ -73,6 +73,7 @@ echo ""
 
 ; Protect bas script
 protect ACE:bin/bas +s >NIL:
+protect ACE:bin/#? +e >NIL:
 
 ; Ask about user-startup persistence
 echo "To make assigns persist across reboots, they"

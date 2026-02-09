@@ -4,6 +4,7 @@ REM inside a SUB (via SHARED) caused garbage bytes due to
 REM missing braces in assign.c array handler.
 
 DEFINT a-z
+LONGINT cnt
 DIM names$(3) SIZE 20
 
 REM Initialize array
