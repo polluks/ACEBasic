@@ -1,0 +1,456 @@
+YAP - Yet Another Preprocessor for ACE BASIC
+==============================================
+
+Date: 2026-02-09
+Status: Planned
+
+
+1. OVERVIEW
+-----------
+
+This spec defines YAP (Yet Another Preprocessor), the ACE BASIC preprocessor
+replacing the removed APP and the external tools ACPP and NAP. YAP is a
+standalone tool written in ACE BASIC that transforms ACE BASIC source files
+before they reach the compiler. It handles file inclusion, macro definitions,
+conditional compilation, and comment removal.
+
+YAP is invoked as the first stage in the build pipeline:
+
+    Source (.b) --> Preprocess (yap) --> Compile (ace) --> Assemble --> Link
+
+Current pipeline (bas script):
+
+    acpp source.b T:source.beta
+    removeline T:source.beta T:source.b      (strips acpp info lines)
+    ace T:source
+
+Target pipeline:
+
+    yap source.b T:source.b
+    ace T:source
+
+YAP replaces both acpp and removeline in a single tool.
+
+
+2. HISTORY AND CONTEXT
+----------------------
+
+ACE has had three preprocessors over its lifetime:
+
+APP (original, by David Benn):
+  - Handled #include (with include-once semantics)
+  - Removed single-line comments (') and block comments ({...})
+  - Did NOT handle #define or conditional compilation
+  - Removed since ACE v2.5
+
+ACPP (C preprocessor):
+  - Full C preprocessor (handles #define, #ifdef, #ifndef, #if, #else, etc.)
+  - Handles C-style comments (/* ... */)
+  - Does NOT understand ACE comments (' and {...})
+  - Inserts information lines (e.g. "# 1 filename") that must be stripped
+    by RemoveLine before the ACE compiler sees them
+  - Assumes ACEinclude: = ACE:include
+
+NAP (New ACE Preprocessor, by Daniel Seifert, v2.00 beta-3, 1996):
+  - Combines APP and CPP features
+  - Handles #include with include-once and recursive inclusion
+  - Handles #define with macro replacement (case-sensitive)
+  - Handles #if/#elif conditional compilation with expression evaluation
+  - Handles #undef
+  - Removes ACE comments (' and {...}) and C comments (/* ... */)
+  - Removes unused STRUCT definitions (optimization for smaller output)
+  - Consolidates consecutive empty lines
+  - Written in ACE BASIC itself
+  - Command-line options: -S -C -Q -I -E -B -H -D -U -P
+
+The include files in ACE:include/ use C preprocessor conventions:
+  - #ifndef GUARD / #define GUARD / #endif for include guards
+  - #define for constants
+  - #include <path> for nested includes
+  - /* ... */ for C-style comments
+  - Mixed with ACE BASIC constructs (STRUCT, LONGINT, STRING, etc.)
+
+
+3. REQUIREMENTS
+---------------
+
+3.1 Must Have (Core)
+  - #include "filename"    -- include file as specified (relative path)
+  - #include <filename>    -- include file from ACEinclude: directory
+  - Include-once semantics (each file included at most once)
+  - Recursive file inclusion
+  - #define TOKEN value    -- simple macro replacement
+  - #define TOKEN          -- define TOKEN with value 1
+  - #undef TOKEN           -- remove a macro definition
+  - #ifndef TOKEN / #endif -- conditional compilation (include guard pattern)
+  - #ifdef TOKEN / #endif  -- conditional compilation
+  - #if / #else / #endif   -- conditional blocks
+  - #elif                  -- chained conditionals
+  - Comment removal: single-line (') and block ({...})
+  - Comment removal: C-style (/* ... */)
+  - Clean output (no info lines that need post-processing)
+  - Correct line counting for error reporting
+
+3.2 Should Have
+  - -D<token>[=<value>]   -- define token from command line
+  - -U<token>             -- undefine token from command line
+  - -I<directory>         -- add include search path (multiple allowed)
+  - Macro replacement is case-sensitive (consistent with C convention)
+  - Multi-line #define using \ line continuation
+  - Consolidate consecutive blank lines in output
+  - Parameterized macros: #define FOO(x) (x+1)  (used in some include files)
+
+3.3 Nice to Have (from NAP)
+  - -S  -- disable removal of unused structures
+  - -C  -- disable comment removal
+  - -Q  -- replace defines with CONST statements instead of inline expansion
+  - -E  -- suppress error/warning messages
+  - Removal of unused STRUCT definitions
+
+
+4. DIRECTIVE SYNTAX
+-------------------
+
+All directives start with # in column 1 (or after optional whitespace).
+The # must be followed immediately by the directive name (no space required
+but space is tolerated, matching C convention).
+
+4.1 File Inclusion
+
+    #include "filename"
+    #include <filename>
+
+  - Quoted form: searches relative to the current file's directory, then
+    the current working directory.
+  - Angle-bracket form: searches in include path directories. The default
+    include path is ACEinclude: (which resolves to ACE:include).
+    Additional paths can be added with -I option.
+  - Include-once: if a file has already been included (by its canonical
+    path), it is silently skipped. This means #ifndef guards work but
+    are technically redundant.
+  - Recursive: included files may themselves contain #include directives.
+  - Maximum nesting depth: 8 levels (ACE supports 9 open files; 1 is the
+    output file).
+
+4.2 Macro Definition
+
+    #define TOKEN replacement-text
+    #define TOKEN
+    #define TOKEN(param1, param2) replacement-text
+
+  - TOKEN is a sequence of alphanumeric characters and underscores,
+    starting with a letter or underscore.
+  - If no replacement-text is given, TOKEN is defined with value "1".
+  - Replacement is case-sensitive: TOKEN and token are different.
+  - Macros are NOT expanded inside string literals or comments.
+  - Line continuation: if a line ends with \ or ~, the next line is
+    appended to the current replacement text.
+  - Parameterized macros: if TOKEN is immediately followed by ( with no
+    space, it is a parameterized macro. Parameters are substituted
+    positionally in the replacement text.
+
+4.3 Macro Undefinition
+
+    #undef TOKEN
+
+  - Removes TOKEN from the macro table.
+  - Not an error if TOKEN was not defined.
+
+4.4 Conditional Compilation
+
+    #ifdef TOKEN          -- true if TOKEN is defined
+    #ifndef TOKEN         -- true if TOKEN is NOT defined
+    #if expression        -- true if expression evaluates to non-zero
+    #elif expression      -- else-if chain
+    #else                 -- else branch
+    #endif                -- end conditional block
+
+  - Conditionals can be nested.
+  - In #if / #elif expressions:
+    - Integer literals (decimal, hex with &H or 0x prefix, octal with 0 prefix)
+    - defined(TOKEN) -- evaluates to 1 if TOKEN is defined, 0 otherwise
+    - Arithmetic operators: + - * /
+    - Comparison operators: = == != <> < > <= >=
+    - Logical operators: && || !
+    - Parentheses for grouping
+    - Macro tokens in expressions are replaced before evaluation
+    - Undefined tokens in expressions evaluate to 0
+  - Lines in a false branch are suppressed (not written to output).
+
+4.5 Comments
+
+  The preprocessor removes the following comment forms:
+
+  - ACE single-line: everything from ' to end of line
+    (but NOT inside string literals)
+  - ACE block comments: everything from { to } (may span lines)
+    (block comments must NOT be nested)
+  - C single-line: everything from // to end of line
+  - C block comments: everything from /* to */ (may span lines)
+    (C block comments must NOT be nested)
+  - REM is NOT removed (it is a BASIC statement handled by the compiler)
+
+  Comment removal can be disabled with -C option.
+
+
+5. COMMAND-LINE INTERFACE
+-------------------------
+
+    yap [options] <inputfile> <outputfile>
+
+    Options:
+      -D<token>[=<value>]   Define a macro (may be repeated)
+      -U<token>             Undefine a macro (may be repeated)
+      -I<directory>         Add include search path (may be repeated, max 7)
+      -C                    Disable comment removal
+      -S                    Disable unused STRUCT removal
+      -E                    Suppress error/warning messages
+      -H                    Print usage and exit
+
+    Default include path: ACEinclude:
+    Default behavior: expand macros, include files, remove comments,
+                      remove unused STRUCTs, consolidate blank lines.
+
+    Exit codes:
+      0  -- success
+      5  -- warnings occurred
+      10 -- errors occurred (file not found, syntax error in directive, etc.)
+
+
+6. PROCESSING MODEL
+--------------------
+
+The preprocessor operates line-by-line with these phases per line:
+
+  1. Check for block comment state (if inside { } or /* */, skip until
+     closing delimiter or remove comment text)
+  2. If line starts with #, parse as directive:
+     a. Evaluate conditional state (are we in a true or false branch?)
+     b. If in false branch, only process #if/#ifdef/#ifndef/#elif/#else/#endif
+        (for nesting tracking); skip everything else
+     c. If in true branch, execute the directive
+  3. If not a directive and in a true branch:
+     a. Remove comments (single-line ' and //)
+     b. Perform macro replacement on the line
+     c. Write line to output
+  4. Track line numbers for error reporting (original file + line number)
+
+Include-once tracking:
+  - Maintain a list of absolute/canonical paths of already-included files
+  - Before opening a file for inclusion, check if it's already in the list
+  - If already included, skip silently
+
+Macro replacement:
+  - Scan line for tokens (word boundaries)
+  - For each token, check if it matches a defined macro
+  - Replace with expansion text
+  - Do NOT re-scan expansion text (no recursive macro expansion)
+  - Do NOT replace inside string literals (text between " " pairs)
+
+
+6.1 PERFORMANCE CONSIDERATIONS
+
+YAP must be as fast as possible. The target platform is a modern Amiga
+development machine with at least 8 MB of RAM (e.g. A1200/A4000 with
+accelerator, or emulator). With ample memory available, YAP can use
+aggressive buffering and in-memory strategies.
+
+NAP v2.00b3 took 26 seconds for its test file on an A500; CPP took 15
+seconds. On the target hardware YAP should be near-instantaneous for
+typical source files.
+
+Key performance strategies:
+
+  a) Load entire files into memory:
+     - With 8 MB+ available, even large include trees fit in RAM.
+     - Read each source/include file into a single memory buffer using
+       AmigaDOS Read() or similar block read. No line-by-line LINE INPUT.
+     - Process lines by scanning for line-end characters (LF, $0A)
+       within the buffer using PEEK.
+
+  b) Minimize string operations:
+     - ACE BASIC string operations (MID$, LEFT$, INSTR) are slow due to
+       memory allocation and copying.
+     - Work with character codes (ASC, PEEK/POKE) on raw buffers where
+       possible instead of creating substring copies.
+     - NAP's biggest speed gains (200%) came from replacing ACE string
+       routines with direct memory/character operations.
+
+  c) Efficient macro lookup:
+     - Store macros in a sorted array or hash table for fast lookup, not
+       a linear scan for every token on every line.
+     - Most files define many macros (dos.h has 80+); linear search for
+       each token is O(tokens * macros) per line.
+
+  d) Avoid unnecessary work:
+     - Skip blank/comment-only lines early (don't scan for macros).
+     - In false conditional branches, only track nesting depth -- don't
+       parse line contents at all.
+     - Include-once check should be fast (hash or sorted list, not linear
+       string comparison over all included files).
+
+  e) Buffer output:
+     - Accumulate output in a large memory buffer, write to disk in one
+       or few large blocks at the end.
+
+  f) Tight inner loops:
+     - The character-scanning loop (finding tokens, checking for comment
+       delimiters, checking for string literal boundaries) is the hottest
+       code path. Keep it minimal -- single-pass over each line, using
+       byte comparisons (PEEK), not string functions.
+
+
+7. INCLUDE PATH RESOLUTION
+---------------------------
+
+For #include "filename":
+  1. Try the path relative to the directory of the file containing the
+     #include directive
+  2. Try the path relative to the current working directory
+  3. Try each -I directory in order
+  4. Error if not found
+
+For #include <filename>:
+  1. Try ACEinclude:<filename>
+  2. Try each -I directory in order
+  3. Error if not found
+
+
+8. ERROR HANDLING
+-----------------
+
+The preprocessor reports errors with file name and line number:
+
+    filename:line: error: message
+
+Errors (exit code 10):
+  - File not found (for #include)
+  - Unterminated block comment at end of file
+  - Unterminated conditional (#if without #endif) at end of file
+  - #else/#elif/#endif without matching #if
+  - Malformed directive syntax
+  - Too many nested includes (depth > 8)
+  - Cannot open input or output file
+
+Warnings (exit code 5):
+  - Redefining an already-defined macro (with different value)
+  - #undef on undefined token
+
+
+9. IMPLEMENTATION LANGUAGE
+--------------------------
+
+YAP is written in ACE BASIC, following the tradition of NAP (which was also
+written in ACE BASIC). This makes YAP a self-hosting tool -- it is compiled
+by the same compiler whose source it preprocesses.
+
+Source file: utils/yap/yap.b
+Binary: bin/yap
+
+Build process (on Amiga):
+  1. Compile: bas yap  (from utils/yap/ directory)
+  2. Copy binary to ACE:bin/
+
+Stack requirement: 40000 bytes (sufficient for recursive file inclusion).
+
+
+10. INTEGRATION WITH BAS SCRIPT
+--------------------------------
+
+The bas script currently runs:
+
+    acpp $srcbase.b T:$srcbase.beta
+    removeline T:$srcbase.beta T:$srcbase.b
+
+This will be replaced with:
+
+    yap $srcbase.b T:$srcbase.b
+
+Removing the need for the removeline step entirely.
+
+
+11. COMPATIBILITY NOTES
+------------------------
+
+The existing include files in ACE:include/ use these constructs that the
+preprocessor MUST handle correctly:
+
+  - #ifndef GUARD_H / #define GUARD_H / #endif  (include guards)
+  - #define TOKEN value                         (simple macros)
+  - #define TOKEN                               (flag macros)
+  - #include <path/file.h>                      (nested includes)
+  - /* ... */ comments                          (C-style, single and multi-line)
+  - ACE BASIC code: STRUCT, END STRUCT, LONGINT, SHORTINT, STRING, ADDRESS
+  - Mixed #define and STRUCT in same file
+  - Hex constants with &H prefix: &H7FFFFFFF
+  - Type suffixes on constants: -1&, 0&
+
+Example from include/dos/dos.h:
+
+    #ifndef DOS_DOS_H
+    #define DOS_DOS_H 1
+    #ifndef DateStampPtr
+    #define DateStampPtr ADDRESS
+    #endif
+    #ifndef EXEC_TYPES_H
+    #include <exec/types.h>
+    #endif
+    #define DOSNAME "dos.library"
+    #define DOSTRUE (-1&)
+    STRUCT DateStamp
+       LONGINT ds_Days
+       LONGINT ds_Minute
+       LONGINT ds_Tick
+    END STRUCT
+    #endif
+
+The preprocessor must pass through all ACE BASIC code unchanged (after
+macro expansion and comment removal).
+
+
+12. DIFFERENCES FROM NAP
+-------------------------
+
+YAP is a spiritual successor to NAP, also written in ACE BASIC.
+
+Simplifications vs NAP:
+  - No -Q option (CONST replacement mode) initially
+  - No -B option (buffer size) -- use standard I/O buffering
+  - No special character issues (NAP had problems with characters like ß)
+  - No tabulator restrictions (tabs treated as whitespace, not line-end)
+  - No speed table tracking (not needed)
+  - Cleaner, modernized ACE BASIC code (NAP was written for ACE v2.37)
+
+Retained from NAP:
+  - Written in ACE BASIC (self-hosting tradition)
+  - #include with include-once semantics
+  - #define with case-sensitive replacement
+  - #if/#elif/#ifdef/#ifndef/#else/#endif conditional compilation
+  - #undef
+  - Comment removal (ACE and C styles)
+  - Unused STRUCT removal (optional, -S disables)
+  - Consecutive blank line consolidation
+  - -D, -U, -I (renamed from -P) command-line options
+  - -C, -S, -E options
+
+
+13. TESTING STRATEGY
+--------------------
+
+Unit tests (file-based, run on emulator):
+  - Include file with #include "..."
+  - Include file with #include <...>
+  - Include-once (same file included twice, only appears once)
+  - Nested includes (A includes B includes C)
+  - #define simple replacement
+  - #define with no value (flag)
+  - #ifdef / #ifndef / #endif
+  - #if / #else / #endif
+  - #elif chains
+  - #undef
+  - Comment removal (' and { } and /* */)
+  - Macro not expanded inside strings
+  - Line continuation with \
+  - Error: file not found
+  - Error: unterminated conditional
+  - Integration: compile a program using include/dos/dos.h end-to-end
