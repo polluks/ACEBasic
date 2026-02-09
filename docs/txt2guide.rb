@@ -357,7 +357,7 @@ class AceConverter < ManualConverter
     output << '@NODE MAIN "Main Menu"'
     output << ''
     output << '			       +------------+'
-    output << '			       | ACE v2.7.1 |'
+    output << '			       | ACE v2.8.0 |'
     output << '			       +------------+'
     output << ''
 

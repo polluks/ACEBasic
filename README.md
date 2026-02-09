@@ -2,7 +2,7 @@
 
 ACE is a complete BASIC compiler for the Amiga computer platform. It compiles BASIC source code into native Amiga executables by generating Motorola 68000/68020 assembly code, bridging BASIC's ease of use with compiled performance.
 
-Originally released under the GNU General Public License (GPL v2) in 1998. Current version: **2.7.1**
+Originally released under the GNU General Public License (GPL v2) in 1998. Current version: **2.8.0**
 
 ## Features
 
