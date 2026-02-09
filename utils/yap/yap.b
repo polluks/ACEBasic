@@ -685,18 +685,20 @@ REM Token-scanning replacement engine.
 REM Scans for identifiers, looks them up, replaces with value.
 REM Does NOT replace inside string literals.
 REM No recursive expansion.
+REM Optimized: POKE-based O(n) string building, inlined ident checks.
 SUB STRING ReplaceMacros$(STRING ln$)
   SHARED macroCount, macroName$, macroValue$
   STRING out$ SIZE 1025
   STRING tok$ SIZE 256
-  SHORTINT i, sLen, ch, startPos, idx, inQuote
+  SHORTINT i, sLen, ch, startPos, idx, inQuote, oLen
+  SHORTINT vLen, j
 
   IF macroCount = 0 THEN
     ReplaceMacros$ = ln$
     EXIT SUB
   END IF
 
-  out$ = ""
+  oLen = 0
   inQuote = FALSE
   sLen = LEN(ln$)
   i = 1
@@ -707,17 +709,21 @@ SUB STRING ReplaceMacros$(STRING ln$)
     REM Track string literals
     IF ch = 34 THEN
       inQuote = NOT inQuote
-      out$ = out$ + CHR$(ch)
+      POKE @out$ + oLen, ch
+      ++oLen
       ++i
     ELSEIF inQuote THEN
-      out$ = out$ + CHR$(ch)
+      POKE @out$ + oLen, ch
+      ++oLen
       ++i
-    ELSEIF IsIdentStart(ch) THEN
-      REM Extract identifier token
+    ELSEIF ch = 95 OR (ch >= 65 AND ch <= 90) OR (ch >= 97 AND ch <= 122) THEN
+      REM Identifier start (inlined IsIdentStart)
       startPos = i
       ++i
       WHILE i <= sLen
-        IF IsIdentChar(PEEK(@ln$ + i - 1)) THEN
+        ch = PEEK(@ln$ + i - 1)
+        REM Inlined IsIdentChar
+        IF ch = 95 OR (ch >= 65 AND ch <= 90) OR (ch >= 97 AND ch <= 122) OR (ch >= 48 AND ch <= 57) THEN
           ++i
         ELSE
           GOTO rm_got_tok
@@ -727,16 +733,28 @@ rm_got_tok:
       tok$ = MID$(ln$, startPos, i - startPos)
       idx = MacroFind(tok$)
       IF idx >= 0 THEN
-        out$ = out$ + macroValue$(idx)
+        REM Copy macro value via POKE
+        vLen = LEN(macroValue$(idx))
+        FOR j = 0 TO vLen - 1
+          POKE @out$ + oLen + j, PEEK(@macroValue$(idx) + j)
+        NEXT
+        oLen = oLen + vLen
       ELSE
-        out$ = out$ + tok$
+        REM Copy original token via POKE
+        vLen = i - startPos
+        FOR j = 0 TO vLen - 1
+          POKE @out$ + oLen + j, PEEK(@ln$ + startPos - 1 + j)
+        NEXT
+        oLen = oLen + vLen
       END IF
     ELSE
-      out$ = out$ + CHR$(ch)
+      POKE @out$ + oLen, ch
+      ++oLen
       ++i
     END IF
   WEND
 
+  POKE @out$ + oLen, 0
   ReplaceMacros$ = out$
 END SUB
 
@@ -1058,16 +1076,51 @@ END SUB
 REM ---- SUB: RemoveComments$ ----
 REM Single-pass left-to-right scanner that removes all comment types.
 REM Respects string literals (text between double quotes).
+REM Optimized: POKE-based O(n) string building, fast path for simple lines.
 SUB STRING RemoveComments$(STRING ln$)
   SHARED inCComment, inAceComment
   STRING out$ SIZE 1025
-  SHORTINT i, sLen, ch, nx
-  SHORTINT inString, done, handled, trimming
+  SHORTINT i, sLen, ch, nx, oLen
+  SHORTINT inString, done, handled, hasSpecial
 
-  out$ = ""
+  sLen = LEN(ln$)
+
+  REM Fast path: no block comment active and no special chars in line
+  IF inCComment = FALSE AND inAceComment = FALSE THEN
+    hasSpecial = FALSE
+    FOR i = 0 TO sLen - 1
+      ch = PEEK(@ln$ + i)
+      IF ch = 47 OR ch = 123 OR ch = 39 OR ch = 34 THEN
+        hasSpecial = TRUE
+        EXIT FOR
+      END IF
+    NEXT
+    IF hasSpecial = FALSE THEN
+      REM Trim trailing whitespace only
+      oLen = sLen
+      WHILE oLen > 0
+        ch = PEEK(@ln$ + oLen - 1)
+        IF ch <> 32 AND ch <> 9 THEN
+          GOTO rc_fast_done
+        END IF
+        --oLen
+      WEND
+rc_fast_done:
+      IF oLen = sLen THEN
+        RemoveComments$ = ln$
+      ELSEIF oLen = 0 THEN
+        RemoveComments$ = ""
+      ELSE
+        RemoveComments$ = LEFT$(ln$, oLen)
+      END IF
+      EXIT SUB
+    END IF
+  END IF
+
+  REM Slow path: character-by-character scan with POKE output
+  oLen = 0
   inString = FALSE
   done = FALSE
-  sLen = LEN(ln$)
   i = 1
 
   WHILE i <= sLen AND done = FALSE
@@ -1103,7 +1156,8 @@ SUB STRING RemoveComments$(STRING ln$)
       REM ---- Toggle string literal state on " ----
       IF ch = 34 THEN
         inString = NOT inString
-        out$ = out$ + CHR$(ch)
+        POKE @out$ + oLen, ch
+        ++oLen
         ++i
         handled = TRUE
       END IF
@@ -1140,23 +1194,24 @@ SUB STRING RemoveComments$(STRING ln$)
       END IF
     END IF
 
-    REM ---- Normal character: copy to output ----
+    REM ---- Normal character: POKE to output buffer ----
     IF handled = FALSE THEN
-      out$ = out$ + CHR$(ch)
+      POKE @out$ + oLen, ch
+      ++oLen
       ++i
     END IF
   WEND
 
   REM Trim trailing whitespace
-  trimming = TRUE
-  WHILE LEN(out$) > 0 AND trimming
-    ch = PEEK(@out$ + LEN(out$) - 1)
+  WHILE oLen > 0
+    ch = PEEK(@out$ + oLen - 1)
     IF ch = 32 OR ch = 9 THEN
-      out$ = LEFT$(out$, LEN(out$) - 1)
+      --oLen
     ELSE
-      trimming = FALSE
+      GOTO rc_slow_done
     END IF
   WEND
-
+rc_slow_done:
+  POKE @out$ + oLen, 0
   RemoveComments$ = out$
 END SUB

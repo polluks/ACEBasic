@@ -1,8 +1,7 @@
 .key arg1,arg2,arg3
 
-; ** Preprocess, compile, assemble and link an ACE program using **
-; ** ACPP rather than APP as a preprocessor. Could use NAP instead. **
-; ** Assembles using vasm, links with vlink. **
+; ** Preprocess, compile, assemble and link an ACE program. **
+; ** Uses YAP preprocessor, vasm assembler, vlink linker. **
 ;
 ; Usage:
 ;   bas sourcefile                      - Compile sourcefile.b
@@ -19,15 +18,14 @@
 
 ; Command paths
 ALIAS cmd_ace ace:bin/ace
-ALIAS cmd_acpp ace:bin/acpp
-ALIAS cmd_removeline ace:bin/removeline
+ALIAS cmd_yap ace:bin/yap
 ALIAS cmd_vasm ace:bin/vasmm68k_mot
 ALIAS cmd_vlink ace:bin/vlink
 
 ; make sure stack is big enough.
 STACK 65000
 
-; don't abort script if ACE or APP quits
+; don't abort script if ACE or YAP quits
 ; with a return code of 10 (ERROR).
 FAILAT 11
 
@@ -88,18 +86,10 @@ IF NOT "$usingobj" EQ ""
 ENDIF
 
 ; preprocess source file.
-cmd_acpp $srcbase.b T:$srcbase.beta
+cmd_yap $srcbase.b T:$srcbase.b
 IF ERROR
   SKIP end
 ENDIF
-
-; remove preprocessor-inserted information lines.
-cmd_removeline T:$srcbase.beta T:$srcbase.b
-IF ERROR
-  SKIP end
-ENDIF
-
-delete >NIL: T:$srcbase.beta
 
 ; Check if assembly-only compilation (-S flag)
 rx "if pos('S', '$aceopts') > 0 then say 1; else say 0" >T:bas_isasm
