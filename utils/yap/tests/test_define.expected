@@ -1,0 +1,6 @@
+REM Test #define, #undef, and value types
+PRINT 1
+PRINT 42
+PRINT "hello world"
+PRINT BAR
+PRINT 99

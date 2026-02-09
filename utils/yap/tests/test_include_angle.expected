@@ -1,0 +1,5 @@
+REM Test: #include <file> with -I path
+PRINT "Before angle include"
+PRINT "System header loaded"
+PRINT "After angle include"
+PRINT "Version "; 3

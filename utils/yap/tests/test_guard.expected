@@ -1,0 +1,3 @@
+REM Test include guard pattern
+PRINT "first include"
+PRINT "done"

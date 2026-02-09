@@ -1,0 +1,5 @@
+REM Test -D and -U command-line options
+REM Run with: yap -DPLATFORM=AMIGA -UDEBUG test_cli_define.b out.b
+PRINT "platform defined"
+PRINT AMIGA
+PRINT "done"

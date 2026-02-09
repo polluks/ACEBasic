@@ -1,0 +1,4 @@
+REM Test nested conditionals and false-branch nesting
+PRINT "outer true"
+PRINT "inner else"
+PRINT "after all"

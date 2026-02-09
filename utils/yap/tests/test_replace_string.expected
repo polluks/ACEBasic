@@ -1,0 +1,5 @@
+REM Test that macros are NOT replaced inside string literals
+PRINT "FOO is a macro"
+PRINT 42
+x = 42 + 1
+PRINT "The value of FOO is"; 42

@@ -1,0 +1,2 @@
+#define FOO 42
+PRINT FOO

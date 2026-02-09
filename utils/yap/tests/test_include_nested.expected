@@ -1,0 +1,7 @@
+REM Test: nested #include (outer includes inner)
+PRINT "Before nested"
+REM helper_outer.h - includes helper_inner.h
+PRINT "From inner"
+PRINT "From outer"
+PRINT "After nested"
+PRINT "Inner="; 200; " Outer="; 100

@@ -1,0 +1,4 @@
+REM Test #ifdef, #ifndef, #else, #endif
+PRINT "foo is defined"
+PRINT "else branch"
+PRINT "not defined branch"

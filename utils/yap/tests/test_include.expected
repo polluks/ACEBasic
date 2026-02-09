@@ -1,0 +1,6 @@
+REM Test: basic #include "file" directive
+PRINT "Before include"
+REM This is a simple include file for testing
+PRINT "From helper_simple"
+PRINT "After include"
+PRINT "Value is "; 42

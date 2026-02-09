@@ -1,0 +1,6 @@
+REM Test: include-once via include guards
+PRINT "Before first include"
+PRINT "Guarded included"
+PRINT "Between includes"
+PRINT "After second include"
+PRINT "Val is "; 99
