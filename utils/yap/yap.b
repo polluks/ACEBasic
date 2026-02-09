@@ -1,5 +1,5 @@
 REM YAP - Yet Another Preprocessor for ACE BASIC
-REM Phase 3: #include support with include-once and path resolution
+REM Buffered I/O: reads entire files into memory, writes output in one shot.
 REM
 REM Usage: yap [options] <inputfile> <outputfile>
 REM
@@ -52,6 +52,25 @@ DIM condSeenTrue(MAX_COND_DEPTH)
 DIM condHadElse(MAX_COND_DEPTH)
 SHORTINT condDepth
 
+REM ---- dos.library for buffered I/O ----
+DECLARE FUNCTION _Read&(fh&, buf&, length&) LIBRARY dos
+DECLARE FUNCTION _Write&(fh&, buf&, length&) LIBRARY dos
+
+REM ---- Input buffer stack (one per include depth) ----
+DIM inBuf&(MAX_INCLUDE_DEPTH)
+DIM inBufLen&(MAX_INCLUDE_DEPTH)
+DIM inBufPos&(MAX_INCLUDE_DEPTH)
+
+REM ---- Output buffer (128KB) ----
+LONGINT outBuf&
+LONGINT outBufLen&
+
+REM ---- Shared line buffer for ReadLineFromBuffer ----
+STRING rdLineBuf$ SIZE 1025
+
+REM ---- Cached output-active flag ----
+SHORTINT cachedOutputActive
+
 REM ---- Forward declarations ----
 DECLARE SUB ShowUsage
 DECLARE SUB SHORTINT ParseArgs
@@ -62,7 +81,6 @@ DECLARE SUB SHORTINT IsIdentChar(SHORTINT ch)
 DECLARE SUB SHORTINT MacroFind(STRING nm$)
 DECLARE SUB MacroDefine(STRING nm$, STRING val$)
 DECLARE SUB MacroUndef(STRING nm$)
-DECLARE SUB SHORTINT OutputActive
 DECLARE SUB HandleDefine(STRING rest$)
 DECLARE SUB HandleUndef(STRING rest$)
 DECLARE SUB HandleIfdef(STRING rest$)
@@ -77,6 +95,12 @@ DECLARE SUB SHORTINT AlreadyIncluded(STRING path$)
 DECLARE SUB AddIncluded(STRING path$)
 DECLARE SUB STRING FindIncludeFile$(STRING nm$, SHORTINT isAngle)
 DECLARE SUB HandleInclude(STRING rest$)
+DECLARE SUB LoadFileToBuffer(SHORTINT depth)
+DECLARE SUB SHORTINT ReadLineFromBuffer(SHORTINT depth)
+DECLARE SUB OutputLine(STRING ln$)
+DECLARE SUB OutputBlankLine
+DECLARE SUB FlushOutput
+DECLARE SUB UpdateCachedOutputActive
 
 REM ---- Main program ----
 exitCode = 0
@@ -88,6 +112,8 @@ condDepth = 0
 includeDepth = 0
 includedCount = 0
 includePathCount = 0
+cachedOutputActive = TRUE
+outBufLen& = 0&
 
 IF ParseArgs = FALSE THEN
   SYSTEM 10
@@ -284,20 +310,6 @@ SUB MacroUndef(STRING nm$)
   END IF
 END SUB
 
-REM ---- SUB: OutputActive ----
-REM Returns TRUE if all conditional levels are active (output should happen).
-SUB SHORTINT OutputActive
-  SHARED condActive, condDepth
-  SHORTINT i
-  OutputActive = TRUE
-  FOR i = 1 TO condDepth
-    IF condActive(i) = FALSE THEN
-      OutputActive = FALSE
-      EXIT FOR
-    END IF
-  NEXT
-END SUB
-
 REM ---- SUB: HandleDefine ----
 REM Parse: TOKEN [value]
 SUB HandleDefine(STRING rest$)
@@ -461,6 +473,7 @@ hif_got_name:
     END IF
   END IF
   condHadElse(condDepth) = FALSE
+  UpdateCachedOutputActive
 END SUB
 
 REM ---- SUB: HandleIfndef ----
@@ -525,6 +538,7 @@ hnif_got_name:
     END IF
   END IF
   condHadElse(condDepth) = FALSE
+  UpdateCachedOutputActive
 END SUB
 
 REM ---- SUB: HandleElse ----
@@ -560,6 +574,7 @@ SUB HandleElse
   ELSE
     condActive(condDepth) = FALSE
   END IF
+  UpdateCachedOutputActive
 END SUB
 
 REM ---- SUB: HandleEndif ----
@@ -573,6 +588,7 @@ SUB HandleEndif
   END IF
 
   --condDepth
+  UpdateCachedOutputActive
 END SUB
 
 REM ---- SUB: IsDirectiveLine ----
@@ -601,7 +617,7 @@ REM Dispatcher: extract keyword after #, route to handler.
 REM Conditionals are always processed (even in false branches) for nesting.
 REM #define/#undef are skipped in false branches.
 SUB HandleDirective(STRING ln$)
-  SHARED exitCode
+  SHARED exitCode, cachedOutputActive
   STRING kw$ SIZE 16
   STRING rest$ SIZE 1025
   SHORTINT i, sLen, ch, startPos
@@ -668,7 +684,7 @@ hdir_got_kw:
     HandleElse
   ELSEIF kw$ = "endif" THEN
     HandleEndif
-  ELSEIF OutputActive THEN
+  ELSEIF cachedOutputActive THEN
     REM #define, #undef, #include only in active branches
     IF kw$ = "define" THEN
       HandleDefine(rest$)
@@ -869,7 +885,7 @@ SUB HandleInclude(STRING rest$)
   SHARED exitCode
   STRING nm$ SIZE 256
   STRING resolved$ SIZE 256
-  SHORTINT i, sLen, ch, startPos, endChar, isAngle, chan
+  SHORTINT i, sLen, ch, startPos, endChar, isAngle
 
   sLen = LEN(rest$)
   i = 1
@@ -949,19 +965,161 @@ hinc_got_name:
   REM Add to included list
   AddIncluded(resolved$)
 
-  REM Push state and open new file
+  REM Push state and load new file into buffer
   ++includeDepth
   inclFileName$(includeDepth) = resolved$
   inclLineNum(includeDepth) = 0
 
-  chan = includeDepth + 2
-  OPEN "I", #chan, resolved$
-  IF HANDLE(chan) = 0& THEN
-    PRINT "Error: cannot open include file: "; resolved$
+  LoadFileToBuffer(includeDepth)
+  IF exitCode <> 0 THEN
     --includeDepth
+    EXIT SUB
+  END IF
+END SUB
+
+REM ---- SUB: LoadFileToBuffer ----
+REM Loads entire file at inclFileName$(depth) into ALLOC'd buffer.
+REM Uses channel #2 transiently (open, read, close immediately).
+SUB LoadFileToBuffer(SHORTINT depth)
+  SHARED inBuf&, inBufLen&, inBufPos&, inclFileName$, exitCode
+  LONGINT fh&, fileLen&, bytesRead&
+
+  OPEN "I", #2, inclFileName$(depth)
+  IF HANDLE(2) = 0& THEN
+    PRINT "Error: cannot open: "; inclFileName$(depth)
     exitCode = 10
     EXIT SUB
   END IF
+  fh& = HANDLE(2)
+  fileLen& = LOF(2)
+  IF fileLen& = 0& THEN
+    CLOSE #2
+    inBuf&(depth) = 0&
+    inBufLen&(depth) = 0&
+    inBufPos&(depth) = 0&
+    EXIT SUB
+  END IF
+  inBuf&(depth) = ALLOC(fileLen&)
+  IF inBuf&(depth) = 0& THEN
+    PRINT "Error: out of memory for: "; inclFileName$(depth)
+    CLOSE #2
+    exitCode = 10
+    EXIT SUB
+  END IF
+  bytesRead& = _Read(fh&, inBuf&(depth), fileLen&)
+  CLOSE #2
+  IF bytesRead& <> fileLen& THEN
+    PRINT "Error: short read on: "; inclFileName$(depth)
+    exitCode = 10
+    EXIT SUB
+  END IF
+  inBufLen&(depth) = fileLen&
+  inBufPos&(depth) = 0&
+END SUB
+
+REM ---- SUB: ReadLineFromBuffer ----
+REM Reads one line from buffer at given depth into SHARED rdLineBuf$.
+REM Returns TRUE if a line was read, FALSE if buffer exhausted.
+SUB SHORTINT ReadLineFromBuffer(SHORTINT depth)
+  SHARED inBuf&, inBufLen&, inBufPos&, rdLineBuf$
+  LONGINT startPos&, scanPos&, endPos&, bufAddr&, lineLen&, copyLen&, j&
+
+  startPos& = inBufPos&(depth)
+  endPos& = inBufLen&(depth)
+  bufAddr& = inBuf&(depth)
+  IF startPos& >= endPos& THEN
+    ReadLineFromBuffer = FALSE
+    EXIT SUB
+  END IF
+
+  REM Scan for LF
+  scanPos& = startPos&
+  WHILE scanPos& < endPos&
+    IF PEEK(bufAddr& + scanPos&) = 10 THEN GOTO rlfb_found
+    scanPos& = scanPos& + 1&
+  WEND
+  REM Last line without trailing newline
+  lineLen& = scanPos& - startPos&
+  inBufPos&(depth) = scanPos&
+  GOTO rlfb_copy
+
+rlfb_found:
+  lineLen& = scanPos& - startPos&
+  inBufPos&(depth) = scanPos& + 1&
+
+rlfb_copy:
+  REM Strip trailing CR (CRLF support)
+  IF lineLen& > 0& THEN
+    IF PEEK(bufAddr& + startPos& + lineLen& - 1&) = 13 THEN
+      lineLen& = lineLen& - 1&
+    END IF
+  END IF
+  copyLen& = lineLen&
+  IF copyLen& > 1024& THEN copyLen& = 1024&
+  FOR j& = 0& TO copyLen& - 1&
+    POKE @rdLineBuf$ + j&, PEEK(bufAddr& + startPos& + j&)
+  NEXT
+  POKE @rdLineBuf$ + copyLen&, 0
+  ReadLineFromBuffer = TRUE
+END SUB
+
+REM ---- SUB: OutputLine ----
+REM Appends a string + LF to the output buffer.
+SUB OutputLine(STRING ln$)
+  SHARED outBuf&, outBufLen&
+  LONGINT sLen&, j&
+  sLen& = CLNG(LEN(ln$))
+  FOR j& = 0& TO sLen& - 1&
+    POKE outBuf& + outBufLen&, PEEK(@ln$ + j&)
+    outBufLen& = outBufLen& + 1&
+  NEXT
+  POKE outBuf& + outBufLen&, 10
+  outBufLen& = outBufLen& + 1&
+END SUB
+
+REM ---- SUB: OutputBlankLine ----
+REM Appends a single LF to the output buffer.
+SUB OutputBlankLine
+  SHARED outBuf&, outBufLen&
+  POKE outBuf& + outBufLen&, 10
+  outBufLen& = outBufLen& + 1&
+END SUB
+
+REM ---- SUB: FlushOutput ----
+REM Writes entire output buffer to outFile$ in one _Write call.
+SUB FlushOutput
+  SHARED outBuf&, outBufLen&, outFile$, exitCode
+  LONGINT fh&, written&
+
+  IF outBufLen& = 0& THEN EXIT SUB
+
+  OPEN "O", #1, outFile$
+  IF HANDLE(1) = 0& THEN
+    PRINT "Error: cannot open output file: "; outFile$
+    exitCode = 10
+    EXIT SUB
+  END IF
+  fh& = HANDLE(1)
+  written& = _Write(fh&, outBuf&, outBufLen&)
+  CLOSE #1
+  IF written& <> outBufLen& THEN
+    PRINT "Error: short write on: "; outFile$
+    exitCode = 10
+  END IF
+END SUB
+
+REM ---- SUB: UpdateCachedOutputActive ----
+REM Recalculates cachedOutputActive from condActive stack.
+SUB UpdateCachedOutputActive
+  SHARED condActive, condDepth, cachedOutputActive
+  SHORTINT i
+  cachedOutputActive = TRUE
+  FOR i = 1 TO condDepth
+    IF condActive(i) = FALSE THEN
+      cachedOutputActive = FALSE
+      EXIT FOR
+    END IF
+  NEXT
 END SUB
 
 REM ---- SUB: ProcessFile ----
@@ -970,81 +1128,90 @@ REM processes directives, replaces macros, writes output.
 SUB ProcessFile
   SHARED inFile$, outFile$, exitCode
   SHARED inCComment, inAceComment, lastWasBlank
-  SHARED condDepth
+  SHARED condDepth, macroCount, cachedOutputActive
   SHARED inclFileName$, inclLineNum, includeDepth
-  STRING ln$ SIZE 1025
+  SHARED inBuf&, inBufLen&, inBufPos&
+  SHARED outBuf&, outBufLen&, rdLineBuf$
   STRING result$ SIZE 1025
-  SHORTINT isBlank, bk, ch, chan, running
+  SHORTINT ch, running, rLen
 
   REM Initialize include stack for main file
   includeDepth = 0
   inclFileName$(0) = inFile$
   inclLineNum(0) = 0
 
-  OPEN "I", #2, inFile$
-  IF HANDLE(2) = 0& THEN
-    PRINT "Error: cannot open input file: "; inFile$
+  REM Allocate 128KB output buffer
+  outBuf& = ALLOC(131072&)
+  IF outBuf& = 0& THEN
+    PRINT "Error: cannot allocate output buffer"
     exitCode = 10
     EXIT SUB
   END IF
+  outBufLen& = 0&
 
-  OPEN "O", #1, outFile$
-  IF HANDLE(1) = 0& THEN
-    PRINT "Error: cannot open output file: "; outFile$
-    CLOSE #2
-    exitCode = 10
-    EXIT SUB
-  END IF
+  REM Load main input file into buffer
+  LoadFileToBuffer(0)
+  IF exitCode <> 0 THEN EXIT SUB
 
   running = TRUE
   WHILE running
-    chan = includeDepth + 2
-
-    REM Check for EOF on current channel
-    IF EOF(chan) THEN
+    REM Check for buffer exhausted on current depth
+    IF inBufPos&(includeDepth) >= inBufLen&(includeDepth) THEN
       IF includeDepth = 0 THEN
         running = FALSE
         GOTO pf_loop_end
       ELSE
         REM Pop include stack
-        CLOSE #chan
         --includeDepth
         GOTO pf_loop_end
       END IF
     END IF
 
-    LINE INPUT #chan, ln$
+    IF ReadLineFromBuffer(includeDepth) = FALSE THEN
+      IF includeDepth = 0 THEN
+        running = FALSE
+        GOTO pf_loop_end
+      ELSE
+        --includeDepth
+        GOTO pf_loop_end
+      END IF
+    END IF
     inclLineNum(includeDepth) = inclLineNum(includeDepth) + 1
 
-    result$ = RemoveComments$(ln$)
+    result$ = RemoveComments$(rdLineBuf$)
 
-    REM Is this a directive line?
-    IF IsDirectiveLine(result$) THEN
-      HandleDirective(result$)
-    ELSEIF OutputActive THEN
-      REM Apply macro replacement
-      result$ = ReplaceMacros$(result$)
+    REM Is this a directive line? (inlined check for # after whitespace)
+    rLen = LEN(result$)
+    IF rLen > 0 THEN
+      ch = PEEK(@result$)
+      IF ch = 35 THEN
+        GOTO pf_is_directive
+      ELSEIF ch = 32 OR ch = 9 THEN
+        IF IsDirectiveLine(result$) THEN GOTO pf_is_directive
+      END IF
+    END IF
+    GOTO pf_not_directive
 
-      REM Check if line is blank (empty or only whitespace)
-      isBlank = TRUE
-      IF LEN(result$) > 0 THEN
-        FOR bk = 1 TO LEN(result$)
-          ch = PEEK(@result$ + bk - 1)
-          IF ch <> 32 AND ch <> 9 THEN
-            isBlank = FALSE
-            EXIT FOR
-          END IF
-        NEXT
+pf_is_directive:
+    HandleDirective(result$)
+    GOTO pf_loop_end
+
+pf_not_directive:
+    IF cachedOutputActive THEN
+      REM Apply macro replacement only if macros exist
+      IF macroCount > 0 THEN
+        result$ = ReplaceMacros$(result$)
+        rLen = LEN(result$)
       END IF
 
-      REM Consolidate blank lines: skip consecutive blanks, keep one
-      IF isBlank THEN
+      REM Check if line is blank (RemoveComments$ trims trailing ws)
+      IF rLen = 0 THEN
         IF lastWasBlank = FALSE THEN
-          PRINT #1,
+          OutputBlankLine
           lastWasBlank = TRUE
         END IF
       ELSE
-        PRINT #1, result$
+        OutputLine(result$)
         lastWasBlank = FALSE
       END IF
     END IF
@@ -1069,8 +1236,8 @@ pf_loop_end:
     exitCode = 10
   END IF
 
-  CLOSE #1
-  CLOSE #2
+  REM Flush output buffer to file
+  FlushOutput
 END SUB
 
 REM ---- SUB: RemoveComments$ ----
@@ -1081,7 +1248,7 @@ SUB STRING RemoveComments$(STRING ln$)
   SHARED inCComment, inAceComment
   STRING out$ SIZE 1025
   SHORTINT i, sLen, ch, nx, oLen
-  SHORTINT inString, done, handled, hasSpecial
+  SHORTINT inString, hasSpecial
 
   sLen = LEN(ln$)
 
@@ -1120,12 +1287,10 @@ rc_fast_done:
   REM Slow path: character-by-character scan with POKE output
   oLen = 0
   inString = FALSE
-  done = FALSE
   i = 1
 
-  WHILE i <= sLen AND done = FALSE
+  WHILE i <= sLen
     ch = PEEK(@ln$ + i - 1)
-    handled = FALSE
 
     REM ---- Inside C block comment: scan for close ----
     IF inCComment THEN
@@ -1140,30 +1305,28 @@ rc_fast_done:
       ELSE
         ++i
       END IF
-      handled = TRUE
+      GOTO rc_next_char
     END IF
 
     REM ---- Inside ACE block comment: scan for close ----
-    IF handled = FALSE AND inAceComment THEN
+    IF inAceComment THEN
       IF ch = 125 THEN
         inAceComment = FALSE
       END IF
       ++i
-      handled = TRUE
+      GOTO rc_next_char
     END IF
 
-    IF handled = FALSE THEN
-      REM ---- Toggle string literal state on " ----
-      IF ch = 34 THEN
-        inString = NOT inString
-        POKE @out$ + oLen, ch
-        ++oLen
-        ++i
-        handled = TRUE
-      END IF
+    REM ---- Toggle string literal state on " ----
+    IF ch = 34 THEN
+      inString = NOT inString
+      POKE @out$ + oLen, ch
+      ++oLen
+      ++i
+      GOTO rc_next_char
     END IF
 
-    IF handled = FALSE AND inString = FALSE THEN
+    IF inString = FALSE THEN
       REM ---- Check for slash (could start C comment) ----
       IF ch = 47 AND i < sLen THEN
         nx = PEEK(@ln$ + i)
@@ -1171,36 +1334,36 @@ rc_fast_done:
           REM Start of C block comment
           inCComment = TRUE
           i = i + 2
-          handled = TRUE
+          GOTO rc_next_char
         ELSEIF nx = 47 THEN
           REM Start of C++ line comment - rest of line is comment
-          done = TRUE
-          handled = TRUE
+          GOTO rc_slow_trim
         END IF
       END IF
 
       REM ---- Check for ACE block comment open brace ----
-      IF handled = FALSE AND ch = 123 THEN
+      IF ch = 123 THEN
         inAceComment = TRUE
         ++i
-        handled = TRUE
+        GOTO rc_next_char
       END IF
 
       REM ---- Check for ACE single-line comment apostrophe ----
-      IF handled = FALSE AND ch = 39 THEN
+      IF ch = 39 THEN
         REM Rest of line is comment
-        done = TRUE
-        handled = TRUE
+        GOTO rc_slow_trim
       END IF
     END IF
 
     REM ---- Normal character: POKE to output buffer ----
-    IF handled = FALSE THEN
-      POKE @out$ + oLen, ch
-      ++oLen
-      ++i
-    END IF
+    POKE @out$ + oLen, ch
+    ++oLen
+    ++i
+
+rc_next_char:
   WEND
+
+rc_slow_trim:
 
   REM Trim trailing whitespace
   WHILE oLen > 0
