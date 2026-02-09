@@ -20,14 +20,9 @@ CONST MAX_INCLUDE_DEPTH = 8
 CONST MAX_INCLUDED_FILES = 128
 CONST MAX_INCLUDE_PATHS = 8
 
-REM ---- DOS library for direct file I/O ----
-LIBRARY "dos.library"
-DECLARE FUNCTION _Write& LIBRARY dos
-
 REM ---- Global variables ----
 STRING inFile$ SIZE 256
 STRING outFile$ SIZE 256
-STRING lf$ SIZE 2
 SHORTINT inCComment
 SHORTINT inAceComment
 SHORTINT lastWasBlank
@@ -61,7 +56,6 @@ REM ---- Forward declarations ----
 DECLARE SUB ShowUsage
 DECLARE SUB SHORTINT ParseArgs
 DECLARE SUB ProcessFile
-DECLARE SUB WriteLine(STRING txt$)
 DECLARE SUB STRING RemoveComments$(STRING ln$)
 DECLARE SUB SHORTINT IsIdentStart(SHORTINT ch)
 DECLARE SUB SHORTINT IsIdentChar(SHORTINT ch)
@@ -94,7 +88,6 @@ condDepth = 0
 includeDepth = 0
 includedCount = 0
 includePathCount = 0
-lf$ = CHR$(10)
 
 IF ParseArgs = FALSE THEN
   SYSTEM 10
@@ -211,20 +204,6 @@ SUB SHORTINT ParseArgs
   END IF
 
   ParseArgs = TRUE
-END SUB
-
-REM ---- SUB: WriteLine ----
-REM Writes a string followed by a newline to output file #1.
-REM Uses dos.library _Write to avoid PRINT null-byte issue.
-SUB WriteLine(STRING txt$)
-  SHARED lf$
-  LONGINT fh, bytes
-  fh = HANDLE(1)
-  bytes = LEN(txt$)
-  IF bytes > 0 THEN
-    _Write(fh, @txt$, bytes)
-  END IF
-  _Write(fh, @lf$, 1&)
 END SUB
 
 REM ---- SUB: IsIdentStart ----
@@ -1043,11 +1022,11 @@ SUB ProcessFile
       REM Consolidate blank lines: skip consecutive blanks, keep one
       IF isBlank THEN
         IF lastWasBlank = FALSE THEN
-          WriteLine("")
+          PRINT #1,
           lastWasBlank = TRUE
         END IF
       ELSE
-        WriteLine(result$)
+        PRINT #1, result$
         lastWasBlank = FALSE
       END IF
     END IF
