@@ -1,0 +1,131 @@
+; Install-ACE
+; AmigaDOS installer script for ACE BASIC Compiler
+;
+; Run from Shell:     execute Install-ACE
+; Run from Workbench: double-click Install-ACE icon (requires .info with IconX)
+;
+; This script sets up ACE assigns, optionally copies files to an existing
+; installation, and can add assigns to S:user-startup for persistence.
+
+; Print banner
+echo ""
+echo "========================================="
+echo "  ACE BASIC Compiler - Installer"
+echo "========================================="
+echo ""
+
+; Capture current directory path
+cd >T:ace_instpath
+SET acepath `type T:ace_instpath`
+delete >NIL: T:ace_instpath
+
+echo "ACE directory: $acepath"
+echo ""
+
+; Check if ACE: assign already exists
+assign ACE: EXISTS >NIL:
+IF NOT WARN
+  ; ACE: assign exists - this is an upgrade scenario
+  echo "An existing ACE: installation was found."
+  echo ""
+  echo "Copy all files from this directory to ACE:,"
+  echo "overwriting existing files?"
+  ask "Copy files? (y/n) "
+  IF WARN
+    echo "Copying files to ACE: ..."
+    copy "$acepath" TO ACE: ALL CLONE QUIET
+    echo "Files copied."
+  ELSE
+    echo "Skipping file copy."
+  ENDIF
+  echo ""
+ELSE
+  ; No ACE: assign - fresh install
+  echo "No existing ACE: installation found."
+  echo ""
+  echo "This will create an ACE: assign pointing to:"
+  echo "  $acepath"
+  echo ""
+  ask "Create ACE: assign? (y/n) "
+  IF NOT WARN
+    echo ""
+    echo "Installation aborted."
+    SKIP end
+  ENDIF
+  assign ACE: "$acepath"
+  echo "ACE: assigned to $acepath"
+  echo ""
+ENDIF
+
+; Create derived assigns
+echo "Setting up assigns..."
+assign ACElib: ACE:lib
+assign ACEbmaps: ACE:bmaps
+assign ACEinclude: ACE:include
+assign ACEsubmods: ACE:submods
+path ACE:bin add
+echo "  ACElib:     -> ACE:lib"
+echo "  ACEbmaps:   -> ACE:bmaps"
+echo "  ACEinclude: -> ACE:include"
+echo "  ACEsubmods: -> ACE:submods"
+echo "  Added ACE:bin to path"
+echo ""
+
+; Protect bas script
+protect ACE:bin/bas +s >NIL:
+
+; Ask about user-startup persistence
+echo "To make assigns persist across reboots, they"
+echo "can be added to S:user-startup."
+echo ""
+ask "Add assigns to S:user-startup? (y/n) "
+IF NOT WARN
+  echo ""
+  echo "Assigns are temporary and will be lost on reboot."
+  echo "To make them permanent, add the following to"
+  echo "S:user-startup manually:"
+  echo ""
+  echo "  assign ACE: $acepath"
+  echo "  assign ACElib: ACE:lib"
+  echo "  assign ACEbmaps: ACE:bmaps"
+  echo "  assign ACEinclude: ACE:include"
+  echo "  assign ACEsubmods: ACE:submods"
+  echo "  path ACE:bin add"
+  SKIP done
+ENDIF
+
+; Check if user-startup already has ACE assigns
+search S:user-startup ";BEGIN ACE BASIC Compiler" >NIL:
+IF NOT WARN
+  echo "S:user-startup already contains ACE assigns."
+  echo "Skipping modification."
+  SKIP done
+ENDIF
+
+; Append assigns to S:user-startup
+echo "" >>S:user-startup
+echo ";BEGIN ACE BASIC Compiler" >>S:user-startup
+echo "assign ACE: $acepath" >>S:user-startup
+echo "assign ACElib: ACE:lib" >>S:user-startup
+echo "assign ACEbmaps: ACE:bmaps" >>S:user-startup
+echo "assign ACEinclude: ACE:include" >>S:user-startup
+echo "assign ACEsubmods: ACE:submods" >>S:user-startup
+echo "path ACE:bin add" >>S:user-startup
+echo ";END ACE BASIC Compiler" >>S:user-startup
+
+echo "Assigns added to S:user-startup."
+
+LAB done
+
+echo ""
+echo "========================================="
+echo "  Installation complete!"
+echo "========================================="
+echo ""
+echo "See docs/ace.guide for documentation."
+echo "Try: "
+echo "cd examples"
+echo "bas Hello"
+echo ""
+
+LAB end
