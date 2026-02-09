@@ -2,7 +2,7 @@
  *
  * Usage: rx runner.rexx [category]
  *
- * Categories: syntax, arithmetic, floats, control, errors, all
+ * Categories: syntax, arithmetic, floats, control, errors, recursion, all
  * Default: all
  *
  * Test levels:
@@ -31,7 +31,7 @@ totalSkip = 0
 
 /* Categories to test */
 IF category = 'all' THEN
-    categories = 'syntax arithmetic floats control subs errors screens gtgadgets legacygadgets assert callback closures strings math logic fileio memory'
+    categories = 'syntax arithmetic floats control subs recursion errors screens gtgadgets legacygadgets assert callback closures strings math logic fileio memory'
 ELSE
     categories = category
 
