@@ -516,11 +516,13 @@ int  exprtype;
 			/* restore storage item info */
 			gen("move.l","_tmpelement","d7");
 
-		        if (storage_item->type == stringtype) 
+		        if (storage_item->type == stringtype)
 			   assign_to_string_array(addrbuf);
         		else
+			{
 			gen("move.l",addrbuf,"a0");
 			gen_pop(storage_item->type, "0(a0,d7.L)");
+			}
 			break;
      }
  } else _error(5); /* '=' expected */

@@ -1,0 +1,42 @@
+REM Test input for YAP comment removal
+REM This file tests all four comment types
+
+REM --- ACE single-line comments (apostrophe) ---
+PRINT "hello"
+x = 42
+PRINT "keep this"
+
+REM --- ACE block comments (curly braces) ---
+
+PRINT "before block"  : PRINT "after"
+
+PRINT "after multiline block"
+
+REM --- C block comments ---
+
+PRINT "before C"  : PRINT "after C"
+
+PRINT "after multiline C"
+
+REM --- C++ single-line comments ---
+
+PRINT "before C++"
+
+REM --- Comments inside strings should be preserved ---
+PRINT "it's a test"
+PRINT "hello /* not a comment */ world"
+PRINT "braces { are } fine in strings"
+PRINT "slashes // are fine too"
+
+REM --- Blank line consolidation ---
+PRINT "before blanks"
+
+PRINT "after blanks"
+
+PRINT "after more blanks"
+
+REM --- Mixed comments on one line ---
+x = 1  + 2
+
+REM --- Edge cases ---
+PRINT "end"
