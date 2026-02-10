@@ -31,20 +31,38 @@
 #define EOF	(-1L)
 #define NULL	(0L)
 
+extern long Read();
+extern long Seek();
+
+#define OFFSET_CURRENT 0
+
 char *fgets(s,n,iop)
 char *s;
 unsigned long n;
 unsigned long iop;
 {
-int  c;
-char *cs;
- 
- cs = s;
- while (--n > 0 && (c = fgetc(iop)) != EOF)
-     if ((*cs++ = c) == '\n')
- 	break;
- *cs = '\0';
- return (c == EOF && cs == s) ? NULL : s;  
+long nread;
+char *p;
+
+ nread = Read(iop, s, n - 1);
+ if (nread <= 0) {
+     *s = '\0';
+     return NULL;
+ }
+
+ /* scan for newline */
+ for (p = s; p < s + nread; p++) {
+     if (*p == '\n') {
+         p++;  /* keep the newline */
+         /* seek back past unread portion */
+         Seek(iop, (long)(p - s - nread), OFFSET_CURRENT);
+         *p = '\0';
+         return s;
+     }
+ }
+ /* no newline found: EOF before line end */
+ s[nread] = '\0';
+ return s;
 }
 
 void fgetline(s,n,iop)
@@ -52,15 +70,26 @@ char *s;
 unsigned long n;
 unsigned long iop;
 {
-int  c;
-char *cs;
- 
- cs = s;
- while (--n > 0 && (c = fgetc(iop)) != EOF)
-     if ((*cs++ = c) == '\n')
- 	break;
- if (cs != s) --cs;  /* overwrite the '\n' */
- *cs = '\0';
+long nread;
+char *p;
+
+ nread = Read(iop, s, n - 1);
+ if (nread <= 0) {
+     *s = '\0';
+     return;
+ }
+
+ /* scan for newline */
+ for (p = s; p < s + nread; p++) {
+     if (*p == '\n') {
+         /* seek back past unread portion */
+         Seek(iop, (long)((p - s) + 1 - nread), OFFSET_CURRENT);
+         *p = '\0';
+         return;
+     }
+ }
+ /* no newline found: EOF before line end */
+ s[nread] = '\0';
 }
 
 void fgetchars(s,n,iop)
@@ -68,12 +97,14 @@ char *s;
 unsigned long n;
 unsigned long iop;
 {
-int  c;
-char *cs;
- 
- cs = s;
- while (--n > 0 && (c = fgetc(iop)) != EOF) *cs++ = c;
- *cs = '\0';
+long nread;
+
+ nread = Read(iop, s, n - 1);
+ if (nread <= 0) {
+     *s = '\0';
+     return;
+ }
+ s[nread] = '\0';
 }
 
 void fgetseqfld(s,n,iop)
@@ -88,7 +119,7 @@ char *cs;
 
  --n;
 
- /* skip whitespace (incl. LF) and commas 
+ /* skip whitespace (incl. LF) and commas
     (latter from after a quote-delimited string) */
  while ((c = fgetc(iop)) != EOF && (c <= ' ' || c == ','));
 
@@ -104,11 +135,11 @@ char *cs;
 
   *cs='\0';
 
-  fgetc(iop);	/* - Assume next character is EOF, whitespace or comma. 
+  fgetc(iop);	/* - Assume next character is EOF, whitespace or comma.
 		   - The next test for EOF by ACE or this function will
 		     be positive if we're now at EOF. This prevents ACE
 		     from trying to read another line (say in a WHILE loop)
-		     and getting NULL strings. 
+		     and getting NULL strings.
 		*/
 
   return;
@@ -117,9 +148,9 @@ char *cs;
  /* get the next field: could be a non-delimited string, integer or float */
  while (n > 0 && c != EOF)
  {
-     if ((*cs++ = c) <= ' ' || c == ',')  
+     if ((*cs++ = c) <= ' ' || c == ',')
         break;	/* delimiters are: whitespace (incl. LF), comma */
- 
+
      --n;
 
      c = fgetc(iop);
