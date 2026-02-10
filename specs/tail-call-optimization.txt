@@ -1,0 +1,341 @@
+Tail-Call Optimization (TCO) for ACE BASIC Compiler
+=====================================================
+
+Status: SPEC
+Date: 2026-02-09
+
+1. Overview
+-----------
+
+Implement tail-call optimization for self-recursive SUBs. When the
+compiler detects that a RETURN expression is a direct call to the same
+SUB with no post-call computation, it replaces JSR/UNLK/RTS with a
+JMP back to the function body, reusing the existing stack frame.
+
+Benefit: recursive functions in tail position use constant stack space
+instead of O(n). A GCD with depth 10000 uses ~24 bytes instead of ~48KB.
+
+
+2. Current Calling Convention (CSLR)
+-------------------------------------
+
+Caller side (sub.c load_params):
+    movea.l _AbsExecBase,a6
+    jsr     _LVOForbid(a6)       ; disable multitasking
+    move.l  param1,-8(sp)        ; load params into callee frame
+    move.l  param2,-12(sp)
+    jsr     _SUB_Name            ; call
+
+Callee side (sub.c sub_params):
+    _SUB_Name:
+        link    a5,#-N           ; create N-byte frame
+        movea.l _AbsExecBase,a6
+        jsr     _LVOPermit(a6)  ; re-enable multitasking
+        move.l  -8(sp),d0       ; load params from caller frame
+        move.l  d0,-4(a5)       ; store as locals
+        ...body...
+        move.l  result,-4(a5)   ; store return value (normal SUB)
+        unlk    a5
+        rts
+
+Return values:
+  - Normal SUB: frame variable at -4(a5)
+  - EXTERNAL/INVOKABLE SUB: d0 register
+
+Stack cost per recursive call: ~20-24 bytes (frame + return address).
+
+
+3. Tail Call Definition
+-----------------------
+
+A call is in tail position when ALL of these hold:
+
+  1. It appears as the return expression:  SubName = SubName(args)
+  2. The called function IS the current SUB (self-recursion only)
+  3. No computation is applied to the result after the call
+  4. Return type matches (always true for self-recursion)
+  5. No local variables are referenced after the call
+
+Examples:
+
+  TAIL CALL (optimizable):
+    SUB LONGINT Gcd(a&, b&)
+      IF b& = 0 THEN
+        Gcd = a&
+      ELSE
+        Gcd = Gcd(b&, a& MOD b&)    ' <-- direct tail call
+      END IF
+    END SUB
+
+  NOT TAIL CALL:
+    Factorial = n% * Factorial(n% - 1)   ' multiplication after call
+    Fib = Fib(n%-1) + Fib(n%-2)         ' addition after call
+    SumTo = n% + SumTo(n% - 1)          ' addition after call
+
+  CONVERTIBLE BY USER (accumulator pattern):
+    SUB LONGINT SumAcc(n%, acc%)
+      IF n% <= 0 THEN SumAcc = acc%
+      ELSE SumAcc = SumAcc(n% - 1, acc% + n%)  ' tail call
+    END SUB
+
+
+4. Architecture Challenge
+-------------------------
+
+ACE uses single-pass, immediate code generation. By the time the
+compiler reaches the RETURN keyword, expr() has already emitted the
+JSR instruction. The compiler doesn't know the call was in tail
+position until after the code is generated.
+
+Three possible approaches:
+
+  A. Peephole optimizer (post-process generated code)  -- CHOSEN
+  B. Special RETURN path (flag + patch during parse)
+  C. Deferred codegen (buffer until context known)     -- too invasive
+
+Approach A is chosen: lowest risk, no parser changes, works with
+existing architecture.
+
+
+5. Implementation Plan
+----------------------
+
+5.1  Add body label to SUB prologue (parse.c)
+
+  Currently generated:
+    _SUB_Gcd:
+        link    a5,#-N
+        movea.l _AbsExecBase,a6
+        jsr     _LVOPermit(a6)
+        move.l  -8(sp),d0       ; param loads...
+        ...
+
+  Add a label after the parameter loading section:
+    _SUB_Gcd:
+        link    a5,#-N
+        movea.l _AbsExecBase,a6
+        jsr     _LVOPermit(a6)
+        move.l  -8(sp),d0
+        move.l  d0,-4(a5)
+    _SUB_Gcd_tcr:               ; <-- tail-call re-entry point
+        ...body...
+
+  The _tcr label marks where a tail-call JMP should land: after
+  frame creation and parameter loading, at the start of the body.
+
+  Implementation: in parse.c, after sub_params() returns, emit the
+  _tcr label. Store it in the SYM entry for the current SUB.
+
+  Note: for a tail call, the caller must update the parameters in the
+  EXISTING frame before jumping to _tcr. The callee's param-load code
+  (which reads from the caller's frame at -8(sp) etc.) is NOT re-executed.
+  Instead, the tail-call code writes new parameter values directly into
+  the local variable slots in the current frame, then JMPs to _tcr.
+
+5.2  Track current SUB name
+
+  During SUB compilation, store the current SUB's assembly label
+  (e.g. "_SUB_Gcd") in a global variable so the optimizer can compare
+  JSR targets against it.
+
+  Already partially available: curr_subname in parse.c. May need to
+  make it accessible from opt.c (extern or pass through).
+
+5.3  Peephole optimizer pattern (opt.c)
+
+  Scan for this pattern:
+
+    JSR  _SUB_X          ; call to some SUB
+    ...                  ; optional: move result to frame var / d0
+    UNLK a5              ; tear down frame
+    RTS                  ; return
+
+  If _SUB_X matches the current SUB being compiled:
+
+    1. Replace JSR _SUB_X with JMP _SUB_X_tcr
+    2. Remove the UNLK a5
+    3. Remove the RTS
+    4. Remove the move-result-to-frame-var (if present, since
+       the recursive call's result is already in the right place)
+
+  Before the JSR, there will be parameter-setup code (Forbid + moves).
+  This code must be MODIFIED for the tail-call path:
+
+    Current (caller writes to CALLEE frame via sp offsets):
+      movea.l _AbsExecBase,a6
+      jsr     _LVOForbid(a6)
+      move.l  newval1,-8(sp)
+      move.l  newval2,-12(sp)
+      jsr     _SUB_Gcd
+
+    Tail-call (write to OWN frame via a5 offsets, skip Forbid):
+      move.l  newval1,-4(a5)     ; update own param slot
+      move.l  newval2,-8(a5)     ; update own param slot
+      jmp     _SUB_Gcd_tcr
+
+  This parameter remapping is the trickiest part. The optimizer must:
+    a. Identify the Forbid block and remove it
+    b. Remap -N(sp) addresses to corresponding -M(a5) addresses
+    c. Handle the case where new param values depend on old params
+       (e.g. Gcd(b&, a& MOD b&) -- must compute a& MOD b& before
+       overwriting a&). Evaluate whether expression evaluation already
+       leaves values on the data stack, making this safe.
+
+  ALTERNATIVE simpler approach for 5.3:
+  Instead of remapping parameters in the optimizer, do a simpler
+  transformation:
+
+    1. Keep the Forbid/param-setup/Permit sequence as-is
+    2. Just replace JSR with JMP and remove UNLK/RTS
+    3. The JMP target is _SUB_Gcd (NOT _tcr) so the full prologue
+       re-executes: LINK creates a new frame, params are loaded
+
+  Wait -- this doesn't save stack because LINK allocates a new frame.
+  The whole point is to REUSE the frame.
+
+  REVISED simpler approach:
+    1. Before the param-setup, emit: UNLK a5 (tear down current frame)
+    2. Keep the Forbid/param-setup as-is (now sp-relative addrs work
+       because we're back in the caller's context)
+    3. Replace JSR with JMP to _SUB_Gcd (full entry, will LINK again)
+    4. Remove the trailing UNLK/RTS
+
+  This way the LINK/UNLK pair balances per iteration. The frame is
+  torn down and recreated each time, but the stack doesn't grow.
+  Net stack growth per tail call: zero (UNLK frees, LINK allocates).
+
+  Generated code for tail call:
+
+    ; compute new param values, push to data stack
+    ...expr evaluation leaves values on stack...
+    ; tear down current frame
+    unlk    a5
+    ; set up params for "new call" (Forbid, move to sp-offsets)
+    movea.l _AbsExecBase,a6
+    jsr     _LVOForbid(a6)
+    move.l  newval1,-8(sp)
+    move.l  newval2,-12(sp)
+    ; jump to full entry (LINK + Permit + param load + body)
+    jmp     _SUB_Gcd
+
+  This is effectively: "return and immediately re-call with new args"
+  but without pushing a return address (JMP vs JSR).
+
+  Advantage: no parameter remapping needed, no _tcr label needed.
+  The existing prologue handles everything.
+
+  Disadvantage: slightly more code executed per iteration (LINK/UNLK
+  + Permit each time). But stack stays flat -- which is the goal.
+
+5.4  Detection: where is the tail call?
+
+  The optimizer needs to identify the pattern. Working backwards
+  from each RTS:
+
+    RTS
+    UNLK a5
+    [optional: move.l ..., -4(a5)]   ; return value store
+    JSR _SUB_X                        ; the call
+
+  If _SUB_X == current SUB name, this is a self-tail-call candidate.
+
+  Transform (using the revised approach from 5.3):
+
+    Before JSR, insert: UNLK a5
+    Change JSR _SUB_X  -->  JMP _SUB_X
+    Remove: the original UNLK a5 (after JSR)
+    Remove: RTS
+    Remove: move.l ..., -4(a5) (return value store, if present)
+
+  The Forbid/param-setup block before the JSR stays as-is. The
+  inserted UNLK goes before the Forbid block.
+
+5.5  Forbid/Permit balance
+
+  Normal call:    Forbid -> params -> JSR -> (callee: Permit)
+  Tail call:      Forbid -> params -> JMP -> (same func: Permit)
+
+  Balance is maintained: one Forbid, one Permit. No issue.
+
+5.6  Return value handling
+
+  For self-recursive tail calls, the return value mechanism is
+  guaranteed to match (same function, same convention). The final
+  base-case return stores the value normally. Intermediate tail-call
+  iterations don't store a return value at all -- they just jump.
+
+  The move-result-to-frame-var instruction between JSR and UNLK
+  is removed by the optimizer since it's dead code in the tail path.
+
+
+6. Scope and Limitations
+------------------------
+
+What IS optimized:
+  - Self-recursive tail calls (SUB calls itself as return expression)
+  - Works for any parameter count and type
+  - Works for both normal and EXTERNAL/INVOKABLE SUBs
+
+What is NOT optimized:
+  - Mutual recursion (IsEven/IsOdd) -- different frame layouts
+  - Non-tail calls (result used in further computation)
+  - Indirect calls (INVOKE with function pointer)
+  - Calls where the recursive call is not the LAST operation
+
+User guidance:
+  - Users can convert non-tail recursive functions to tail-recursive
+    using the accumulator pattern (document in ref.txt)
+  - Example: Factorial(n, acc) instead of n * Factorial(n-1)
+
+
+7. Files to Modify
+-------------------
+
+  opt.c         Add tail-call pattern detection and transformation.
+                New function: optimize_tail_call().
+                Needs access to current SUB name.
+
+  parse.c       Pass current SUB assembly label to optimizer.
+                Store in global or pass to optimize().
+
+  acedef.h      Add extern for current SUB label variable.
+                Possibly add TCO counter for statistics.
+
+  No changes to: statement.c, sub.c, expr.c, factor.c, invoke.c,
+  codegen.c, misc.c, lex.c.
+
+
+8. Testing Strategy
+-------------------
+
+8.1  New test: verify/tests/cases/recursion/tco_gcd.b
+
+  Test GCD with large inputs that would overflow stack without TCO.
+  GCD(1000000, 3) requires many iterations but constant stack.
+
+8.2  New test: verify/tests/cases/recursion/tco_accumulator.b
+
+  Test accumulator-style tail recursion:
+    SumAcc(1000, 0) -- 1000 iterations, constant stack.
+
+8.3  Regression: all existing recursion tests must still pass.
+
+  factorial, fibonacci, sum_recursive, gcd, power, depth,
+  mutual_recursion -- none of these should change behavior.
+
+8.4  Verify with assembly inspection
+
+  Compile a tail-recursive SUB, inspect the .s file to confirm
+  JMP is generated instead of JSR/UNLK/RTS.
+
+
+9. Estimated Effort
+--------------------
+
+  Phase 1: SUB label tracking + optimizer pattern     8-12 hours
+  Phase 2: Testing and verification                    4-6 hours
+  Phase 3: Documentation (ref.txt update)              1-2 hours
+
+  Total: ~15-20 hours
+
+  Branch name: tco-self-recursion

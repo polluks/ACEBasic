@@ -1,0 +1,330 @@
+Buffered File I/O for Sequential Reads
+========================================
+
+Goal: Dramatically speed up LINE INPUT and INPUT # by eliminating
+per-character function call overhead. Currently fgetline/fgetseqfld
+call fgetc() in a tight loop (~80 calls per line). Replace with
+block reads using a user-space buffer.
+
+Branch: buffered-file-io
+
+
+Background / Current Architecture
+-----------------------------------
+
+Call chain for LINE INPUT #n, x$:
+
+  LINE INPUT -> _line_input (file.s)
+             -> fgetline() (fgets.c)
+             -> fgetc() loop, one call per character
+             -> vbcc libc fgetc -> AmigaDOS FGetC (dos.library)
+
+All four read functions in fgets.c use the same fgetc() loop:
+  - fgets()       -- used internally
+  - fgetline()    -- LINE INPUT #
+  - fgetchars()   -- INPUT$()
+  - fgetseqfld()  -- INPUT #
+
+AmigaDOS FGetC has a small internal buffer (208 bytes default), so
+actual disk I/O is already batched. But the per-character overhead
+of C function call -> library call -> LVO dispatch adds up on a
+7 MHz 68000. For an 80-char line: 80 iterations of this overhead.
+
+Write path (_writestring) already uses a single Write() call per
+string with strlen -- no optimization needed there.
+
+
+Design
+-------
+
+Two-layer approach, implemented in sequence:
+
+Layer 1 (Step 1): Replace fgetline() internals with Read + Seek.
+  - Bulk-read up to MAXSTRINGSIZE bytes with one Read() call.
+  - Scan the buffer in-memory for newline.
+  - Seek() back to just past the newline.
+  - 2 syscalls per line instead of ~80 fgetc calls.
+  - Only touches fgetline(), minimal risk.
+
+Layer 2 (Steps 2-4): User-space buffered getc for all read functions.
+  - Add a buffered_getc() function in fgets.c with a static buffer.
+  - All four fgetXxx functions call buffered_getc() instead of fgetc().
+  - ~1 Read() syscall per 1024 bytes instead of per character.
+  - Invalidate buffer on file handle change and on close.
+
+After Layer 2 is working, Layer 1's Read+Seek in fgetline() is
+superseded -- fgetline() reverts to using buffered_getc() in a loop
+(same code shape as today, but fast). Layer 1 serves as a safe
+intermediate milestone and fallback.
+
+
+Interaction with EOF, Seek, Close
+----------------------------------
+
+EOF test (_eoftest in file.s):
+  Uses Seek(fh, +1, OFFSET_CURRENT) to probe, then Seek(fh, -1, ...)
+  to restore position. This operates on the raw file handle and is
+  independent of any user-space buffer. However, if we have buffered
+  data ahead of the file position, the file pointer is actually
+  further ahead than the logical read position. Two options:
+  a) EOF returns false if buffer still has unread data (requires
+     checking buffer state from assembly -- complex).
+  b) Accept that EOF may briefly return wrong result when buffer
+     has data (unlikely in practice: EOF is checked in read loops
+     that drain the buffer first).
+  Decision: Option (b) for now. The typical pattern is:
+    WHILE NOT EOF(1)
+      LINE INPUT #1, x$
+    WEND
+  Here EOF is checked, then LINE INPUT drains the buffer. If buffer
+  has remaining data, LINE INPUT will consume it before EOF matters.
+  The only risk is the final iteration: LINE INPUT reads the last
+  line from the buffer, the OS file pointer is at true EOF, and the
+  next EOF check correctly sees EOF via Seek. This works correctly.
+
+Close (_closefile in file.s):
+  Must invalidate the buffer. The simplest approach: in fgets.c,
+  track the current buffered file handle. On any call where the
+  handle differs from the buffered handle, refill the buffer. Close
+  zeroes the file_handle_list entry, so the old handle value will
+  never match again -- natural invalidation.
+
+  But for safety: add an exported _invalidate_iobuf() function in
+  fgets.c that _closefile calls before closing the handle.
+
+Seek (from BASIC or random file ops):
+  User-initiated Seek (via LOC, LOF, random GET/PUT) can move the
+  file pointer. If a program mixes LINE INPUT with Seek on the same
+  file, the buffer would be stale. This is an unusual pattern.
+  For safety: _invalidate_iobuf() should also be called on any
+  explicit Seek. This can be added in _eoftest, _lof, GetRecord,
+  PutRecord. But for Step 2, we start without this and add it only
+  if needed (documented as known limitation).
+
+Multiple files:
+  The single-buffer approach means switching between two files
+  (e.g., LINE INPUT from #1, then LINE INPUT from #2) discards
+  and refills the buffer each time. This is correct but suboptimal
+  for interleaved reads. Acceptable for now -- programs typically
+  read one file at a time. A per-file buffer could be added later
+  if needed (would require AllocMem/FreeMem per open file).
+
+
+Implementation Steps
+---------------------
+
+Step 1: fgetline() with Read + Seek
+.....................................
+
+File: src/lib/c/fgets.c
+
+Replace fgetline() body:
+
+  void fgetline(s, n, iop)
+  char *s;
+  unsigned long n;
+  unsigned long iop;
+  {
+      long nread;
+      char *p;
+
+      nread = Read(iop, s, n - 1);
+      if (nread <= 0) {
+          *s = '\0';
+          return;
+      }
+
+      /* scan for newline */
+      for (p = s; p < s + nread; p++) {
+          if (*p == '\n') {
+              /* seek back past unread portion */
+              Seek(iop, (long)((p - s) + 1 - nread), OFFSET_CURRENT);
+              *p = '\0';
+              return;
+          }
+      }
+      /* no newline found: EOF before line end */
+      s[nread] = '\0';
+  }
+
+Need to declare Read() and Seek() at the top of fgets.c since it
+does not include any headers. These are AmigaDOS functions accessed
+via the linker (LVO stubs). K&R style, just declare them:
+
+  extern long Read();
+  extern long Seek();
+
+Also need OFFSET_CURRENT:
+
+  #define OFFSET_CURRENT 0
+
+Verification:
+  - Build runtime: make -f Makefile-lib clean all
+  - Test with existing LINE INPUT test cases
+  - Test with YAP preprocessor (largest LINE INPUT user)
+  - Verify EOF detection still works (WHILE NOT EOF loop)
+
+
+Step 2: Add buffered_getc() to fgets.c
+........................................
+
+File: src/lib/c/fgets.c
+
+Add a static buffer and buffered read function:
+
+  #define IOBUF_SIZE 1024
+
+  static char   iobuf[IOBUF_SIZE];
+  static long   iobuf_pos = 0;
+  static long   iobuf_len = 0;
+  static unsigned long iobuf_fh = 0;
+
+  int buffered_getc(iop)
+  unsigned long iop;
+  {
+      if (iop != iobuf_fh || iobuf_pos >= iobuf_len) {
+          iobuf_fh = iop;
+          iobuf_len = Read(iop, iobuf, IOBUF_SIZE);
+          if (iobuf_len <= 0) {
+              iobuf_len = 0;
+              return -1;
+          }
+          iobuf_pos = 0;
+      }
+      return (unsigned char)iobuf[iobuf_pos++];
+  }
+
+  void invalidate_iobuf()
+  {
+      iobuf_fh = 0;
+      iobuf_pos = 0;
+      iobuf_len = 0;
+  }
+
+Buffer size rationale: 1024 bytes matches MAXSTRINGSIZE (max line
+length). A single Read fills the buffer, and a typical 80-char line
+gets ~12 lines from one buffer fill. Total static memory: 1024 bytes
++ 12 bytes overhead = ~1036 bytes. Very modest for Amiga.
+
+IOBUF_SIZE could be increased to 2048 or 4096 for even fewer
+syscalls, but 1024 is a good balance for Amiga memory constraints.
+
+Verification:
+  - Build runtime: make -f Makefile-lib
+  - No behavioral change yet (buffered_getc not called yet)
+
+
+Step 3: Replace fgetc() with buffered_getc() in all readers
+.............................................................
+
+File: src/lib/c/fgets.c
+
+Revert fgetline() back to the loop form (replacing the Read+Seek
+from Step 1), but using buffered_getc instead of fgetc:
+
+  void fgetline(s, n, iop)
+  char *s;
+  unsigned long n;
+  unsigned long iop;
+  {
+      int c;
+      char *cs;
+
+      cs = s;
+      while (--n > 0 && (c = buffered_getc(iop)) != EOF)
+          if ((*cs++ = c) == '\n')
+              break;
+      if (cs != s) --cs;
+      *cs = '\0';
+  }
+
+Same replacement in fgets(), fgetchars(), and fgetseqfld():
+change every fgetc(iop) call to buffered_getc(iop).
+
+This is a simple search-and-replace within fgets.c only.
+
+Verification:
+  - Build runtime: make -f Makefile-lib
+  - Run all test suites (syntax, arithmetic, control, etc.)
+  - Test LINE INPUT with various file sizes
+  - Test INPUT # with sequential fields
+  - Test INPUT$() with character counts
+  - Test EOF detection in loops
+  - Test YAP preprocessor on real files
+
+
+Step 4: Add buffer invalidation on Close
+..........................................
+
+File: src/lib/asm/file.s
+File: src/lib/c/fgets.c
+
+Make invalidate_iobuf() callable from assembly:
+
+In fgets.c, the function is already named invalidate_iobuf().
+The C compiler will export it as _invalidate_iobuf.
+
+In file.s, add:
+
+  xref _invalidate_iobuf
+
+In _close_the_file (after the Close call, or before it):
+
+  _close_the_file:
+      jsr     _invalidate_iobuf    ; flush read buffer
+      movea.l _DOSBase,a6
+      move.l  (a3),d1
+      jsr     _LVOClose(a6)
+      move.l  #0,(a3)
+      rts
+
+This ensures that if a file is closed and its number reused for
+a different file, stale buffer data is not returned.
+
+Verification:
+  - Build runtime: make -f Makefile-lib clean all
+  - Test: open file, read some lines, close, open different file
+    with same file number, read -- must get correct data
+  - Run full test suite
+
+
+Optional Future Steps (not in this branch)
+-------------------------------------------
+
+F1: Invalidate buffer on explicit Seek operations.
+    Add _invalidate_iobuf calls in _eoftest, _lof, GetRecord,
+    PutRecord. Only needed if programs mix buffered reads with
+    random access on the same file handle.
+
+F2: Per-file buffer for interleaved multi-file reads.
+    Replace static buffer with dynamically allocated per-file
+    buffers. Would require AllocMem in _openfile and FreeMem
+    in _closefile, plus a buffer pointer array parallel to
+    _file_handle_list.
+
+F3: SetVBuf on file open for AmigaDOS-level buffer increase.
+    Call SetVBuf(fh, NULL, BUF_FULL, 4096) in _openfile.
+    Belt-and-suspenders optimization, only useful if any code
+    paths still use raw FGetC.
+
+F4: Buffered write layer for PRINT # with many small items.
+    Accumulate output in a buffer, flush on newline or close.
+    Low priority since Write is already string-at-a-time.
+
+
+Testing Checklist
+------------------
+
+[ ] LINE INPUT # basic (read lines from file)
+[ ] LINE INPUT # with EOF loop (WHILE NOT EOF)
+[ ] LINE INPUT # with long lines (near 1024 chars)
+[ ] LINE INPUT # with empty lines
+[ ] LINE INPUT # at exact buffer boundary
+[ ] INPUT # with multiple fields per line
+[ ] INPUT # with string fields (quoted)
+[ ] INPUT # with numeric fields
+[ ] INPUT$() character reads
+[ ] Close and reopen same file number
+[ ] Close file #1, open file #2 with same number, read
+[ ] YAP preprocessor on real source files
+[ ] Full test suite: rx runner.rexx all
