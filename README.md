@@ -4,6 +4,39 @@ ACE is a complete BASIC compiler for the Amiga computer platform. It compiles BA
 
 Originally released under the GNU General Public License (GPL v2) in 1998. Current version: **2.8.0**
 
+## Quick Example
+
+```basic
+PRINT "Hello, Amiga!"
+```
+
+Compile and run:
+```
+bas hello
+hello
+Hello, Amiga!
+```
+
+ACE shines when tapping into the Amiga's native capabilities:
+
+```basic
+REM -- Open a centered window with a message
+SCREEN 1,640,256,4,2
+WINDOW 1,"ACE BASIC",(100,50)-(540,200),30,1
+
+COLOR 1,0
+PRINT "Welcome to ACE BASIC!"
+PRINT
+PRINT "A native Amiga BASIC compiler"
+PRINT "generating 68000 assembly."
+
+WHILE INKEY$=""
+WEND
+
+WINDOW CLOSE 1
+SCREEN CLOSE 1
+```
+
 ## Features
 
 ### Core Language
