@@ -78,7 +78,6 @@ Testing:
     fileio, memory, control, syntax, subs, arithmetic, errors).
   - Recursion test suite (7 tests).
   - YAP preprocessor test suite (11 tests covering all features).
-  - Verified on A600 ECS hardware.
 
 Documentation:
 

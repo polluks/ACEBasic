@@ -13,8 +13,8 @@ REM   Section 5: Combined workload   (all patterns together)
 REM ============================================================
 
 DEFLNG a-z
-CONST ITERATIONS& = 200000
-CONST ARR_ITERS&  = 50000
+CONST ITERATIONS& = 1000000
+CONST ARR_ITERS&  = 200000
 
 DIM result&(500)
 
@@ -27,8 +27,15 @@ REM Each IF generates: move.l (sp)+,d0 / tst.l d0 / bne.s
 REM Phase 2: cmpi.l #0 -> tst.l  (saves 2 bytes each)
 REM Phase 6: move sets flags, tst.l eliminated (saves 2 more)
 
-t1! = TIMER
 s = 0
+
+REM --- Helper SUB: takes 3 long args (exercises stack cleanup) ---
+SUB AddThree(x&, y&, z&)
+  SHARED s
+  s = s + x + y + z
+END SUB
+
+t1! = TIMER
 FOR i = 1 TO ITERATIONS&
   a = i
   IF a > 100 THEN
@@ -119,8 +126,3 @@ PRINT
 PRINT "Done."
 STOP
 
-REM --- Helper SUB: takes 3 long args (exercises stack cleanup) ---
-SUB AddThree(LONG x, LONG y, LONG z) STATIC
-  SHARED s
-  s = s + x + y + z
-END SUB
