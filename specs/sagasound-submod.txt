@@ -1,5 +1,5 @@
-Arne Audio Submodule for ACE BASIC
-===================================
+SagaSound Audio Submodule for ACE BASIC
+========================================
 
 Status: DRAFT
 Date: 2026-02-10
@@ -8,9 +8,10 @@ Date: 2026-02-10
 1. OVERVIEW
 -----------
 
-Add Vampire SAGA "Arne" 16-bit audio support to ACE as a self-contained
-submodule. Arne is the enhanced audio chip in the Vampire FPGA
-accelerator, replacing the classic Paula chip with:
+Add Vampire SAGA 16-bit audio support to ACE as a self-contained
+submodule. The SAGA audio chip (sometimes called "Arne") is the enhanced
+audio unit in the Vampire FPGA accelerator, replacing the classic Paula
+chip with:
 
   - 16 audio channels (vs Paula's 4)
   - 8-bit or 16-bit sample support per channel
@@ -24,7 +25,7 @@ POKEW/POKEL for direct register access and follows the established
 submod pattern (see submods/runprog, submods/easyrequest).
 
 ACE's existing SOUND/WAVE/BEEP commands continue to work unchanged
-via the classic Paula registers ($DFF0A0-$DFF0D0). The Arne submod
+via the classic Paula registers ($DFF0A0-$DFF0D0). The SagaSound submod
 provides a separate, modern API for Vampire-equipped systems.
 
 Source reference for register map:
@@ -42,15 +43,15 @@ The Vampire SAGA chipset consists of:
   - Anni    : DMA + Blitter + Copper (replaces Alice/Agnus)
   - Maggie  : 3D texture mapping unit (new)
 
-This spec covers Arne only. Maggie 3D support is a separate effort
-(see section 10).
+This spec covers the audio unit (Arne). Maggie 3D support is a separate
+effort (see section 10).
 
 
-3. ARNE REGISTER MAP
----------------------
+3. SAGA AUDIO REGISTER MAP
+----------------------------
 
-Arne uses a unified register block at $DFF400 with 16 channels,
-each occupying $10 (16) bytes:
+The SAGA audio unit uses a unified register block at $DFF400 with 16
+channels, each occupying $10 (16) bytes:
 
   Base address for channel N = $DFF400 + (N * $10)
 
@@ -95,40 +96,40 @@ Common AUD_MODE values:
 4. FILE LAYOUT
 --------------
 
-  submods/arne/arne.b                Module source
-  include/submods/Arne.h             DECLARE SUB header for users
-  submods/arne/test_arne.b           Test program (plays a tone)
-  submods/arne/test_arne_aiff.b      Test program (plays AIFF file)
+  submods/sagasound/sagasound.b          Module source
+  include/submods/SagaSound.h            DECLARE SUB header for users
+  submods/sagasound/test_sagasound.b     Test program (plays a tone)
+  submods/sagasound/test_sagasound_aiff.b  Test program (plays PCM file)
 
 
 5. PUBLIC API
 -------------
 
-5.1 Constants (defined in Arne.h)
+5.1 Constants (defined in SagaSound.h)
 
-  CONST ARNE_PAL_CLOCK  = 3546895   ' PAL clock frequency in Hz
+  CONST SAGASOUND_PAL_CLOCK  = 3546895   ' PAL clock frequency in Hz
 
   ' Mode flags (combine with OR or +)
-  CONST ARNE_8BIT       = 0         ' 8-bit sample (default)
-  CONST ARNE_16BIT      = 1         ' 16-bit sample
-  CONST ARNE_ONESHOT    = 2         ' Play once then stop
-  CONST ARNE_STEREO     = 4         ' Stereo interleaved L/R
+  CONST SAGASOUND_8BIT       = 0         ' 8-bit sample (default)
+  CONST SAGASOUND_16BIT      = 1         ' 16-bit sample
+  CONST SAGASOUND_ONESHOT    = 2         ' Play once then stop
+  CONST SAGASOUND_STEREO     = 4         ' Stereo interleaved L/R
 
   ' Common mode combinations
-  CONST ARNE_LOOP16S    = 5         ' 16-bit + stereo + loop
-  CONST ARNE_PLAY16S    = 7         ' 16-bit + stereo + oneshot
-  CONST ARNE_LOOP8      = 0         ' 8-bit mono loop
-  CONST ARNE_PLAY8      = 2         ' 8-bit mono oneshot
+  CONST SAGASOUND_LOOP16S    = 5         ' 16-bit + stereo + loop
+  CONST SAGASOUND_PLAY16S    = 7         ' 16-bit + stereo + oneshot
+  CONST SAGASOUND_LOOP8      = 0         ' 8-bit mono loop
+  CONST SAGASOUND_PLAY8      = 2         ' 8-bit mono oneshot
 
   ' Maximum channels
-  CONST ARNE_MAX_CH     = 16
+  CONST SAGASOUND_MAX_CH     = 16
 
 5.2 Subroutines
 
-  SUB ArnePlay(channel%, bufAddr&, byteSize&, ~
+  SUB SagaSoundPlay(channel%, bufAddr&, byteSize&, ~
                period%, volLeft%, volRight%, mode%) EXTERNAL
 
-    Play a sample on a specific Arne channel.
+    Play a sample on a specific channel.
 
     channel%  : 0-15 (channel number)
     bufAddr&  : Address of sample data (must be 32-byte aligned)
@@ -139,36 +140,36 @@ Common AUD_MODE values:
     volRight% : Right volume 0-255
     mode%     : AUD_MODE flags (see constants above)
 
-  SUB ArneStop(channel%) EXTERNAL
+  SUB SagaSoundStop(channel%) EXTERNAL
 
     Stop playback on a channel (disables DMA).
 
-  SUB ArneStart(channel%) EXTERNAL
+  SUB SagaSoundStart(channel%) EXTERNAL
 
     Resume playback on a channel (re-enables DMA).
 
-  SUB ArneVolume(channel%, volLeft%, volRight%) EXTERNAL
+  SUB SagaSoundVolume(channel%, volLeft%, volRight%) EXTERNAL
 
     Change volume on a playing channel without restarting it.
 
-  SUB SHORTINT ArneIsFree(channel%) EXTERNAL
+  SUB SHORTINT SagaSoundIsFree(channel%) EXTERNAL
 
     Returns -1 (true) if channel is free, 0 (false) if busy.
     Reads DMACONR / DMACONR2.
 
-  SUB SHORTINT ArneFindFree() EXTERNAL
+  SUB SHORTINT SagaSoundFindFree() EXTERNAL
 
     Scan channels 0-15 and return the first free channel number.
     Returns -1 if no channel is free.
 
-  SUB ArneStopAll() EXTERNAL
+  SUB SagaSoundStopAll() EXTERNAL
 
     Stop all 16 channels. Convenience for cleanup.
 
-  SUB SHORTINT ArnePeriod(sampleRate&) EXTERNAL
+  SUB SHORTINT SagaSoundPeriod(sampleRate&) EXTERNAL
 
     Convenience: returns PAL_CLOCK / sampleRate& as a SHORT.
-    Example: ArnePeriod(44100) returns 80.
+    Example: SagaSoundPeriod(44100) returns 80.
 
 
 6. IMPLEMENTATION DETAILS
@@ -178,7 +179,7 @@ Common AUD_MODE values:
 
 All register writes use computed addresses:
 
-  SUB ArnePlay(channel%, bufAddr&, byteSize&, ~
+  SUB SagaSoundPlay(channel%, bufAddr&, byteSize&, ~
                period%, volLeft%, volRight%, mode%) EXTERNAL
     LONGINT base&
     base& = &HDFF400 + (CLNG(channel%) * &H10)
@@ -199,21 +200,21 @@ All register writes use computed addresses:
 
 6.2 Channel status via PEEKW
 
-  SUB SHORTINT ArneIsFree(channel%) EXTERNAL
+  SUB SHORTINT SagaSoundIsFree(channel%) EXTERNAL
     SHORTINT dmaStatus%
     IF channel% < 4 THEN
       dmaStatus% = PEEKW(&HDFF002)
-      ArneIsFree = ((dmaStatus% AND (1 SHL channel%)) = 0)
+      SagaSoundIsFree = ((dmaStatus% AND (1 SHL channel%)) = 0)
     ELSE
       dmaStatus% = PEEKW(&HDFF202)
-      ArneIsFree = ((dmaStatus% AND (1 SHL (channel% - 4))) = 0)
+      SagaSoundIsFree = ((dmaStatus% AND (1 SHL (channel% - 4))) = 0)
     END IF
   END SUB
 
 6.3 Buffer alignment
 
-Arne requires sample buffers to be 32-byte aligned. ACE's ALLOC
-returns unaligned memory. Two approaches:
+The SAGA audio unit requires sample buffers to be 32-byte aligned. ACE's
+ALLOC returns unaligned memory. Two approaches:
 
   Option A - Over-allocate and align manually:
 
@@ -225,12 +226,12 @@ returns unaligned memory. Two approaches:
 
   Option B - Provide a helper SUB:
 
-    SUB LONGINT ArneAllocAligned(byteSize&) EXTERNAL
+    SUB LONGINT SagaSoundAllocAligned(byteSize&) EXTERNAL
       ' Allocates byteSize& + 31 bytes, returns 32-byte aligned address.
-      ' Stores raw address internally for ArneFreeMem.
+      ' Stores raw address internally for SagaSoundFreeMem.
     END SUB
 
-    SUB ArneFreeMem(alignedAddr&) EXTERNAL
+    SUB SagaSoundFreeMem(alignedAddr&) EXTERNAL
       ' Frees the allocation associated with alignedAddr&.
     END SUB
 
@@ -254,8 +255,8 @@ so POKEW/POKEL is fine.
 
 7.1 Play a sine wave tone
 
-  #include <submods/Arne.h>
-  EXTERNAL Arne
+  #include <submods/SagaSound.h>
+  EXTERNAL sagasound
 
   ' Generate a 16-bit sine wave in memory
   DIM sineData%(31)              ' 32 words = 64 bytes
@@ -268,57 +269,57 @@ so POKEW/POKEL is fine.
   sampleAddr& = VARPTR(sineData%(0))
 
   ' Play at ~440 Hz on channel 0, full volume, 16-bit mono loop
-  period% = ArnePeriod(440 * 32)  ' 32 samples per cycle
-  ArnePlay(0, sampleAddr&, 64, period%, 255, 255, ARNE_16BIT)
+  period% = SagaSoundPeriod(440 * 32)  ' 32 samples per cycle
+  SagaSoundPlay(0, sampleAddr&, 64, period%, 255, 255, SAGASOUND_16BIT)
 
   SLEEP
-  ArneStop(0)
+  SagaSoundStop(0)
 
-7.2 Play an AIFF file (conceptual)
+7.2 Play a PCM file (conceptual)
 
-  #include <submods/Arne.h>
-  EXTERNAL Arne
+  #include <submods/SagaSound.h>
+  EXTERNAL sagasound
 
-  ' Load AIFF into memory (BLOAD or manual file I/O)
+  ' Load raw PCM into memory (BLOAD or manual file I/O)
   ' Parse header for sample rate, data offset, data size
   ' ...
 
-  period% = ArnePeriod(sampleRate&)
-  ch% = ArneFindFree()
+  period% = SagaSoundPeriod(sampleRate&)
+  ch% = SagaSoundFindFree()
   IF ch% >= 0 THEN
-    ArnePlay(ch%, dataAddr&, dataSize&, period%, 200, 200, ARNE_PLAY16S)
+    SagaSoundPlay(ch%, dataAddr&, dataSize&, period%, 200, 200, SAGASOUND_PLAY16S)
   END IF
 
 
-8. HEADER FILE (Arne.h)
--------------------------
+8. HEADER FILE (SagaSound.h)
+------------------------------
 
-  #ifndef ARNE_H
-  #define ARNE_H 1
+  #ifndef SAGASOUND_H
+  #define SAGASOUND_H 1
 
-  {* Arne.h - Vampire SAGA Arne 16-bit audio submod for ACE BASIC *}
+  {* SagaSound.h - Vampire SAGA 16-bit audio submod for ACE BASIC *}
 
-  CONST ARNE_PAL_CLOCK = 3546895
-  CONST ARNE_8BIT      = 0
-  CONST ARNE_16BIT     = 1
-  CONST ARNE_ONESHOT   = 2
-  CONST ARNE_STEREO    = 4
-  CONST ARNE_LOOP16S   = 5
-  CONST ARNE_PLAY16S   = 7
-  CONST ARNE_LOOP8     = 0
-  CONST ARNE_PLAY8     = 2
-  CONST ARNE_MAX_CH    = 16
+  CONST SAGASOUND_PAL_CLOCK = 3546895
+  CONST SAGASOUND_8BIT      = 0
+  CONST SAGASOUND_16BIT     = 1
+  CONST SAGASOUND_ONESHOT   = 2
+  CONST SAGASOUND_STEREO    = 4
+  CONST SAGASOUND_LOOP16S   = 5
+  CONST SAGASOUND_PLAY16S   = 7
+  CONST SAGASOUND_LOOP8     = 0
+  CONST SAGASOUND_PLAY8     = 2
+  CONST SAGASOUND_MAX_CH    = 16
 
-  DECLARE SUB ArnePlay(SHORTINT ch, LONGINT buf, LONGINT sz, ~
+  DECLARE SUB SagaSoundPlay(SHORTINT ch, LONGINT buf, LONGINT sz, ~
                        SHORTINT per, SHORTINT vl, SHORTINT vr, ~
                        SHORTINT md) EXTERNAL
-  DECLARE SUB ArneStop(SHORTINT ch) EXTERNAL
-  DECLARE SUB ArneStart(SHORTINT ch) EXTERNAL
-  DECLARE SUB ArneVolume(SHORTINT ch, SHORTINT vl, SHORTINT vr) EXTERNAL
-  DECLARE SUB SHORTINT ArneIsFree(SHORTINT ch) EXTERNAL
-  DECLARE SUB SHORTINT ArneFindFree() EXTERNAL
-  DECLARE SUB ArneStopAll() EXTERNAL
-  DECLARE SUB SHORTINT ArnePeriod(LONGINT rate) EXTERNAL
+  DECLARE SUB SagaSoundStop(SHORTINT ch) EXTERNAL
+  DECLARE SUB SagaSoundStart(SHORTINT ch) EXTERNAL
+  DECLARE SUB SagaSoundVolume(SHORTINT ch, SHORTINT vl, SHORTINT vr) EXTERNAL
+  DECLARE SUB SHORTINT SagaSoundIsFree(SHORTINT ch) EXTERNAL
+  DECLARE SUB SHORTINT SagaSoundFindFree() EXTERNAL
+  DECLARE SUB SagaSoundStopAll() EXTERNAL
+  DECLARE SUB SHORTINT SagaSoundPeriod(LONGINT rate) EXTERNAL
 
   #endif
 
@@ -327,8 +328,8 @@ so POKEW/POKEL is fine.
 ----------------
 
 Phase 1 - Structural (on emulator without Vampire):
-  - Compile arne.b as module: bas -m arne
-  - Compile test_arne.b linking arne.o
+  - Compile sagasound.b as module: bas -m sagasound
+  - Compile test_sagasound.b linking sagasound.o
   - Verify no compilation errors
   - Verify generated .s assembly has correct POKEW/POKEL addresses
 
@@ -336,10 +337,10 @@ Phase 2 - Functional (requires Vampire hardware):
   - Play a generated sine wave, verify audio output
   - Test all 16 channels (at least channels 0, 4, 15)
   - Test mode flags: 8-bit vs 16-bit, mono vs stereo, loop vs oneshot
-  - Test ArneStop / ArneStart (pause/resume)
-  - Test ArneVolume (change volume while playing)
-  - Test ArneIsFree / ArneFindFree
-  - Test ArneStopAll
+  - Test SagaSoundStop / SagaSoundStart (pause/resume)
+  - Test SagaSoundVolume (change volume while playing)
+  - Test SagaSoundIsFree / SagaSoundFindFree
+  - Test SagaSoundStopAll
 
 
 10. FUTURE WORK
@@ -347,7 +348,7 @@ Phase 2 - Functional (requires Vampire hardware):
 
 10.1 AIFF loader submod
 
-  A separate submod (or extension to Arne) that loads AIFF files,
+  A separate submod (or extension to SagaSound) that loads AIFF files,
   parses the header (COMM chunk for sample rate, SSND chunk for
   data), allocates aligned memory, and returns a ready-to-play
   buffer. The MagicSoundSystem.V4 code has a working AIFF parser
@@ -377,5 +378,6 @@ Phase 2 - Functional (requires Vampire hardware):
 10.4 Integration with existing SOUND command
 
   If the submod approach proves successful, a later phase could
-  integrate Arne support into the compiler's built-in SOUND command
-  with extended syntax, for users who prefer not to use EXTERNAL.
+  integrate SAGA audio support into the compiler's built-in SOUND
+  command with extended syntax, for users who prefer not to use
+  EXTERNAL.

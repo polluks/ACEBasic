@@ -1,22 +1,22 @@
-REM #using ace:submods/arne/arne.o
+REM #using ace:submods/sagasound/sagasound.o
 
 {*
-** Test program for Arne audio submodule - raw PCM file playback.
+** Test program for SagaSound audio submodule - raw PCM file playback.
 **
 ** Loads a raw 16-bit PCM file into memory and plays it through
-** Arne. Expects a headerless raw PCM file (16-bit signed
+** SagaSound. Expects a headerless raw PCM file (16-bit signed
 ** big-endian, mono, 44100 Hz).
 **
-** Usage: test_arne_aiff <filename>
+** Usage: test_sagasound_aiff <filename>
 **
 ** To create a raw PCM test file from an AIFF on a modern system:
 **   sox input.aiff -t raw -r 44100 -b 16 -e signed -B output.raw
 **
-** Requires: Vampire with SAGA/Arne audio hardware.
+** Requires: Vampire with SAGA audio hardware.
 *}
 
-#include <submods/Arne.h>
-EXTERNAL Arne
+#include <submods/SagaSound.h>
+EXTERNAL sagasound
 
 DECLARE FUNCTION _Read&(fh&, buf&, length&) LIBRARY dos
 
@@ -26,8 +26,8 @@ SHORTINT period%, ch%, playing%
 
 playing% = 0
 
-PRINT "Arne Raw PCM Player"
-PRINT "==================="
+PRINT "SagaSound Raw PCM Player"
+PRINT "========================"
 PRINT
 
 {* Get filename from command line or prompt *}
@@ -81,8 +81,8 @@ IF bytesRead& <> fileSize& THEN
 END IF
 
 {* Play AS 16-bit sterio oneshot at 44100 Hz *}
-period% = ArnePeriod(44100&)
-ch% = ArneFindFree()
+period% = SagaSoundPeriod(44100&)
+ch% = SagaSoundFindFree()
 
 IF ch% < 0 THEN
   PRINT "No free channels!"
@@ -94,15 +94,14 @@ PRINT "Period:"; period%
 PRINT
 playing% = 1
 
-ArnePlay(ch%, alignedAddr&, fileSize&, period%, 255, 255, ARNE_PLAY16S)
+SagaSoundPlay(ch%, alignedAddr&, fileSize&, period%, 255, 255, SAGASOUND_PLAY16S)
 
 INPUT "Press ENTER to stop..."; dummy$
 
-ArneStop(ch%)
+SagaSoundStop(ch%)
 
 done:
 IF playing% THEN
   PRINT "Stopped."
 END IF
 PRINT "Done."
-

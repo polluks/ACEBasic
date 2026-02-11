@@ -1,7 +1,7 @@
 {*
-** Arne Audio Submodule for ACE BASIC
+** SagaSound Audio Submodule for ACE BASIC
 **
-** Provides access to the Vampire SAGA "Arne" 16-bit audio chip
+** Provides access to the Vampire SAGA 16-bit audio chip
 ** with 16 channels, 8/16-bit samples, stereo volume, and rates
 ** up to 56 kHz. Uses POKEW/POKEL for direct register access.
 **
@@ -24,10 +24,10 @@
 *}
 
 
-{* --- ArnePlay --- *}
-{* Play a sample on a specific Arne channel. *}
+{* --- SagaSoundPlay --- *}
+{* Play a sample on a specific channel. *}
 
-SUB ArnePlay(channel%, bufAddr&, byteSize&, ~
+SUB SagaSoundPlay(channel%, bufAddr&, byteSize&, ~
              period%, volLeft%, volRight%, mode%) EXTERNAL
 
   LONGINT base&
@@ -49,10 +49,10 @@ SUB ArnePlay(channel%, bufAddr&, byteSize&, ~
 END SUB
 
 
-{* --- ArneStop --- *}
+{* --- SagaSoundStop --- *}
 {* Stop playback on a channel (disable DMA). *}
 
-SUB ArneStop(channel%) EXTERNAL
+SUB SagaSoundStop(channel%) EXTERNAL
 
   IF channel% < 4 THEN
     POKEW &HDFF096, (SHL(1, channel%))
@@ -63,10 +63,10 @@ SUB ArneStop(channel%) EXTERNAL
 END SUB
 
 
-{* --- ArneStart --- *}
+{* --- SagaSoundStart --- *}
 {* Resume playback on a channel (re-enable DMA). *}
 
-SUB ArneStart(channel%) EXTERNAL
+SUB SagaSoundStart(channel%) EXTERNAL
 
   IF channel% < 4 THEN
     POKEW &HDFF096, &H8000 + (SHL(1, channel%))
@@ -77,10 +77,10 @@ SUB ArneStart(channel%) EXTERNAL
 END SUB
 
 
-{* --- ArneVolume --- *}
+{* --- SagaSoundVolume --- *}
 {* Change volume on a playing channel without restarting it. *}
 
-SUB ArneVolume(channel%, volLeft%, volRight%) EXTERNAL
+SUB SagaSoundVolume(channel%, volLeft%, volRight%) EXTERNAL
 
   LONGINT base&
 
@@ -90,62 +90,62 @@ SUB ArneVolume(channel%, volLeft%, volRight%) EXTERNAL
 END SUB
 
 
-{* --- ArneIsFree --- *}
+{* --- SagaSoundIsFree --- *}
 {* Returns -1 (true) if channel is free, 0 (false) if busy. *}
 
-SUB SHORTINT ArneIsFree(channel%) EXTERNAL
+SUB SHORTINT SagaSoundIsFree(channel%) EXTERNAL
 
   SHORTINT dmaStatus%
 
   IF channel% < 4 THEN
     dmaStatus% = PEEKW(&HDFF002)
-    ArneIsFree = ((dmaStatus% AND (SHL(1, channel%))) = 0)
+    SagaSoundIsFree = ((dmaStatus% AND (SHL(1, channel%))) = 0)
   ELSE
     dmaStatus% = PEEKW(&HDFF202)
-    ArneIsFree = ((dmaStatus% AND (SHL(1, channel% - 4))) = 0)
+    SagaSoundIsFree = ((dmaStatus% AND (SHL(1, channel% - 4))) = 0)
   END IF
 
 END SUB
 
 
-{* --- ArneFindFree --- *}
+{* --- SagaSoundFindFree --- *}
 {* Scan channels 0-15, return first free channel or -1 if none. *}
 
-SUB SHORTINT ArneFindFree EXTERNAL
+SUB SHORTINT SagaSoundFindFree EXTERNAL
 
   SHORTINT i%
 
   FOR i% = 0 TO 15
-    IF ArneIsFree(i%) THEN
-      ArneFindFree = i%
+    IF SagaSoundIsFree(i%) THEN
+      SagaSoundFindFree = i%
       EXIT SUB
     END IF
   NEXT
 
-  ArneFindFree = -1
+  SagaSoundFindFree = -1
 
 END SUB
 
 
-{* --- ArneStopAll --- *}
+{* --- SagaSoundStopAll --- *}
 {* Stop all 16 channels. *}
 
-SUB ArneStopAll EXTERNAL
+SUB SagaSoundStopAll EXTERNAL
 
   SHORTINT i%
 
   FOR i% = 0 TO 15
-    ArneStop(i%)
+    SagaSoundStop(i%)
   NEXT
 
 END SUB
 
 
-{* --- ArnePeriod --- *}
+{* --- SagaSoundPeriod --- *}
 {* Convenience: returns PAL_CLOCK / sampleRate& as a SHORT. *}
 
-SUB SHORTINT ArnePeriod(sampleRate&) EXTERNAL
+SUB SHORTINT SagaSoundPeriod(sampleRate&) EXTERNAL
 
-  ArnePeriod = CINT(3546895& / sampleRate&)
+  SagaSoundPeriod = CINT(3546895& / sampleRate&)
 
 END SUB
