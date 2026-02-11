@@ -28,8 +28,7 @@
 {* Play a sample on a specific channel. *}
 
 SUB SagaSoundPlay(channel%, bufAddr&, byteSize&, ~
-             period%, volLeft%, volRight%, mode%) EXTERNAL
-
+                  period%, volLeft%, volRight%, mode%) EXTERNAL
   LONGINT base&
 
   base& = &HDFF400 + (CLNG(channel%) * &H10)
@@ -45,7 +44,6 @@ SUB SagaSoundPlay(channel%, bufAddr&, byteSize&, ~
   ELSE
     POKEW &HDFF296, &H8000 + (SHL(1, channel% - 4))
   END IF
-
 END SUB
 
 
@@ -53,13 +51,11 @@ END SUB
 {* Stop playback on a channel (disable DMA). *}
 
 SUB SagaSoundStop(channel%) EXTERNAL
-
   IF channel% < 4 THEN
     POKEW &HDFF096, (SHL(1, channel%))
   ELSE
     POKEW &HDFF296, (SHL(1, channel% - 4))
   END IF
-
 END SUB
 
 
@@ -67,13 +63,11 @@ END SUB
 {* Resume playback on a channel (re-enable DMA). *}
 
 SUB SagaSoundStart(channel%) EXTERNAL
-
   IF channel% < 4 THEN
     POKEW &HDFF096, &H8000 + (SHL(1, channel%))
   ELSE
     POKEW &HDFF296, &H8000 + (SHL(1, channel% - 4))
   END IF
-
 END SUB
 
 
@@ -81,12 +75,10 @@ END SUB
 {* Change volume on a playing channel without restarting it. *}
 
 SUB SagaSoundVolume(channel%, volLeft%, volRight%) EXTERNAL
-
   LONGINT base&
 
   base& = &HDFF400 + (CLNG(channel%) * &H10)
   POKEW base& + &H8, (volLeft% * 256) + volRight%
-
 END SUB
 
 
@@ -94,7 +86,6 @@ END SUB
 {* Returns -1 (true) if channel is free, 0 (false) if busy. *}
 
 SUB SHORTINT SagaSoundIsFree(channel%) EXTERNAL
-
   SHORTINT dmaStatus%
 
   IF channel% < 4 THEN
@@ -104,7 +95,6 @@ SUB SHORTINT SagaSoundIsFree(channel%) EXTERNAL
     dmaStatus% = PEEKW(&HDFF202)
     SagaSoundIsFree = ((dmaStatus% AND (SHL(1, channel% - 4))) = 0)
   END IF
-
 END SUB
 
 
@@ -112,7 +102,6 @@ END SUB
 {* Scan channels 0-15, return first free channel or -1 if none. *}
 
 SUB SHORTINT SagaSoundFindFree EXTERNAL
-
   SHORTINT i%
 
   FOR i% = 0 TO 15
@@ -123,7 +112,6 @@ SUB SHORTINT SagaSoundFindFree EXTERNAL
   NEXT
 
   SagaSoundFindFree = -1
-
 END SUB
 
 
@@ -131,13 +119,11 @@ END SUB
 {* Stop all 16 channels. *}
 
 SUB SagaSoundStopAll EXTERNAL
-
   SHORTINT i%
 
   FOR i% = 0 TO 15
     SagaSoundStop(i%)
   NEXT
-
 END SUB
 
 
@@ -145,7 +131,5 @@ END SUB
 {* Convenience: returns PAL_CLOCK / sampleRate& as a SHORT. *}
 
 SUB SHORTINT SagaSoundPeriod(sampleRate&) EXTERNAL
-
   SagaSoundPeriod = CINT(3546895& / sampleRate&)
-
 END SUB

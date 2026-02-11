@@ -162,9 +162,13 @@ message passing. The entire event trap system is unavailable:
 
 What DOES work in SAGA takeover:
   - STICK/STRIG: direct hardware polling (see joystick-internals.txt)
-  - SagaRawKey: CIA keyboard polling (SAGA submodule)
+  - CIA keyboard polling (direct hardware, no OS)
   - MOUSE(0): CIA button read (bit 6 of $BFE001)
   - POTX/POTY: direct hardware polling
+
+Note: The P96/RTG approach (SCREEN mode 13) avoids SAGA takeover
+entirely and keeps IDCMP fully functional via a backdrop window.
+See examples/gfx/p96_chunky.b for the recommended pattern.
 
 Note: MOUSE, TIMER, BREAK, and ERROR event traps do NOT use IDCMP
 internally (they check hardware or runtime state directly), but the

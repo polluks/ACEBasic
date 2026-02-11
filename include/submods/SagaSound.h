@@ -15,8 +15,8 @@ CONST SAGASOUND_PLAY8     = 2
 CONST SAGASOUND_MAX_CH    = 16
 
 DECLARE SUB SagaSoundPlay(SHORTINT ch, LONGINT buf, LONGINT sz, ~
-                     SHORTINT per, SHORTINT vl, SHORTINT vr, ~
-                     SHORTINT md) EXTERNAL
+                          SHORTINT per, SHORTINT vl, SHORTINT vr, ~
+                          SHORTINT md) EXTERNAL
 DECLARE SUB SagaSoundStop(SHORTINT ch) EXTERNAL
 DECLARE SUB SagaSoundStart(SHORTINT ch) EXTERNAL
 DECLARE SUB SagaSoundVolume(SHORTINT ch, SHORTINT vl, SHORTINT vr) EXTERNAL

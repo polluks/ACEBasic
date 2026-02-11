@@ -118,4 +118,7 @@ MOUSE(1/2) depends on Intuition's Window structure and will NOT work
 when the OS is bypassed. MOUSE(0) reads CIA directly and still works.
 
 For SAGA takeover scenarios, use STICK/STRIG for joystick input and
-SagaRawKey (from the SAGA submodule) for keyboard input.
+direct CIA keyboard polling for keyboard input. However, the
+recommended approach is to use P96/RTG (SCREEN mode 13) instead of
+SAGA takeover, which keeps IDCMP and INKEY$ fully functional.
+See examples/gfx/p96_chunky.b.
